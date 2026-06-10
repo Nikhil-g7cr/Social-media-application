@@ -11,6 +11,7 @@ import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 
 import { Users, UserColumns } from './user.model';
+import { Conversation } from './conversation.model';
 // import { Conversations, ConversationColumns } from './conversation.model';
 
 export const enum CPColumns {
@@ -51,16 +52,6 @@ export class CP extends Model<CP> {
   })
   [CPColumns.UserID]!: string;
 
-  // Uncomment this when your Conversation model is ready
-  /*
-  @ForeignKey(() => Conversations)
-  */
-  @Column({
-    type: SQLDataType.UNIQUEIDENTIFIER,
-    allowNull: false,
-  })
-  [CPColumns.ConversationID]!: string;
-
   @Column({
     type: `${SQLDataType.VARCHAR}(20)`,
     allowNull: false,
@@ -83,13 +74,18 @@ export class CP extends Model<CP> {
   User!: Users;
 
   // Uncomment this after creating the Conversation model
-  /*
-  @BelongsTo(() => Conversations, {
+  @ForeignKey(() => Conversation)
+  @Column({
+    type: SQLDataType.UNIQUEIDENTIFIER,
+    allowNull: false,
+  })
+  [CPColumns.ConversationID]!: string;
+
+  @BelongsTo(() => Conversation, {
     foreignKey: CPColumns.ConversationID,
-    targetKey: ConversationColumns.ID,
+    targetKey: 'ConversationId', // Note: your Conversation model uses 'ConversationId'
     as: CPAlias.Conversation,
     onDelete: 'CASCADE',
   })
-  Conversation!: Conversations;
-  */
+  Conversation!: Conversation;
 }

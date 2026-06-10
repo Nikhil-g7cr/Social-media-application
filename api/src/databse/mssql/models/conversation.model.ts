@@ -1,17 +1,17 @@
 import { Table, Column, Model, DataType, HasMany, CreatedAt } from 'sequelize-typescript';
-import { Message } from 'src/modules/message/entities/message.entity';
+import { Message } from './message.model';
 
 @Table({
   tableName: 'Conversations',
   timestamps: false, // Disabling default timestamps so we can manage customized DATETIME2 columns
 })
-export class Conversation extends Model {
+export class Conversation extends Model<Conversation> { // ✅ Added <Conversation> generic here
   @Column({
     type: DataType.UUID,
     defaultValue: DataType.UUIDV4,
     primaryKey: true,
   })
-  ConversationId: string;
+  ConversationId!: string;
 
   @Column({
     type: DataType.STRING(20),
@@ -21,13 +21,13 @@ export class Conversation extends Model {
       isIn: [['single', 'group', 'broadcast']], // Emulates the CHECK constraint at runtime
     },
   })
-  chat_type: 'single' | 'group' | 'broadcast';
+  chat_type!: 'single' | 'group' | 'broadcast';
 
   @Column({
     type: DataType.STRING(100),
     allowNull: true,
   })
-  title: string;
+  title!: string;
 
   @CreatedAt
   @Column({
@@ -35,9 +35,9 @@ export class Conversation extends Model {
     allowNull: false,
     defaultValue: DataType.NOW, // Maps to GETDATE() or current time in MS SQL
   })
-  created_at: Date;
+  created_at!: Date;
 
   // Relationships
   @HasMany(() => Message, { onDelete: 'CASCADE' })
-  messages: Message[];
+  messages!: Message[];
 }

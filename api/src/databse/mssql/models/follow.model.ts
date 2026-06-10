@@ -1,4 +1,13 @@
-import { Table, Column, Model, DataType, ForeignKey, CreatedAt, PrimaryKey } from 'sequelize-typescript';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  ForeignKey,
+  CreatedAt,
+  PrimaryKey,
+  BelongsTo,
+} from 'sequelize-typescript';
 import { Users } from './user.model';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 
@@ -7,11 +16,10 @@ import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
   timestamps: false, // Explicitly managing only created_at
 })
 export class Follow extends Model {
-    @PrimaryKey
-    @Column({type:SQLDataType.UNIQUEIDENTIFIER, allowNull:false})
-    ID!:string
+  @PrimaryKey
+  @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
+  ID!: string;
 
-    
   // We use a composite primary key using follower_id and following_id
   // This guarantees a user cannot follow the same person more than once
 
@@ -38,4 +46,16 @@ export class Follow extends Model {
     defaultValue: DataType.NOW, // Maps to GETDATE() in SQL Server
   })
   created_at!: Date;
+
+  @BelongsTo(() => Users, {
+    foreignKey: 'follower_id',
+    as: 'Follower',
+  })
+  follower!: Users;
+
+  @BelongsTo(() => Users, {
+    foreignKey: 'following_id',
+    as: 'Following',
+  })
+  following!: Users;
 }

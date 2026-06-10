@@ -6,7 +6,7 @@ import { Posts } from './post.model';
 
 export const enum LikesColumns {
   ID = 'ID',
-  USerID = 'USerID',
+  UserID="UserID",
   PostsID = 'PostsID',
   CreatedBy = 'CreatedBy',
   CreatedAt = 'CreatedAt',
@@ -21,7 +21,7 @@ export class Likes extends Model<Likes> {
   [LikesColumns.ID]!: string;
 
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  [LikesColumns.USerID]!: string;
+  [LikesColumns.UserID]!: string;
 
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
   [LikesColumns.PostsID]!: string;
@@ -46,7 +46,7 @@ export class Likes extends Model<Likes> {
     [LikesColumns.ModifiedBy]?: Date;
 
     @BelongsTo(()=>Users,{
-        foreignKey: LikesColumns.USerID,
+        foreignKey: LikesColumns.UserID,
         targetKey: 'ID',
         as: 'User',
         onDelete: 'NO ACTION'

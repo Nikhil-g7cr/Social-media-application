@@ -1,7 +1,10 @@
 import { Tables } from '../connection/tables.mssql';
 import { Schema } from '../connection/schemas.mssql';
-import { BelongsTo, Column, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
+import { Posts } from './post.model';
+import { Comments } from './comments.model';
+import { Likes } from './like.model';
 
 export const enum UserColumns {
   ID = 'ID',
@@ -146,6 +149,16 @@ class Users extends Model<Users> {
     onDelete: 'NO ACTION',
   })
   ModifiedByUser!: Users;
+
+
+  @HasMany(() => Posts, { foreignKey: 'UserID' })
+  Posts!: Posts[];
+
+  @HasMany(() => Comments, { foreignKey: 'UserID' })
+  Comment!: Comments[];
+
+  @HasMany(() => Likes, { foreignKey: 'UserID' })
+  Likes!: Likes[];
 }
 
 export {Users};

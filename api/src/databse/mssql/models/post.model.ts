@@ -1,7 +1,9 @@
-import { BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Users } from './user.model';
+import { Comments } from './comments.model';
+import { Likes } from './like.model';
 
 export const enum PostsColumns {
   ID = 'ID',
@@ -74,6 +76,16 @@ class Posts extends Model<Posts> {
 		onDelete: 'NO ACTION'
 	})
 	User!: Users;
+
+
+	// Inside the Posts class:
+	@HasMany(() => Comments, { foreignKey: 'PostID' })
+	Comments!: Comments[];
+
+	@HasMany(() => Likes, { foreignKey: 'PostsID' }) // Use whatever exact string your Likes model uses
+	Likes!: Likes[];
+
+
 }
 
 export { Posts };
