@@ -1,4 +1,4 @@
-import { Posts, Users } from '../models';
+import { Likes, Posts, Users } from '../models';
 import { MsSqlConstants } from './constant.mssql';
 
 const msSqlDBModelsProvider = [
@@ -11,6 +11,10 @@ const msSqlDBModelsProvider = [
 		{
 			provide:MsSqlConstants.POST,
 			useValue:Posts
+		},
+		{
+			provide:MsSqlConstants.LIKE,
+			useValue:Likes
 		}
 		
 	],

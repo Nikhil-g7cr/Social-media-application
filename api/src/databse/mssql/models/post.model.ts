@@ -69,7 +69,7 @@ class Posts extends Model<Posts> {
 
 	@BelongsTo(() => Users, {
 		foreignKey: PostsColumns.UserID,
-		targetKey: 'UserID',
+		targetKey: 'ID',
 		as: PostsAlias.User,
 		onDelete: 'NO ACTION'
 	})
