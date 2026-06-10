@@ -8,7 +8,7 @@ export class AppConfig {
     };
 
     // Database configuration
-    ((this.envConfig.db = {
+    this.envConfig.db = {
       mssql: {
         dialect: 'mssql',
         databse: process.env.DB_NAME,
@@ -20,13 +20,13 @@ export class AppConfig {
           process.env.MSSQL_TRUST_SERVER_CERTIFICATE,
         ),
       },
-    }),
-      (this.envConfig.blobStorage = {
-        blobAccountName: process.env.BLOB_ACCOUNT_NAME,
-        blobAccountKey: process.env.BLOB_ACCOUNT_KEY,
-        blobContainerName: process.env.BLOB_CONTAINER_NAME,
-      }),
-      (this.envConfig.jwt = {
+    };
+    this.envConfig.blobStorage = {
+      blobAccountName: process.env.BLOB_ACCOUNT_NAME,
+      blobAccountKey: process.env.BLOB_ACCOUNT_KEY,
+      blobContainerName: process.env.BLOB_CONTAINER_NAME,
+    };
+      this.envConfig.jwt = {
         appAXTSecret: process.env.JWT_ACCESS_TOKEN_SECRET,
         appRFTSecret: process.env.JWT_REFRESH_TOKEN_SECRET,
         web: {
@@ -38,13 +38,13 @@ export class AppConfig {
             maxTtl: process.env.JWT_WEB_RFT_MAX_TTL || '30d',
           },
         },
-      }),
-      (this.envConfig.AuthSSO = {
+      };
+      this.envConfig.AuthSSO = {
         aad: {
           clientId: process.env.AAD_CLIENT_ID,
           tenantId: process.env.AAD_TENANT_ID,
         },
-      }));
+      };
   }
   get(key: string): any {
     return this.envConfig[key];
