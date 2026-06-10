@@ -11,11 +11,11 @@ export class AppConfig {
     this.envConfig.db = {
       mssql: {
         dialect: 'mssql',
-        databse: process.env.DB_NAME,
-        username: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        host: process.env.DB_HOST,
-        port: parseInt(process.env.DB_PORT || '1433'),
+        databse: process.env.MSSQL_NAME,
+        username: process.env.MSSQL_USER,
+        password: process.env.MSSQL_PASSWORD,
+        host: process.env.MSSQL_HOST,
+        port: parseInt(process.env.MSSQL_PORT || '1433'),
         trustServerCertificate: Boolean(
           process.env.MSSQL_TRUST_SERVER_CERTIFICATE,
         ),
