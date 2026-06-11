@@ -1,3 +1,6 @@
+import { Injectable } from "@nestjs/common";
+
+@Injectable()
 export class AppConfig {
   private readonly envConfig: { [key: string]: any } = {};
 
@@ -22,9 +25,9 @@ export class AppConfig {
       },
     };
     this.envConfig.blobStorage = {
-      blobAccountName: process.env.BLOB_ACCOUNT_NAME,
-      blobAccountKey: process.env.BLOB_ACCOUNT_KEY,
-      blobContainerName: process.env.BLOB_CONTAINER_NAME,
+      blobAccountName: process.env.AZURE_BLOB_STORAGE_ACCOUNT_NAME,
+      blobAccountKey: process.env.AZURE_BLOB_STORAGE_ACCOUNT_KEY,
+      blobContainerName: process.env.AZURE_BLOB_STORAGE_CONTAINER_NAME,
     };
       this.envConfig.jwt = {
         appAXTSecret: process.env.JWT_ACCESS_TOKEN_SECRET,

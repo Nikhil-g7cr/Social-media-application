@@ -7,9 +7,9 @@ import { messageFactory, messages } from './shared/message.shared';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  const configObj = app.get(AppConfig)
+  const configObj = app.get(AppConfig);
   const logger = app.get(AppLogger)
-  const appConfig = configObj.get('app')
+  const appConfig = configObj.get('app') 
   const {port} = appConfig
 
   try{
