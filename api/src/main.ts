@@ -18,6 +18,7 @@ async function bootstrap() {
       const successMsg = messageFactory(messages.S1,[port]);
       logger.log(successMsg, 200);
     })
+    console.log("http://localhost:5000/api/docs/swagger")
   }
   catch(error:any){
     const errMsg = messageFactory(messages.E1, [ error.message])
