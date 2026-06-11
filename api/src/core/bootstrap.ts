@@ -7,7 +7,7 @@
 import { INestApplication, ValidationPipe } from "@nestjs/common";
 import { json, urlencoded } from "express";
 import helmet from "helmet";
-import { AppConfig } from "src/config/AppConfig";
+import { AppConfig } from "../config/AppConfig";
 import cors from 'cors';
 import { corsOptions } from "../core/cors.config" // Pre-configured CORS options
 import { ResponseHandler } from "./response-handler";

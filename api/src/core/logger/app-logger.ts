@@ -36,7 +36,7 @@ export default class AppLogger implements LoggerService {
 					key: blobCred.blobAccountKey
 				},
 				containerName: blobCred.blobLoggerContainer,
-				blobName: 'app-logs/BNW',
+				blobName: 'app-logs/TOMO',
 				rotatePeriod: 'YYYY-MM-DD',
 				bufferLogSize: 1,
 				eol: '\n',
@@ -53,7 +53,7 @@ export default class AppLogger implements LoggerService {
 				},
 				containerName: blobCred.blobLoggerContainer,
 				level: 'error',
-				blobName: 'errors/BNW',
+				blobName: 'errors/TOMO',
 				rotatePeriod: 'YYYY-MM-DD',
 				bufferLogSize: 1,
 				eol: '\n',
@@ -62,7 +62,7 @@ export default class AppLogger implements LoggerService {
 			})
 		);
 
-		const logFormat = combine(label({ label: 'BNW-api' }), timestamp({ format: () => unix_ts_now().toString() }), json());
+		const logFormat = combine(label({ label: 'TOMO-api' }), timestamp({ format: () => unix_ts_now().toString() }), json());
 
 		this.logger = createLogger({
 			level: blobCred.logLevel || 'info',
