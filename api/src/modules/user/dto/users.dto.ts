@@ -8,9 +8,8 @@ import {
   Max,
   MaxLength,
   Min,
-  minLength,
+  MinLength,
 } from 'class-validator';
-import { UserRoles } from 'src/databse/mssql/models';
 export class UsersDTO {
   @IsString()
   @IsNotEmpty()
@@ -18,19 +17,20 @@ export class UsersDTO {
 
   @IsString()
   @IsNotEmpty()
-  @Max(50)
-  @Min(1)
+  @MaxLength(50)
+  @MinLength(1)
   FullName!: string;
 
   @IsString()
   @IsNotEmpty()
-  @Max(50)
-  @Min(1)
+  @MaxLength(50)
+  @MinLength(1)
   UserName!: string;
 
   @IsEmail()
   @IsNotEmpty()
   @MaxLength(100)
+  @MinLength(7)
   EmailAddress!: string;
 
   @IsStrongPassword({
