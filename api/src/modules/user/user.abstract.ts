@@ -1,13 +1,13 @@
 import { AppResponse } from "src/shared/appresponse.shared";
 import { UpdateUserDto } from "./dto/UpdateUser.dto";
 import { UsersDTO } from "./dto/users.dto";
-import { Tokens } from "./models/users.model";
+import { AtPayload, Tokens } from "./models/users.model";
 
 export abstract class UsersAbstractSvc{
-    abstract getAllUser():Promise<AppResponse>
-    abstract getUserByID(userID:string):Promise<AppResponse>
-    abstract addUser(userInfo:UsersDTO,tokens:Tokens):Promise<AppResponse>
-    abstract updateUser(userInfo: UpdateUserDto):Promise<AppResponse>
-    abstract deleteUser(userID:string):Promise<AppResponse>
-    abstract fetchRoles():Promise<AppResponse>
+    abstract getAllUser(payload: AtPayload):Promise<AppResponse>
+    abstract getUserByID(userID: string, payload: AtPayload):Promise<AppResponse>
+    abstract addUser(userInfo:UsersDTO,payload:AtPayload):Promise<AppResponse>
+    abstract updateUser(userInfo: UpdateUserDto, targetUserID: string, payload: AtPayload):Promise<AppResponse>
+    abstract deleteUser(userID: string, payload: AtPayload):Promise<AppResponse>
+    // abstract fetchRoles():Promise<AppResponse>
 }
