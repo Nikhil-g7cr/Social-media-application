@@ -1,7 +1,9 @@
 import { AppConfig } from "src/config/AppConfig";
 import AppLogger from "./logger/app-logger";
 import {ConfigModule} from "@nestjs/config"
+import { DatabaseService } from "src/databse/database.service";
 import { DatabaseModule } from "src/databse/database.module";
+// import { DatabaseModule } from "src/databse/database.module";
 
 
 
@@ -16,10 +18,10 @@ const getProviders = (): any[] => {
 		];
 	},
 	importProviders = (): any[] => {
-		return [ConfigModule.forRoot({ envFilePath: '.env' }), DatabaseModule];
+		return [ConfigModule.forRoot({ envFilePath: '.env' }),DatabaseModule];
 	},
 	exportProviders = (): any[] => {
-		return [AppConfig, AppLogger, DatabaseModule];
+		return [AppConfig, AppLogger,DatabaseModule];
 	};
 
 export { exportProviders, getProviders, importProviders };

@@ -4,6 +4,7 @@ import { msSqlDBModelsProvider } from "./mssql/connection/models.connection.mssq
 import { DatabaseService } from "./database.service";
 import { UserAbsSQLDAO } from "./mssql/abstract/user.abstract.mssql";
 import { UserSQLDao } from "./mssql/dao/user.dao";
+import { CoreModule } from "src/core/core.module";
 
 @Module({
     providers:[
@@ -12,7 +13,7 @@ import { UserSQLDao } from "./mssql/dao/user.dao";
         DatabaseService,
         {
             provide:UserAbsSQLDAO,
-            useValue:UserSQLDao
+            useClass:UserSQLDao
         }
     ],
     exports:[
@@ -20,7 +21,7 @@ import { UserSQLDao } from "./mssql/dao/user.dao";
         ...msSqlDBModelsProvider,
         {
             provide:UserAbsSQLDAO,
-            useValue:UserSQLDao
+            useClass:UserSQLDao
         }
     ]
 })
