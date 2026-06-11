@@ -2,8 +2,8 @@ import { AppConfig } from "src/config/AppConfig";
 import { MsSqlConstants } from "./constant.mssql";
 import AppLogger from "src/core/logger/app-logger";
 import { Sequelize } from "sequelize-typescript";
-import {models} from "../models";
 import { messageFactory, messages } from "src/shared/message.shared";
+import { models } from "./models.connection.mssql";
 
 export const sequelizeProvider = [
     {

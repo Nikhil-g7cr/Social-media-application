@@ -1,3 +1,4 @@
+// this will contain the number of tables
 export enum Tables{
     tbl_User = 'tbl_User',
     tbl_Post = 'tbl_Post',
