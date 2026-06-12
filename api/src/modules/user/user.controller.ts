@@ -1,14 +1,23 @@
-import { Controller, Get, Post, Patch, Delete,Body, Param, Req, UseGuards } from '@nestjs/common';
-import { UserService } from './user.service';
+import {
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
 import { UsersDTO } from './dto/users.dto';
 import { UpdateUserDto } from './dto/UpdateUser.dto';
 import { AppResponse } from 'src/shared/appresponse.shared';
 import { AtPayload } from './models/users.model';
+import { UsersAbstractSvc } from './user.abstract';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
-
+  constructor(private readonly userService: UsersAbstractSvc) {}
   /**
    * GET /user
    * Fetches all users. Only accessible by ADMIN or MANAGER.
@@ -16,7 +25,7 @@ export class UserController {
   @Get()
   async getAllUsers(@Req() req: any): Promise<AppResponse> {
     // req.user is populated by your Authentication Guard
-    const payload: AtPayload = req.user; 
+    const payload: AtPayload = req.user;
     return await this.userService.getAllUser(payload);
   }
 
@@ -26,8 +35,8 @@ export class UserController {
    */
   @Get(':id')
   async getUserByID(
-    @Param('id') id: string, 
-    @Req() req: any
+    @Param('id') id: string,
+    @Req() req: any,
   ): Promise<AppResponse> {
     const payload: AtPayload = req.user;
     return await this.userService.getUserByID(id, payload);
@@ -40,8 +49,8 @@ export class UserController {
    */
   @Post()
   async addUser(
-    @Body() userInfo: UsersDTO, 
-    @Req() req: any
+    @Body() userInfo: UsersDTO,
+    @Req() req: any,
   ): Promise<AppResponse> {
     const payload: AtPayload = req.user;
     return await this.userService.addUser(userInfo, payload);
@@ -55,7 +64,7 @@ export class UserController {
   async updateUser(
     @Param('id') id: string,
     @Body() userInfo: UpdateUserDto,
-    @Req() req: any
+    @Req() req: any,
   ): Promise<AppResponse> {
     const payload: AtPayload = req.user;
     return await this.userService.updateUser(userInfo, id, payload);
@@ -67,8 +76,8 @@ export class UserController {
    */
   @Delete(':id')
   async deleteUser(
-    @Param('id') id: string, 
-    @Req() req: any
+    @Param('id') id: string,
+    @Req() req: any,
   ): Promise<AppResponse> {
     const payload: AtPayload = req.user;
     return await this.userService.deleteUser(id, payload);

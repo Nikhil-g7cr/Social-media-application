@@ -1,19 +1,15 @@
 import {
-    IsBoolean,
   IsEmail,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsStrongPassword,
-  Max,
   MaxLength,
-  Min,
   MinLength,
 } from 'class-validator';
+
 export class UsersDTO {
-  @IsString()
-  @IsNotEmpty()
-  ID!: string;
+  // ❌ REMOVED: ID field deleted. The database/service handles this!
 
   @IsString()
   @IsNotEmpty()
@@ -43,22 +39,24 @@ export class UsersDTO {
   @IsNotEmpty()
   Password!: string;
 
-  @IsNotEmpty()
+  // ✅ FIXED: Changed @Min/@Max to @MinLength/@MaxLength
+  // ✅ FIXED: Changed @IsNotEmpty to @IsOptional so users aren't forced to write a bio
+  @IsOptional() 
   @IsString()
-  @Min(5)
-  @Max(2000)
-  Bio?:string;
+  @MinLength(5)
+  @MaxLength(2000)
+  Bio?: string;
 
   @IsString()
   @IsOptional()
   @MaxLength(1000)
   ProfilePictureUrl?: string;
 
-  @IsNotEmpty()
-  Gender?:string
+  @IsString()
+  @IsOptional() // Made optional so users don't have to provide gender if they don't want to
+  Gender?: string;
 
-/*  
-    ============================================================================================
+/* ============================================================================================
     Including Role or IsActive in a public signup DTO is risky because attackers can 
     exploit it to create admin or active accounts (privilege escalation).
     Instead, rely on backend defaults (e.g., role = USER, 
@@ -66,5 +64,4 @@ export class UsersDTO {
     in a separate admin-only DTO protected by authorization.
     ============================================================================================
  */
-
 }
