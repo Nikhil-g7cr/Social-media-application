@@ -120,11 +120,11 @@ export class UserService implements UsersAbstractSvc {
     //     }
     // }
 
-    async deleteUser(userID: string, payload: AtPayload): Promise<AppResponse> {
+    async deleteUser(userID: string): Promise<AppResponse> {
         try {
-            if (!payload.roles.includes(UserRoles.ADMIN)) {
-                return createResponse(HttpStatus.FORBIDDEN, 'Access Denied: Only Admins can delete users.');
-            }
+            // if (!payload.roles.includes(UserRoles.ADMIN)) {
+            //     return createResponse(HttpStatus.FORBIDDEN, 'Access Denied: Only Admins can delete users.');
+            // }
 
             return await this.userSQLAbsDAO.deleteUser(userID);
         } catch (error: any) {
@@ -132,4 +132,16 @@ export class UserService implements UsersAbstractSvc {
             return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2));
         }
     }
+    // async deleteUser(userID: string, payload: AtPayload): Promise<AppResponse> {
+    //     try {
+    //         if (!payload.roles.includes(UserRoles.ADMIN)) {
+    //             return createResponse(HttpStatus.FORBIDDEN, 'Access Denied: Only Admins can delete users.');
+    //         }
+
+    //         return await this.userSQLAbsDAO.deleteUser(userID);
+    //     } catch (error: any) {
+    //         this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+    //         return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2));
+    //     }
+    // }
 }
