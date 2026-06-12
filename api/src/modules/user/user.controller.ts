@@ -25,8 +25,9 @@ export class UserController {
   @Get()
   async getAllUsers(@Req() req: any): Promise<AppResponse> {
     // req.user is populated by your Authentication Guard
-    const payload: AtPayload = req.user;
-    return await this.userService.getAllUser(payload);
+    // const payload: AtPayload = req.user;
+    // return await this.userService.getAllUser(payload);
+    return await this.userService.getAllUser();
   }
 
   /**
