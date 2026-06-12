@@ -4,7 +4,9 @@ import { msSqlDBModelsProvider } from "./mssql/connection/models.connection.mssq
 import { DatabaseService } from "./database.service";
 import { UserAbsSQLDAO } from "./mssql/abstract/user.abstract.mssql";
 import { UserSQLDao } from "./mssql/dao/user.dao";
-import { CoreModule } from "src/core/core.module";
+import { AbstractAuthSvc } from "src/modules/auth/auth.abstract";
+import { AuthSQLDao } from "./mssql/dao/auth.dao";
+import { AuthAbstractSQLDao } from "./mssql/abstract/auth.abstract.mssql";
 
 @Module({
     providers:[
@@ -14,6 +16,10 @@ import { CoreModule } from "src/core/core.module";
         {
             provide:UserAbsSQLDAO,
             useClass:UserSQLDao
+        },
+        {
+            provide:AuthAbstractSQLDao,
+            useClass:AuthSQLDao
         }
     ],
     exports:[
@@ -22,6 +28,10 @@ import { CoreModule } from "src/core/core.module";
         {
             provide:UserAbsSQLDAO,
             useClass:UserSQLDao
+        },
+        {
+            provide:AuthAbstractSQLDao,
+            useClass:AuthSQLDao
         }
     ]
 })

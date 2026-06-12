@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
-// import { AbstractAuthSqlDao } from './mssql/abstract/auth.abstract';
-// import { UsersAbstractSqlDao } from './mssql/abstract/users.abstract';
+import { AuthAbstractSQLDao } from './mssql/abstract/auth.abstract.mssql';
+import { UserAbsSQLDAO } from './mssql/abstract/user.abstract.mssql';
 @Injectable()
 export class DatabaseService {
 	constructor(
-		// public authSqlTxn: AbstractAuthSqlDao,
-		// public userSqltxn: UsersAbstractSqlDao
+		public authSqlTxn: AuthAbstractSQLDao,
+		public userSqltxn: UserAbsSQLDAO
 	) {}
 }

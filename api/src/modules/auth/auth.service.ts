@@ -125,7 +125,7 @@ export class AuthService implements AbstractAuthSvc {
         {
           accessToken,
           refreshToken,
-          user,
+          // user,
         },
       );
     } catch (error: any) {
