@@ -22,7 +22,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
   // READ OPERATIONS (No Transactions Needed)
   // ==========================================
 
-  async getUsers(userInfo: UsersDTO): Promise<AppResponse> {
+  async getUsers(): Promise<AppResponse> {
     try {
       const users = await this._user.findAll();
       return createResponse(200, 'Users retrieved successfully', users);
@@ -147,7 +147,6 @@ export class UserSQLDao implements UserAbsSQLDAO {
       const [updatedRowsCount] = await this._user.update(
         {
           ...UserInfo,
-          ModifiedAt: new Date(),
         },
         {
           where: { ID: UserId },
