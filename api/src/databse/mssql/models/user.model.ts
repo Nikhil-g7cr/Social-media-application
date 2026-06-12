@@ -1,6 +1,6 @@
 import { Tables } from '../connection/tables.mssql';
 import { Schema } from '../connection/schemas.mssql';
-import { BelongsTo, Column, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, DataType, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Posts } from './post.model';
 import { Comments } from './comments.model';
@@ -41,7 +41,6 @@ export const enum RecordCreatedBy {
 
 @Table({
   tableName: Tables.tbl_User,
-  schema: Schema.Users,
   timestamps: false,
 })
 class Users extends Model<Users> {
@@ -117,10 +116,9 @@ class Users extends Model<Users> {
   [UserColumns.CreatedBy]?: string;
 
   @Column({
-    type: SQLDataType.DATETIME,
-    allowNull: false,
+    type: DataType.DATE
   })
-  [UserColumns.CreatedAt]!: Date;
+  [UserColumns.CreatedAt]?: Date;
 
   @Column({
     type: SQLDataType.UNIQUEIDENTIFIER,
@@ -129,7 +127,7 @@ class Users extends Model<Users> {
   [UserColumns.ModifiedBy]?: string;
 
   @Column({
-    type: SQLDataType.DATETIME,
+    type: DataType.DATE,
     allowNull: true,
   })
   [UserColumns.ModifiedAt]?: Date;

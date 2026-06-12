@@ -15,7 +15,7 @@ export const sequelizeProvider = [
                 const dbConfig = _appConfigSvc.get('db').mssql;
                 
                 // 2. Reassign the outer variable instead of redeclaring it
-                sequelize = new Sequelize({ ...dbConfig, logging: true });
+                sequelize = new Sequelize({ ...dbConfig, logging: console.log });
                 
                 sequelize.addModels([...models]);
                 _logger.log(messages.S3, 200);
