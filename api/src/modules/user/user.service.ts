@@ -9,8 +9,8 @@ import { UserAbsSQLDAO } from 'src/databse/mssql/abstract/user.abstract.mssql';
 import { DatabaseService } from 'src/databse/database.service';
 import { AppConfig } from 'src/config/AppConfig';
 import AppLogger from 'src/core/logger/app-logger';
-import { UserRoles } from 'src/databse/mssql/models/user.model';
 import { messageFactory, messages } from 'src/shared/message.shared';
+import { UserRoles } from 'src/core/enums/user.enums';
 
 @Injectable()
 export class UserService implements UsersAbstractSvc {

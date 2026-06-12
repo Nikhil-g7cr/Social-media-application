@@ -1,9 +1,10 @@
 import { AppConfig } from "src/config/AppConfig";
 import AppLogger from "./logger/app-logger";
 import {ConfigModule} from "@nestjs/config"
-import { DatabaseService } from "src/databse/database.service";
 import { DatabaseModule } from "src/databse/database.module";
-// import { DatabaseModule } from "src/databse/database.module";
+import { AbstractAuthSvc } from "src/modules/auth/auth.abstract";
+import { AuthService } from "src/modules/auth/auth.service";
+import { JwtService } from "@nestjs/jwt";
 
 
 
@@ -13,8 +14,8 @@ const getProviders = (): any[] => {
 			AppLogger,
 			// { provide: APP_GUARD, useClass: AuthGuard },
 			// { provide: APP_GUARD, useClass: RolesGuard },
-			// { provide: AbstractAuthSvc, useClass: AuthService },
-			// JwtService
+			{ provide: AbstractAuthSvc, useClass: AuthService },
+			JwtService
 		];
 	},
 	importProviders = (): any[] => {
