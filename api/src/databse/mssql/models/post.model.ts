@@ -1,4 +1,4 @@
-import { BelongsTo, Column, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { BelongsTo, Column, DataType, Default, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Users } from './user.model';
@@ -21,7 +21,7 @@ export const enum PostsAlias {
 	User = 'User'
 }
 
-export const enum PostTypes {
+export enum PostTypes {
 	TEXT = 'TEXT',
 	IMAGE = 'IMAGE',
 	VIDEO = 'VIDEO'
@@ -33,6 +33,7 @@ export const enum PostTypes {
 })
 class Posts extends Model<Posts> {
 	@PrimaryKey
+	@Default(DataType.UUIDV4)
 	@Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
 	[PostsColumns.ID]!: string;
 
@@ -57,6 +58,7 @@ class Posts extends Model<Posts> {
 	})
 	[PostsColumns.MediaURL]?: string;
 
+	@Default(DataType.NOW)
 	@Column({
 		type: SQLDataType.DATETIME,
 		allowNull: false

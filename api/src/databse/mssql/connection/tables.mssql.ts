@@ -1,7 +1,7 @@
 // this will contain the number of tables
 export enum Tables{
     tbl_User = 'Users',
-    tbl_Post = 'tbl_Post',
+    tbl_Post = 'Post',
     tbl_Like = 'tbl_Like',
     tbl_Follow = 'tbl_Follow',
     tbl_Conversation = 'tbl_Conversation',
