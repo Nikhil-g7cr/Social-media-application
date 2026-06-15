@@ -3,7 +3,7 @@ import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 
 export abstract class PostAbstractSvc {
-  abstract createPost(createPostDto: CreatePostDto): Promise<AppResponse>;
+  abstract createPost(createPostDto: CreatePostDto,userId:string): Promise<AppResponse>;
 
   abstract getAllPosts(): Promise<AppResponse>;
 

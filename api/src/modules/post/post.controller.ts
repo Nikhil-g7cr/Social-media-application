@@ -6,12 +6,15 @@ import {
   Param,
   Post,
   Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 
 import { AppResponse } from 'src/shared/appresponse.shared';
 import { PostAbstractSvc } from './post.abstract';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 
 @Controller('posts')
 export class PostController {
@@ -20,12 +23,15 @@ export class PostController {
   ) {}
 
   @Post()
-  async createPost(
-    @Body() createPostDto: CreatePostDto,
-  ): Promise<AppResponse> {
-    return await this.postService.createPost(
-      createPostDto,
-    );
+  @UseGuards(JwtAuthGuard)
+    async createPost(
+      @Req() req: any,
+      @Body() createPostDto: CreatePostDto,
+    ): Promise<AppResponse> {
+      return await this.postService.createPost(
+        createPostDto,
+        req.user.sub,
+      );
   }
 
   @Get()

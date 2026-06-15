@@ -25,29 +25,42 @@ export class PostSQLDAO implements PostAbstractSQLDao {
   ) {}
 
   async createPost(
-    createPostDto: CreatePostDto,
-  ): Promise<AppResponse> {
-    try {
-      const newPost = await this.postModel.create(
-        createPostDto as any,
-      );
+  createPostDto: CreatePostDto,
+  userId: string,
+): Promise<AppResponse> {
+  try {
+    const payload = {
+      UserID: userId,
+      Type: createPostDto.type,
+      Content: createPostDto.content,
+      MediaURL: createPostDto.mediaURL,
+    };
 
-      return createResponse(
-        HttpStatus.CREATED,
-        'Post created successfully',
-        newPost,
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `[PostSQLDAO] createPost: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+    this.logger.log(
+      JSON.stringify(payload, null, 2),
+      HttpStatus.OK,
+    );
 
-      throw new InternalServerErrorException(
-        error.message || 'Failed to create post',
-      );
-    }
+    const newPost = await this.postModel.create(
+      payload as any,
+    );
+
+    return createResponse(
+      HttpStatus.CREATED,
+      'Post created successfully',
+      newPost,
+    );
+  } catch (error: any) {
+    this.logger.error(
+      `[PostSQLDAO] createPost: ${error.message}`,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+
+    throw new InternalServerErrorException(
+      error.message || 'Failed to create post',
+    );
   }
+}
 
   async getAllPosts(): Promise<AppResponse> {
     try {

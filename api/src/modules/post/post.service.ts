@@ -17,26 +17,22 @@ export class PostService implements PostAbstractSvc {
     private readonly postDao: PostAbstractSQLDao,
   ) {}
 
-  async createPost(
-    createPostDto: CreatePostDto,
-  ): Promise<AppResponse> {
-    try {
-      this.logger.log(
-        '[PostService] Initiating createPost',
-        200,
-      );
+  
 
-      return await this.postDao.createPost(
-        createPostDto,
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `[PostService] Error in createPost: ${error.message}`,
-        500,
-      );
-      throw error;
-    }
-  }
+  async createPost(
+  createPostDto: CreatePostDto,
+  userId: string,
+): Promise<AppResponse> {
+  this.logger.log(
+    '[PostService] Initiating createPost',
+    200,
+  );
+
+  return await this.postDao.createPost(
+    createPostDto,
+    userId,
+  );
+}
 
   async getAllPosts(): Promise<AppResponse> {
     try {

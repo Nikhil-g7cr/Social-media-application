@@ -3,7 +3,7 @@ import { CreatePostDto } from 'src/modules/post/dto/create-post.dto';
 import { UpdatePostDto } from 'src/modules/post/dto/update-post.dto';
 
 export abstract class PostAbstractSQLDao {
-  abstract createPost(createPostDto: CreatePostDto): Promise<AppResponse>;
+  abstract createPost(createPostDto: CreatePostDto,userID:string): Promise<AppResponse>;
 
   abstract getAllPosts(): Promise<AppResponse>;
 
