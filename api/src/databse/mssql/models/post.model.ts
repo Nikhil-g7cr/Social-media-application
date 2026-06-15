@@ -21,7 +21,7 @@ export const enum PostsAlias {
 	User = 'User'
 }
 
-export const enum PostTypes {
+export enum PostTypes {
 	TEXT = 'TEXT',
 	IMAGE = 'IMAGE',
 	VIDEO = 'VIDEO'
