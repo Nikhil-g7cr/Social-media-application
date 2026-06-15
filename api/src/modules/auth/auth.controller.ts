@@ -5,12 +5,14 @@ import {
   Headers,
   Post,
   Req,
+  UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 
 import { AbstractAuthSvc } from "./auth.abstract";
 import { LoginDto } from "./dto/login.dto";
 import { UsersDTO } from "../user/dto/users.dto";
+import { JwtAuthGuard } from "src/core/guards/jwt-auth.guard";
 
 @Controller("auth")
 @ApiTags("Authentication")
@@ -68,38 +70,34 @@ export class AuthController {
   async validateToken(
     @Headers("authorization") authorization: string,
   ) {
-    const token = authorization?.replace(
-      "Bearer ",
-      "",
-    );
-
-    return await this.authService.validateToken(
-      token,
-    );
+    if (!authorization) {
+      return { code: 401, message: "Authorization header missing" };
+    }
+    const token = authorization.split(" ")[1]; // Safely extracts token
+    return await this.authService.validateToken(token);
   }
 
   // =====================================================
   // PARSE TOKEN (Optional)
   // =====================================================
 
+  // REMOVED: @UseGuards(JwtAuthGuard) - Parsing should work even if token is expired!
   @Post("parse-token")
   async parseToken(
     @Headers("authorization") authorization: string,
   ) {
-    const token = authorization?.replace(
-      "Bearer ",
-      "",
-    );
-
-    return await this.authService.parseToken(
-      token,
-    );
+    if (!authorization) {
+      return { code: 401, message: "Authorization header missing" };
+    }
+    const token = authorization.split(" ")[1];
+    return await this.authService.parseToken(token);
   }
 
   // =====================================================
   // CURRENT USER PROFILE
   // =====================================================
 
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   // @Authorize()   <-- Enable after JwtAuthGuard is ready
   @Get("profile")
@@ -115,6 +113,7 @@ export class AuthController {
   // LOGOUT
   // =====================================================
 
+  @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   // @Authorize()   <-- Enable after JwtAuthGuard is ready
   @Post("logout")
