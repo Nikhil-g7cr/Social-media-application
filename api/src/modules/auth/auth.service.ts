@@ -1,26 +1,268 @@
-import { Injectable } from '@nestjs/common';
-import { CreateAuthDto } from './dto/create-auth.dto';
-import { UpdateAuthDto } from './dto/update-auth.dto';
+import { HttpStatus, Injectable } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import * as bcrypt from "bcrypt";
+
+import AppLogger from "src/core/logger/app-logger";
+import { AppConfig } from "src/config/AppConfig";
+
+import { AbstractAuthSvc } from "./auth.abstract";
+import { AuthAbstractSQLDao } from "src/databse/mssql/abstract/auth.abstract.mssql";
+
+import { AppResponse, createResponse } from "src/shared/appresponse.shared";
+import { messageFactory, messages } from "src/shared/message.shared";
+
+import { UsersDTO } from "../user/dto/users.dto";
+import { LoginDto } from "./dto/login.dto";
+import { JwtPayload } from "./models/jwt-payload.model";
 
 @Injectable()
-export class AuthService {
-  create(createAuthDto: CreateAuthDto) {
-    return 'This action adds a new auth';
+export class AuthService implements AbstractAuthSvc {
+  constructor(
+    private readonly authDao: AuthAbstractSQLDao,
+    private readonly jwtService: JwtService,
+    private readonly appConfig: AppConfig,
+    private readonly logger: AppLogger,
+  ) {}
+
+  // =====================================================
+  // SIGNUP
+  // =====================================================
+
+  async signup(userData: UsersDTO): Promise<AppResponse> {
+    try {
+      // Check if email already exists
+      const existingUser = await this.authDao.fetchUserByEmail(
+        userData.EmailAddress,
+      );
+
+      if (existingUser.code === HttpStatus.OK) {
+        return createResponse(
+          HttpStatus.CONFLICT,
+          "User with this email already exists.",
+        );
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(userData.Password, 10);
+
+      // Save user
+      const response = await this.authDao.createUser({
+        ...userData,
+        Password: hashedPassword,
+      });
+
+      return response;
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
+        description: error.message,
+      };
+    }
   }
 
-  findAll() {
-    return `This action returns all auth`;
+  // =====================================================
+  // LOGIN
+  // =====================================================
+
+  async login(loginData: LoginDto): Promise<AppResponse> {
+    try {
+      // Find user
+      const userRes = await this.authDao.fetchUserByEmail(
+        loginData.EmailAddress,
+      );
+
+      if (userRes.code !== HttpStatus.OK) {
+        return createResponse(
+          HttpStatus.UNAUTHORIZED,
+          "Invalid email or password.",
+        );
+      }
+
+      const user: any = userRes.data;
+
+      // Compare password
+      const isPasswordValid = await bcrypt.compare(
+        loginData.Password,
+        user.PasswordHash,
+      );
+
+      if (!isPasswordValid) {
+        return createResponse(
+          HttpStatus.UNAUTHORIZED,
+          "Invalid email or password.",
+        );
+      }
+
+      // JWT Payload
+      const payload: JwtPayload = {
+        sub: user.ID,
+        email: user.EmailAddress,
+        roles: [user.Role],
+      };
+
+      // Generate Tokens
+      const accessToken = await this.jwtService.signAsync(payload, {
+        secret: this.appConfig.get("jwt").appAXTSecret,
+        expiresIn: this.appConfig.get("jwt").web.axt.expiresIn,
+      });
+
+      const refreshToken = await this.jwtService.signAsync(payload, {
+        secret: this.appConfig.get("jwt").appRFTSecret,
+        expiresIn: this.appConfig.get("jwt").web.rft.expiresIn,
+      });
+
+      // Remove password before returning
+      delete user.PasswordHash;
+
+      return createResponse(
+        HttpStatus.OK,
+        "Login successful.",
+        {
+          accessToken,
+          refreshToken,
+          // user,
+        },
+      );
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
+        description: error.message,
+      };
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} auth`;
+  // =====================================================
+  // VALIDATE TOKEN
+  // =====================================================
+
+  async validateToken(token: string): Promise<AppResponse> {
+    try {
+      const payload = await this.jwtService.verifyAsync(token, {
+        secret: this.appConfig.get("jwt").appAXTSecret,
+      });
+
+      return createResponse(
+        HttpStatus.OK,
+        "Token is valid.",
+        payload,
+      );
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.UNAUTHORIZED);
+
+      return createResponse(
+        HttpStatus.UNAUTHORIZED,
+        "Invalid or expired token.",
+      );
+    }
   }
 
-  update(id: number, updateAuthDto: UpdateAuthDto) {
-    return `This action updates a #${id} auth`;
+  // =====================================================
+  // PARSE TOKEN
+  // =====================================================
+
+  async parseToken(token: string): Promise<AppResponse> {
+    try {
+      const payload = this.jwtService.decode(token);
+
+      if (!payload) {
+        return createResponse(
+          HttpStatus.BAD_REQUEST,
+          "Invalid token.",
+        );
+      }
+
+      return createResponse(
+        HttpStatus.OK,
+        "Token parsed successfully.",
+        payload,
+      );
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        messageFactory(messages.E2),
+      );
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} auth`;
+  // =====================================================
+  // REFRESH ACCESS TOKEN
+  // =====================================================
+
+  async refreshToken(refreshToken: string): Promise<AppResponse> {
+    try {
+      const verify = await this.jwtService.verifyAsync(refreshToken, {
+        secret: this.appConfig.get("jwt").appRFTSecret,
+      });
+
+      const payload: JwtPayload = {
+        sub: verify.sub,
+        email: verify.email,
+        roles: verify.roles,
+      };
+
+      const accessToken = await this.jwtService.signAsync(payload, {
+        secret: this.appConfig.get("jwt").appAXTSecret,
+        expiresIn: this.appConfig.get("jwt").web.axt.expiresIn,
+      });
+
+      return createResponse(
+        HttpStatus.OK,
+        "Access token refreshed successfully.",
+        {
+          accessToken,
+        },
+      );
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.UNAUTHORIZED);
+
+      return createResponse(
+        HttpStatus.UNAUTHORIZED,
+        "Invalid refresh token.",
+      );
+    }
+  }
+
+  // =====================================================
+  // GET CURRENT USER PROFILE
+  // =====================================================
+
+  async getProfile(payload: JwtPayload): Promise<AppResponse> {
+    try {
+      return await this.authDao.fetchUserById(payload.sub);
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
+        description: error.message,
+      };
+    }
+  }
+
+  // =====================================================
+  // LOGOUT
+  // =====================================================
+
+  async logout(userId: string): Promise<AppResponse> {
+    // Later you can revoke refresh token here.
+    return createResponse(
+      HttpStatus.OK,
+      "User logged out successfully.",
+    );
   }
 }

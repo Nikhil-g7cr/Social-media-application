@@ -5,6 +5,7 @@ import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Posts } from './post.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
+import { UserRoles } from 'src/core/enums/user.enums';
 
 export const enum UserColumns {
   ID = 'ID',
@@ -26,12 +27,17 @@ export const enum UserColumns {
 export const enum UserAlias {
   CreatedByUser = 'CreatedByUser',
   ModifiedByUser = 'ModifiedByUser',
+  UserRoles = 'UserRoles'
 }
 
-export const enum UserRoles {
-  USER = 'USER',
-  MANAGER = 'MANAGER',
-  ADMIN = 'ADMIN',
+export const enum UserRolesColumns {
+	UserRolesGuid = 'UserRolesGuid',
+	UserGuid = 'UserGuid',
+	RoleId = 'RoleId',
+	CreatedBy = 'CreatedBy',
+	EffectiveFrom = 'EffectiveFrom',
+	EffectiveTill = 'EffectiveTill',
+	ModifiedBy = 'ModifiedBy'
 }
 
 export const enum RecordCreatedBy {

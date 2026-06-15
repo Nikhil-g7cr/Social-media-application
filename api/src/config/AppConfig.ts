@@ -1,4 +1,4 @@
-import { Injectable } from "@nestjs/common";
+import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class AppConfig {
@@ -29,25 +29,26 @@ export class AppConfig {
       blobAccountKey: process.env.AZURE_BLOB_STORAGE_ACCOUNT_KEY,
       blobContainerName: process.env.AZURE_BLOB_STORAGE_CONTAINER_NAME,
     };
-      this.envConfig.jwt = {
-        appAXTSecret: process.env.JWT_ACCESS_TOKEN_SECRET,
-        appRFTSecret: process.env.JWT_REFRESH_TOKEN_SECRET,
-        web: {
-          axt: {
-            expiresIn: process.env.JWT_WEB_AXT_EXPIRES_IN || '15m',
-          },
-          rft: {
-            expiresIn: process.env.JWT_WEB_RFT_EXPIRES_IN || '7d',
-            maxTtl: process.env.JWT_WEB_RFT_MAX_TTL || '30d',
-          },
+
+    this.envConfig.jwt = {
+      appAXTSecret: process.env.JWT_ACCESS_TOKEN_SECRET,
+      appRFTSecret: process.env.JWT_REFRESH_TOKEN_SECRET,
+      web: {
+        axt: {
+          expiresIn: process.env.JWT_WEB_AXT_EXPIRES_IN || '15m',
         },
-      };
-      this.envConfig.AuthSSO = {
-        aad: {
-          clientId: process.env.AAD_CLIENT_ID,
-          tenantId: process.env.AAD_TENANT_ID,
+        rft: {
+          expiresIn: process.env.JWT_WEB_RFT_EXPIRES_IN || '7d',
+          maxTtl: process.env.JWT_WEB_RFT_MAX_TTL || '30d',
         },
-      };
+      },
+    };
+    this.envConfig.AuthSSO = {
+      aad: {
+        clientId: process.env.AAD_CLIENT_ID,
+        tenantId: process.env.AAD_TENANT_ID,
+      },
+    };
   }
   get(key: string): any {
     return this.envConfig[key];
