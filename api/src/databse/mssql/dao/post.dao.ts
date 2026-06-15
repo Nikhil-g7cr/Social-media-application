@@ -14,187 +14,149 @@ import { MsSqlConstants } from '../connection/constant.mssql';
 
 import { CreatePostDto } from 'src/modules/post/dto/create-post.dto';
 import { UpdatePostDto } from 'src/modules/post/dto/update-post.dto';
+import { Sequelize } from 'sequelize-typescript';
+import { messageFactory, messages } from 'src/shared/message.shared';
 
 @Injectable()
 export class PostSQLDAO implements PostAbstractSQLDao {
   constructor(
-    @Inject(MsSqlConstants.POST)
-    private readonly postModel: typeof Posts,
+    @Inject(MsSqlConstants.SEQUELIZE_PROVIDER) private sequelize: Sequelize,
+    @Inject(MsSqlConstants.POST) private readonly postModel: typeof Posts,
 
     private readonly logger: AppLogger,
   ) {}
 
   async createPost(
-  createPostDto: CreatePostDto,
-  userId: string,
-): Promise<AppResponse> {
-  try {
-    const payload = {
-      UserID: userId,
-      Type: createPostDto.type,
-      Content: createPostDto.content,
-      MediaURL: createPostDto.mediaURL,
-    };
+    createPostDto: CreatePostDto,
+    userId: string,
+  ): Promise<AppResponse> {
+    const transaction = await this.sequelize.transaction();
+    try {
+      const payload = {
+        UserID: userId,
+        Type: createPostDto.type,
+        Content: createPostDto.content,
+        MediaURL: createPostDto.mediaURL,
+      };
 
-    this.logger.log(
-      JSON.stringify(payload, null, 2),
-      HttpStatus.OK,
-    );
+      this.logger.log(JSON.stringify(payload, null, 2), HttpStatus.OK);
 
-    const newPost = await this.postModel.create(
-      payload as any,
-    );
+      const newPost = await this.postModel.create({payload} as any,{ transaction});
 
-    return createResponse(
-      HttpStatus.CREATED,
-      'Post created successfully',
-      newPost,
-    );
-  } catch (error: any) {
-    this.logger.error(
-      `[PostSQLDAO] createPost: ${error.message}`,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
+      await transaction.commit();
 
-    throw new InternalServerErrorException(
-      error.message || 'Failed to create post',
-    );
+      return createResponse(
+        HttpStatus.CREATED,
+        'Post created successfully',
+        newPost,
+      );
+    } catch (error: any) {
+        await transaction.rollback();
+        this.logger.error(`[PostSQLDAO] createPost: ${error.message}`,HttpStatus.INTERNAL_SERVER_ERROR);
+        return { ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)), description:error.message}
+    }
   }
-}
 
   async getAllPosts(): Promise<AppResponse> {
     try {
       const posts = await this.postModel.findAll({
-        order: [[PostsColumns.CreatedAt, 'DESC']],
+        order: [['CreatedAt', 'DESC']], // Fetch newest posts first
+      });
+      return createResponse(HttpStatus.OK, 'Posts retrieved successfully', posts);
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return {
+        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        description: error.message,
+      };
+    }
+  }
+
+  async getPostById(postId: string): Promise<AppResponse> {
+    try {
+      const post = await this.postModel.findOne({
+        where: { ID: postId },
       });
 
-      return createResponse(
-        HttpStatus.OK,
-        'Posts retrieved successfully',
-        posts,
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `[PostSQLDAO] getAllPosts: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
+      if (!post) {
+        return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
+      }
 
-      throw new InternalServerErrorException(
-        error.message || 'Failed to retrieve posts',
-      );
+      return createResponse(HttpStatus.OK, 'Post retrieved successfully', post);
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return {
+        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        description: error.message,
+      };
     }
   }
 
-  async getPostById(
-    postId: string,
-  ): Promise<AppResponse> {
+  async updatePost(updatePostDto: UpdatePostDto, postId: string): Promise<AppResponse> {
+    const transaction = await this.sequelize.transaction();
     try {
-      const post = await this.postModel.findByPk(postId);
-
-      if (!post) {
-        throw new NotFoundException(
-          `Post with ID ${postId} not found`,
-        );
+      
+      // 1. Map camelCase DTO fields to PascalCase Model fields
+      const updatePayload: any = {};
+      
+      if (updatePostDto.type !== undefined) {
+        updatePayload.Type = updatePostDto.type;
+      }
+      if (updatePostDto.content !== undefined) {
+        updatePayload.Content = updatePostDto.content;
+      }
+      if (updatePostDto.mediaURL !== undefined) {
+        updatePayload.MediaURL = updatePostDto.mediaURL;
       }
 
-      return createResponse(
-        HttpStatus.OK,
-        'Post retrieved successfully',
-        post,
+      // 2. Pass the mapped payload to the update function
+      const [updatedRowsCount] = await this.postModel.update(
+        updatePayload, 
+        {
+          where: { ID: postId },
+          transaction,
+        },
       );
+
+      if (updatedRowsCount === 0) {
+        await transaction.rollback();
+        return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
+      }
+
+      await transaction.commit();
+      return createResponse(HttpStatus.OK, 'Post updated successfully', null);
     } catch (error: any) {
-      this.logger.error(
-        `[PostSQLDAO] getPostById: ${error.message}`,
-        error instanceof NotFoundException
-          ? HttpStatus.NOT_FOUND
-          : HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-
-      // Let custom HTTP exceptions bubble up
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException(
-        error.message || 'Failed to retrieve post',
-      );
+      await transaction.rollback();
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return {
+        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        description: error.message,
+      };
     }
   }
 
-  async updatePost(
-    updatePostDto: UpdatePostDto,
-    postId: string,
-  ): Promise<AppResponse> {
+  async deletePost(postId: string): Promise<AppResponse> {
+    const transaction = await this.sequelize.transaction();
     try {
-      const post = await this.postModel.findByPk(postId);
+      const deletedRowsCount = await this.postModel.destroy({
+        where: { ID: postId },
+        transaction,
+      });
 
-      if (!post) {
-        throw new NotFoundException(
-          `Post with ID ${postId} not found`,
-        );
+      if (deletedRowsCount === 0) {
+        await transaction.rollback();
+        return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
       }
 
-      const updatedPost = await post.update(
-        updatePostDto as any,
-      );
-
-      return createResponse(
-        HttpStatus.OK,
-        'Post updated successfully',
-        updatedPost,
-      );
+      await transaction.commit();
+      return createResponse(HttpStatus.OK, 'Post deleted successfully', null);
     } catch (error: any) {
-      this.logger.error(
-        `[PostSQLDAO] updatePost: ${error.message}`,
-        error instanceof NotFoundException
-          ? HttpStatus.NOT_FOUND
-          : HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException(
-        error.message || 'Failed to update post',
-      );
-    }
-  }
-
-  async deletePost(
-    postId: string,
-  ): Promise<AppResponse> {
-    try {
-      const post = await this.postModel.findByPk(postId);
-
-      if (!post) {
-        throw new NotFoundException(
-          `Post with ID ${postId} not found`,
-        );
-      }
-
-      await post.destroy();
-
-      return createResponse(
-        HttpStatus.OK,
-        'Post deleted successfully',
-        null,
-      );
-    } catch (error: any) {
-      this.logger.error(
-        `[PostSQLDAO] deletePost: ${error.message}`,
-        error instanceof NotFoundException
-          ? HttpStatus.NOT_FOUND
-          : HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-
-      if (error instanceof NotFoundException) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException(
-        error.message || 'Failed to delete post',
-      );
+      await transaction.rollback();
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return {
+        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        description: error.message,
+      };
     }
   }
 }

@@ -29,6 +29,7 @@ import { PostSQLDAO } from "./mssql/dao/post.dao";
         }
     ],
     exports:[
+        ...sequelizeProvider,
         DatabaseService,
         ...msSqlDBModelsProvider,
         {
