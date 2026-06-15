@@ -2,7 +2,7 @@ import { Module } from "@nestjs/common";
 import { JwtModule } from "@nestjs/jwt";
 import { PassportModule } from "@nestjs/passport";
 
-import { AuthController } from "./auth.controller";
+import { AuthController, TestErrorsController } from "./auth.controller";
 import { AuthService } from "./auth.service";
 import { AbstractAuthSvc } from "./auth.abstract";
 
@@ -27,7 +27,7 @@ import { JwtStrategy } from "./models/jwt.strategy";
     JwtModule.register({}),
   ],
 
-  controllers: [AuthController],
+  controllers: [AuthController,TestErrorsController],
 
   providers: [
     AppConfig,

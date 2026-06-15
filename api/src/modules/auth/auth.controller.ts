@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Get,
@@ -123,5 +124,44 @@ export class AuthController {
     return await this.authService.logout(
       req.user?.sub,
     );
+  }
+
+  
+}
+
+@Controller('test')
+export class TestErrorsController {
+
+  // 1. Test standard NestJS HttpException
+  @Get('http-error')
+  throwHttpError() {
+    // Should return 400 Bad Request
+    throw new BadRequestException('This is a simulated bad request');
+  }
+
+  // 2. Test Sequelize Unique Constraint
+  @Get('unique-error')
+  throwUniqueConstraint() {
+    // Should return 409 Conflict
+    const error = new Error('Validation error');
+    error.name = 'SequelizeUniqueConstraintError';
+    (error as any).errors = [{ message: 'email must be unique' }];
+    throw error;
+  }
+
+  // 3. Test JWT Token Error
+  @Get('jwt-error')
+  throwJwtError() {
+    // Should return 401 Unauthorized
+    const error = new Error('jwt expired');
+    error.name = 'TokenExpiredError';
+    throw error;
+  }
+
+  // 4. Test Unhandled Generic Error
+  @Get('server-error')
+  throwServerError() {
+    // Should return 500 Internal Server Error
+    throw new Error('Something completely unexpected broke!');
   }
 }
