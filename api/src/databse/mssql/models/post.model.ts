@@ -4,6 +4,7 @@ import { Tables } from '../connection/tables.mssql';
 import { Users } from './user.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
+import { PostMedia } from './postMedia.model';
 
 export const enum PostsColumns {
   ID = 'ID',
@@ -88,6 +89,9 @@ class Posts extends Model<Posts> {
 	@HasMany(() => Likes, { foreignKey: 'PostID' }) // Use whatever exact string your Likes model uses
 	Likes!: Likes[];
 
+	// Make sure to import PostMedia at the top of the file!
+	@HasMany(() => PostMedia, { foreignKey: 'PostID' })
+	Media!: PostMedia[];
 
 }
 
