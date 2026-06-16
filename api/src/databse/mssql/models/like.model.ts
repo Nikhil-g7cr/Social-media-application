@@ -1,4 +1,5 @@
 import { BelongsTo, Column, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { Sequelize } from 'sequelize';
 import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Users } from './user.model';
@@ -6,12 +7,9 @@ import { Posts } from './post.model';
 
 export const enum LikesColumns {
   ID = 'ID',
-  UserID="UserID",
-  PostsID = 'PostsID',
-  CreatedBy = 'CreatedBy',
+  UserID = 'UserID',
+  PostID = 'PostID', // Note: If your DB literally spells this without the 's' (PostID), change this string to 'PostID'!
   CreatedAt = 'CreatedAt',
-  ModifiedBy = 'ModifiedBy',
-  ModifiedAt = 'ModifiedAt',
 }
 
 @Table({ tableName: Tables.tbl_Like, timestamps: false })
@@ -24,40 +22,29 @@ export class Likes extends Model<Likes> {
   [LikesColumns.UserID]!: string;
 
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  [LikesColumns.PostsID]!: string;
+  [LikesColumns.PostID]!: string;
 
+  // Let SQL handle the date automatically
   @Column({
     type: SQLDataType.DATETIME,
     allowNull: false,
+    defaultValue: Sequelize.literal('GETDATE()')
   })
   [LikesColumns.CreatedAt]!: Date;
 
-  @Column({
-    type: SQLDataType.DATETIME,
-    allowNull: true,
+  @BelongsTo(() => Users, {
+    foreignKey: LikesColumns.UserID,
+    targetKey: 'ID',
+    as: 'User',
+    onDelete: 'NO ACTION'
   })
-  [LikesColumns.ModifiedAt]?: Date;
+  User!: Users;
 
-  
-    @Column({type: SQLDataType.DATETIME,allowNull: false})
-    [LikesColumns.CreatedBy]!: Date;
-  
-    @Column({type: SQLDataType.DATETIME,allowNull: true})
-    [LikesColumns.ModifiedBy]?: Date;
-
-    @BelongsTo(()=>Users,{
-        foreignKey: LikesColumns.UserID,
-        targetKey: 'ID',
-        as: 'User',
-        onDelete: 'NO ACTION'
-    })
-    User!: Users;
-
-    @BelongsTo(()=>Posts,{
-        foreignKey: LikesColumns.PostsID,
-        targetKey: 'ID',
-        as: 'Posts',
-        onDelete: 'NO ACTION'
-    })
-    Post!: Posts;
+  @BelongsTo(() => Posts, {
+    foreignKey: LikesColumns.PostID,
+    targetKey: 'ID',
+    as: 'Posts',
+    onDelete: 'NO ACTION'
+  })
+  Post!: Posts;
 }

@@ -85,7 +85,7 @@ class Posts extends Model<Posts> {
 
 	Comments!: Comments[];
 
-	@HasMany(() => Likes, { foreignKey: 'PostsID' }) // Use whatever exact string your Likes model uses
+	@HasMany(() => Likes, { foreignKey: 'PostID' }) // Use whatever exact string your Likes model uses
 	Likes!: Likes[];
 
 
