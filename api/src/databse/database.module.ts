@@ -9,6 +9,10 @@ import { AuthSQLDao } from "./mssql/dao/auth.dao";
 import { AuthAbstractSQLDao } from "./mssql/abstract/auth.abstract.mssql";
 import { PostAbstractSQLDao } from "./mssql/abstract/posts.abstract.mssql";
 import { PostSQLDAO } from "./mssql/dao/post.dao";
+import { LikeAbstractSQLDAO } from "./mssql/abstract/like.abstract.mssql";
+import { LikeSQLDAO } from "./mssql/dao/like.dao";
+import { CommentsAbstractSQLDAO } from "./mssql/abstract/comment.abstract.mssql";
+import { CommentSQLDAO } from "./mssql/dao/comment.dao";
 
 @Module({
     providers:[
@@ -26,6 +30,14 @@ import { PostSQLDAO } from "./mssql/dao/post.dao";
         {
             provide:PostAbstractSQLDao,
             useClass:PostSQLDAO
+        },
+        {
+            provide:LikeAbstractSQLDAO,
+            useClass:LikeSQLDAO
+        },
+        {
+            provide: CommentsAbstractSQLDAO,
+            useClass:CommentSQLDAO
         }
     ],
     exports:[
@@ -43,6 +55,14 @@ import { PostSQLDAO } from "./mssql/dao/post.dao";
         {
             provide:PostAbstractSQLDao,
             useClass:PostSQLDAO
+        },
+        {
+            provide:LikeAbstractSQLDAO,
+            useClass:LikeSQLDAO
+        },
+         {
+            provide: CommentsAbstractSQLDAO,
+            useClass:CommentSQLDAO
         }
     ]
 })

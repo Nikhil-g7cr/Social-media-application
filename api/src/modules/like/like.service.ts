@@ -1,26 +1,13 @@
 import { Injectable } from '@nestjs/common';
-import { CreateLikeDto } from './dto/create-like.dto';
-import { UpdateLikeDto } from './dto/update-like.dto';
+import { AppResponse } from 'src/shared/appresponse.shared';
+// import { LikeSQLDAO } from 'src/databse/mssql/dao/like.dao'; // Adjust path if needed
+import { LikeAbstractSQLDAO } from 'src/databse/mssql/abstract/like.abstract.mssql';
 
 @Injectable()
 export class LikeService {
-  create(createLikeDto: CreateLikeDto) {
-    return 'This action adds a new like';
-  }
+  constructor(private readonly likeDao: LikeAbstractSQLDAO) {}
 
-  findAll() {
-    return `This action returns all like`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} like`;
-  }
-
-  update(id: number, updateLikeDto: UpdateLikeDto) {
-    return `This action updates a #${id} like`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} like`;
+  async toggleLike(postId: string, userId: string): Promise<AppResponse> {
+    return await this.likeDao.toggleLike(postId, userId);
   }
 }

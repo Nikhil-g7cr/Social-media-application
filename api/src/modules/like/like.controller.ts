@@ -1,34 +1,25 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Post, Param, Req, UseGuards } from '@nestjs/common';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 import { LikeService } from './like.service';
-import { CreateLikeDto } from './dto/create-like.dto';
-import { UpdateLikeDto } from './dto/update-like.dto';
+import { LikeAbstractSvc } from './like.abstract';
 
+@ApiTags('Likes')
 @Controller('like')
+@UseGuards(JwtAuthGuard) // Protects the route
+@ApiBearerAuth()         // Tells Swagger to expect a token
 export class LikeController {
-  constructor(private readonly likeService: LikeService) {}
+  constructor(private readonly likeService: LikeAbstractSvc) {}
 
-  @Post()
-  create(@Body() createLikeDto: CreateLikeDto) {
-    return this.likeService.create(createLikeDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.likeService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.likeService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateLikeDto: UpdateLikeDto) {
-    return this.likeService.update(+id, updateLikeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.likeService.remove(+id);
+  @Post(':postId')
+  async toggleLike(
+    @Param('postId') postId: string,
+    @Req() req: any,
+  ) {
+    // req.user is automatically populated by JwtAuthGuard!
+    // 'sub' is the property where we stored the user's ID during login
+    const userId = req.user.sub; 
+    
+    return await this.likeService.toggleLike(postId, userId);
   }
 }

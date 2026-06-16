@@ -5,9 +5,11 @@ import { UserModule } from '../user/user.module';
 import { CoreModule } from 'src/core/core.module';
 import { AuthModule } from '../auth/auth.module';
 import { PostModule } from '../post/post.module';
+import { LikeModule } from '../like/like.module';
+import { CommentModule } from '../comment/comment.module';
 
 @Module({
-  imports: [UserModule,CoreModule,AuthModule,PostModule],
+  imports: [UserModule,CoreModule,AuthModule,PostModule, LikeModule, CommentModule],
   controllers: [AppController],
   providers: [AppService],
 })
