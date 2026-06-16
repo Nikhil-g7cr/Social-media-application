@@ -4,58 +4,64 @@ import {
   Model,
   DataType,
   ForeignKey,
-  CreatedAt,
   PrimaryKey,
   BelongsTo,
 } from 'sequelize-typescript';
+import { Sequelize } from 'sequelize';
 import { Users } from './user.model';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 
+export const enum FollowColumns {
+  ID = 'ID',
+  FollowerID = 'FollowerID',
+  FollowingID = 'FollowingID',
+  CreatedAt = 'CreatedAt',
+}
+
 @Table({
-  tableName: 'Follows',
-  timestamps: false, // Explicitly managing only created_at
+  tableName: 'tbl_Follow', // Match SQL exactly
+  timestamps: false,
 })
-export class Follow extends Model {
+export class Follow extends Model<Follow> { // Added <Follow> generic
   @PrimaryKey
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  ID!: string;
-
-  // We use a composite primary key using follower_id and following_id
-  // This guarantees a user cannot follow the same person more than once
+  [FollowColumns.ID]!: string;
 
   @ForeignKey(() => Users)
   @Column({
-    type: DataType.UUID,
-    primaryKey: true,
+    type: SQLDataType.UNIQUEIDENTIFIER,
     allowNull: false,
   })
-  follower_id!: string; // The usersUsers who clicks "Follow"
+  [FollowColumns.FollowerID]!: string;
 
   @ForeignKey(() => Users)
   @Column({
-    type: DataType.UUID,
-    primaryKey: true,
+    type: SQLDataType.UNIQUEIDENTIFIER,
     allowNull: false,
   })
-  following_id!: string; // The usersUsers being followed
+  [FollowColumns.FollowingID]!: string;
 
-  @CreatedAt
   @Column({
     type: DataType.DATE,
     allowNull: false,
-    defaultValue: DataType.NOW, // Maps to GETDATE() in SQL Server
+    defaultValue: Sequelize.literal('GETDATE()'), // Let SQL handle the date
   })
-  created_at!: Date;
+  [FollowColumns.CreatedAt]!: Date;
 
+  // Relationships
   @BelongsTo(() => Users, {
-    foreignKey: 'follower_id',
+    foreignKey: FollowColumns.FollowerID,
+    targetKey: 'ID', // Explicitly map to User's ID
     as: 'Follower',
+    onDelete: 'NO ACTION'
   })
   follower!: Users;
 
   @BelongsTo(() => Users, {
-    foreignKey: 'following_id',
+    foreignKey: FollowColumns.FollowingID,
+    targetKey: 'ID', // Explicitly map to User's ID
     as: 'Following',
+    onDelete: 'NO ACTION'
   })
   following!: Users;
 }

@@ -6,13 +6,12 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript';
-
+import { Sequelize } from 'sequelize'; // <-- Added this
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 
 import { Users, UserColumns } from './user.model';
 import { Conversation } from './conversation.model';
-// import { Conversations, ConversationColumns } from './conversation.model';
 
 export const enum CPColumns {
   ID = 'ID',
@@ -34,7 +33,7 @@ export const enum ConversationParticipantRoles {
 }
 
 @Table({
-  tableName: Tables.tbl_Conversation_Participants,
+  tableName: 'Conversation_Participants', // Ensure this string matches exactly if Tables.tbl_Conversation_Participants is different
   timestamps: false,
 })
 export class CP extends Model<CP> {
@@ -44,6 +43,13 @@ export class CP extends Model<CP> {
     allowNull: false,
   })
   [CPColumns.ID]!: string;
+
+  @ForeignKey(() => Conversation)
+  @Column({
+    type: SQLDataType.UNIQUEIDENTIFIER,
+    allowNull: false,
+  })
+  [CPColumns.ConversationID]!: string;
 
   @ForeignKey(() => Users)
   @Column({
@@ -59,9 +65,11 @@ export class CP extends Model<CP> {
   })
   [CPColumns.Role]!: ConversationParticipantRoles;
 
+  // Let SQL handle the exact time they joined
   @Column({
     type: SQLDataType.DATETIME,
     allowNull: false,
+    defaultValue: Sequelize.literal('GETDATE()'),
   })
   [CPColumns.JoinedAt]!: Date;
 
@@ -73,17 +81,9 @@ export class CP extends Model<CP> {
   })
   User!: Users;
 
-  // Uncomment this after creating the Conversation model
-  @ForeignKey(() => Conversation)
-  @Column({
-    type: SQLDataType.UNIQUEIDENTIFIER,
-    allowNull: false,
-  })
-  [CPColumns.ConversationID]!: string;
-
   @BelongsTo(() => Conversation, {
     foreignKey: CPColumns.ConversationID,
-    targetKey: 'ConversationId', // Note: your Conversation model uses 'ConversationId'
+    targetKey: 'ID', // <-- Fixed this to match the newly corrected Conversation model
     as: CPAlias.Conversation,
     onDelete: 'CASCADE',
   })
