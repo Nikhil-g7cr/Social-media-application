@@ -41,7 +41,14 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       this.logger.log(JSON.stringify(payload, null, 2), HttpStatus.OK);
 
-      const newPost = await this.postModel.create({payload} as any,{ transaction});
+      // const newPost = await this.postModel.create(payload as any,{ transaction});
+
+      const newPost = await this.postModel.create(
+        payload as any,
+        {
+          transaction,
+        }
+      );
 
       await transaction.commit();
 
