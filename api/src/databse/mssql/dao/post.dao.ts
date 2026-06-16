@@ -26,60 +26,31 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     private readonly logger: AppLogger,
   ) {}
 
-  // async createPost(
-  //   createPostDto: CreatePostDto,
-  //   userId: string,
-  // ): Promise<AppResponse> {
-  //   const transaction = await this.sequelize.transaction();
-  //   try {
-  //     const payload = {
-  //       UserID: userId,
-  //       Type: createPostDto.type,
-  //       Content: createPostDto.content,
-  //       MediaURL: createPostDto.mediaURL,
-  //     };
-
-  //     this.logger.log(JSON.stringify(payload, null, 2), HttpStatus.OK);
-
-  //     // const newPost = await this.postModel.create(payload as any,{ transaction});
-
-  //     const newPost = await this.postModel.create(
-  //       payload as any,
-  //       {
-  //         transaction,
-  //       }
-  //     );
-
-  //     await transaction.commit();
-
-  //     return createResponse(
-  //       HttpStatus.CREATED,
-  //       'Post created successfully',
-  //       newPost,
-  //     );
-  //   } catch (error: any) {
-  //       await transaction.rollback();
-  //       this.logger.error(`[PostSQLDAO] createPost: ${error.message}`,HttpStatus.INTERNAL_SERVER_ERROR);
-  //       return { ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)), description:error.message}
-  //   }
-  // }
-
   async createPost(
     createPostDto: CreatePostDto,
     userId: string,
   ): Promise<AppResponse> {
+    const transaction = await this.sequelize.transaction();
     try {
       const payload = {
         UserID: userId,
         Type: createPostDto.type,
         Content: createPostDto.content,
         MediaURL: createPostDto.mediaURL,
-        // CreatedAt: new Date(), // <--- ADD THIS LINE
       };
 
       this.logger.log(JSON.stringify(payload, null, 2), HttpStatus.OK);
 
-      const newPost = await this.postModel.create(payload as any);
+      // const newPost = await this.postModel.create(payload as any,{ transaction});
+
+      const newPost = await this.postModel.create(
+        payload as any,
+        {
+          transaction,
+        }
+      );
+
+      await transaction.commit();
 
       return createResponse(
         HttpStatus.CREATED,
@@ -87,12 +58,9 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         newPost,
       );
     } catch (error: any) {
-        this.logger.error(`[PostSQLDAO] REAL ERROR: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
-        
-        return { 
-          ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create post"), 
-          description: error.message 
-        };
+        await transaction.rollback();
+        this.logger.error(`[PostSQLDAO] createPost: ${error.message}`,HttpStatus.INTERNAL_SERVER_ERROR);
+        return { ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)), description:error.message}
     }
   }
 
@@ -136,8 +104,9 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     const transaction = await this.sequelize.transaction();
     try {
       
-      // 1. Map camelCase DTO fields to PascalCase Model fields
-      const updatePayload: any = {};
+      const updatePayload: any = {
+        ModifiedAt: this.sequelize.literal('GETDATE()') 
+      };
       
       if (updatePostDto.type !== undefined) {
         updatePayload.Type = updatePostDto.type;
@@ -149,7 +118,6 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         updatePayload.MediaURL = updatePostDto.mediaURL;
       }
 
-      // 2. Pass the mapped payload to the update function
       const [updatedRowsCount] = await this.postModel.update(
         updatePayload, 
         {
@@ -165,9 +133,21 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       await transaction.commit();
       return createResponse(HttpStatus.OK, 'Post updated successfully', null);
+      
     } catch (error: any) {
-      await transaction.rollback();
-      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      // 1. Try to rollback, but catch and ignore the "double rollback" error 
+      // if MS SQL Server already killed the transaction.
+      try {
+        await transaction.rollback();
+      } catch (rollbackError: any) {
+         // We intentionally do nothing here except optionally log it. 
+         // If rollback fails, the transaction is already dead.
+         this.logger.error(`[PostSQLDAO] Rollback skipped: ${rollbackError.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
+      
+      // 2. Log the REAL database error that caused the update to fail
+      this.logger.error(`[PostSQLDAO] updatePost DB Error: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      
       return {
         ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
         description: error.message,
