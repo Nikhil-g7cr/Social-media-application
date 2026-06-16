@@ -7,9 +7,11 @@ export enum Tables{
     tbl_Conversation = 'tbl_Conversation',
     tbl_Message = 'tbl_Message',
     tbl_Comment = 'tbl_Comment',
-    tbl_Conversation_Participants = 'tbl_Conversation_Participants',
+    tbl_Conversation_Participants = 'Conversation_Participants',
     tbl_Post_View = 'tbl_Post_View',
-    tbl_Message_Attachment = 'tbl_Message_Attachment',
+    tbl_post_like='tbl_PostLike',
+    tbl_postMedia = 'tbl_PostMedia',
+    tbl_Message_Attachment = 'Message_Attachment',
 
 }
 

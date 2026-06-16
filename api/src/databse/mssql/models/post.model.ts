@@ -60,13 +60,13 @@ class Posts extends Model<Posts> {
 
 	@Default(DataType.NOW)
 	@Column({
-		type: SQLDataType.DATETIME,
+		type: DataType.DATE,
 		allowNull: false
 	})
 	[PostsColumns.CreatedAt]!: Date;
 
 	@Column({
-		type: SQLDataType.DATETIME,
+		type: DataType.DATE,
 		allowNull: true
 	})
 	[PostsColumns.ModifiedAt]?: Date;
@@ -82,6 +82,7 @@ class Posts extends Model<Posts> {
 
 	// Inside the Posts class:
 	@HasMany(() => Comments, { foreignKey: 'PostID' })
+
 	Comments!: Comments[];
 
 	@HasMany(() => Likes, { foreignKey: 'PostsID' }) // Use whatever exact string your Likes model uses
