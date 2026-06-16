@@ -58,10 +58,10 @@ class Posts extends Model<Posts> {
 	})
 	[PostsColumns.MediaURL]?: string;
 
-	@Default(DataType.NOW)
+	// @Default(DataType.NOW)
 	@Column({
 		type: DataType.DATE,
-		allowNull: false
+		allowNull: true
 	})
 	[PostsColumns.CreatedAt]!: Date;
 

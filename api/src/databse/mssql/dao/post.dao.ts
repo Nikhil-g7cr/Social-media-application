@@ -26,31 +26,60 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     private readonly logger: AppLogger,
   ) {}
 
+  // async createPost(
+  //   createPostDto: CreatePostDto,
+  //   userId: string,
+  // ): Promise<AppResponse> {
+  //   const transaction = await this.sequelize.transaction();
+  //   try {
+  //     const payload = {
+  //       UserID: userId,
+  //       Type: createPostDto.type,
+  //       Content: createPostDto.content,
+  //       MediaURL: createPostDto.mediaURL,
+  //     };
+
+  //     this.logger.log(JSON.stringify(payload, null, 2), HttpStatus.OK);
+
+  //     // const newPost = await this.postModel.create(payload as any,{ transaction});
+
+  //     const newPost = await this.postModel.create(
+  //       payload as any,
+  //       {
+  //         transaction,
+  //       }
+  //     );
+
+  //     await transaction.commit();
+
+  //     return createResponse(
+  //       HttpStatus.CREATED,
+  //       'Post created successfully',
+  //       newPost,
+  //     );
+  //   } catch (error: any) {
+  //       await transaction.rollback();
+  //       this.logger.error(`[PostSQLDAO] createPost: ${error.message}`,HttpStatus.INTERNAL_SERVER_ERROR);
+  //       return { ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)), description:error.message}
+  //   }
+  // }
+
   async createPost(
     createPostDto: CreatePostDto,
     userId: string,
   ): Promise<AppResponse> {
-    const transaction = await this.sequelize.transaction();
     try {
       const payload = {
         UserID: userId,
         Type: createPostDto.type,
         Content: createPostDto.content,
         MediaURL: createPostDto.mediaURL,
+        // CreatedAt: new Date(), // <--- ADD THIS LINE
       };
 
       this.logger.log(JSON.stringify(payload, null, 2), HttpStatus.OK);
 
-      // const newPost = await this.postModel.create(payload as any,{ transaction});
-
-      const newPost = await this.postModel.create(
-        payload as any,
-        {
-          transaction,
-        }
-      );
-
-      await transaction.commit();
+      const newPost = await this.postModel.create(payload as any);
 
       return createResponse(
         HttpStatus.CREATED,
@@ -58,9 +87,12 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         newPost,
       );
     } catch (error: any) {
-        await transaction.rollback();
-        this.logger.error(`[PostSQLDAO] createPost: ${error.message}`,HttpStatus.INTERNAL_SERVER_ERROR);
-        return { ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)), description:error.message}
+        this.logger.error(`[PostSQLDAO] REAL ERROR: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+        
+        return { 
+          ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Failed to create post"), 
+          description: error.message 
+        };
     }
   }
 
@@ -84,6 +116,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       const post = await this.postModel.findOne({
         where: { ID: postId },
       });
+
 
       if (!post) {
         return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
