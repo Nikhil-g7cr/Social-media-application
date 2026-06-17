@@ -1,9 +1,22 @@
-import { Module } from '@nestjs/common';
-import { FollowService } from './follow.service';
-import { FollowController } from './follow.controller';
+import { Module } from "@nestjs/common";
+import { FollowController } from "./follow.controller";
+import { FollowService } from "./follow.service";
+import { FollowSQLDao } from "src/databse/mssql/dao/follow.dao";
+import { DatabaseModule } from "src/databse/database.module";
+import { UserModule } from "../user/user.module";
 
 @Module({
-  controllers: [FollowController],
-  providers: [FollowService],
+  imports:[DatabaseModule],
+    controllers: [
+        FollowController,
+    ],
+    providers: [
+        FollowSQLDao,
+        FollowService
+    ],
+    exports: [
+        FollowService,
+        FollowSQLDao,
+    ],
 })
 export class FollowModule {}

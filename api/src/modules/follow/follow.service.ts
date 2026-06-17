@@ -1,26 +1,144 @@
-import { Injectable } from '@nestjs/common';
-import { CreateFollowDto } from './dto/create-follow.dto';
-import { UpdateFollowDto } from './dto/update-follow.dto';
+import {
+    Injectable,
+    BadRequestException,
+    NotFoundException,
+    Inject,
+} from '@nestjs/common';
+import { UserAbsSQLDAO } from 'src/databse/mssql/abstract/user.abstract.mssql';
+import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
+import { UserSQLDao } from 'src/databse/mssql/dao/user.dao';
+
+
 
 @Injectable()
 export class FollowService {
-  create(createFollowDto: CreateFollowDto) {
-    return 'This action adds a new follow';
-  }
+    constructor(
+        private readonly followDao: FollowSQLDao,
+        @Inject(UserAbsSQLDAO)private readonly userDao: UserSQLDao,
+    ) {}
 
-  findAll() {
-    return `This action returns all follow`;
-  }
+    async followUser(
+        followerId: string,
+        followingId: string,
+    ) {
+      
+        if (followerId === followingId) {
+            throw new BadRequestException(
+                'You cannot follow yourself',
+            );
+        }
 
-  findOne(id: number) {
-    return `This action returns a #${id} follow`;
-  }
+        const user = await this.userDao.getUserByID(followingId);
 
-  update(id: number, updateFollowDto: UpdateFollowDto) {
-    return `This action updates a #${id} follow`;
-  }
+        if (!user) {
+            throw new NotFoundException(
+                'User not found',
+            );
+        }
 
-  remove(id: number) {
-    return `This action removes a #${id} follow`;
-  }
+        const alreadyFollowing =
+            await this.followDao.findOne(
+                followerId,
+                followingId,
+            );
+
+        if (alreadyFollowing) {
+            throw new BadRequestException(
+                'Already following this user',
+            );
+        }
+
+        return this.followDao.create({
+            FollowerID: followerId,
+            FollowingID: followingId,
+        });
+    }
+
+    async unfollowUser(
+        followerId: string,
+        followingId: string,
+    ) {
+        const follow =
+            await this.followDao.findOne(
+                followerId,
+                followingId,
+            );
+
+        if (!follow) {
+            throw new BadRequestException(
+                'You are not following this user',
+            );
+        }
+
+        await this.followDao.delete(
+            followerId,
+            followingId,
+        );
+
+        return {
+            success: true,
+            message: 'User unfollowed successfully',
+        };
+    }
+
+    async getFollowers(userId: string) {
+      
+        return this.followDao.getFollowers(userId);
+    }
+
+    async getFollowing(userId: string) {
+        return this.followDao.getFollowing(userId);
+    }
+
+    async getFollowCounts(userId: string) {
+        const [followersCount, followingCount] =
+            await Promise.all([
+                this.followDao.countFollowers(userId),
+                this.followDao.countFollowing(userId),
+            ]);
+
+        return {
+            followersCount,
+            followingCount,
+        };
+    }
+
+    async isFollowing(
+        followerId: string,
+        followingId: string,
+    ) {
+        const isFollowing =
+            await this.followDao.isFollowing(
+                followerId,
+                followingId,
+            );
+
+        return {
+            isFollowing,
+        };
+    }
+
+    async getProfileFollowInfo(
+    currentUserId: string,
+    profileUserId: string,
+) {
+    const [
+        followersCount,
+        followingCount,
+        isFollowing,
+    ] = await Promise.all([
+        this.followDao.countFollowers(profileUserId),
+        this.followDao.countFollowing(profileUserId),
+        this.followDao.isFollowing(
+            currentUserId,
+            profileUserId,
+        ),
+    ]);
+
+    return {
+        followersCount,
+        followingCount,
+        isFollowing,
+    };
+}
 }

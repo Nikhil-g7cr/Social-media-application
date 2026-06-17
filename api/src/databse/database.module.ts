@@ -4,7 +4,6 @@ import { msSqlDBModelsProvider } from "./mssql/connection/models.connection.mssq
 import { DatabaseService } from "./database.service";
 import { UserAbsSQLDAO } from "./mssql/abstract/user.abstract.mssql";
 import { UserSQLDao } from "./mssql/dao/user.dao";
-import { AbstractAuthSvc } from "src/modules/auth/auth.abstract";
 import { AuthSQLDao } from "./mssql/dao/auth.dao";
 import { AuthAbstractSQLDao } from "./mssql/abstract/auth.abstract.mssql";
 import { PostAbstractSQLDao } from "./mssql/abstract/posts.abstract.mssql";
@@ -13,6 +12,8 @@ import { LikeAbstractSQLDAO } from "./mssql/abstract/like.abstract.mssql";
 import { LikeSQLDAO } from "./mssql/dao/like.dao";
 import { CommentsAbstractSQLDAO } from "./mssql/abstract/comment.abstract.mssql";
 import { CommentSQLDAO } from "./mssql/dao/comment.dao";
+import { FollowAbstractSQLDao } from "./mssql/abstract/follow.abstract.mssql";
+import {  FollowSQLDao } from "./mssql/dao/follow.dao";
 
 @Module({
     providers:[
@@ -39,6 +40,11 @@ import { CommentSQLDAO } from "./mssql/dao/comment.dao";
             provide: CommentsAbstractSQLDAO,
             useClass:CommentSQLDAO
         }
+        ,
+        {
+            provide: FollowAbstractSQLDao,
+            useClass:FollowSQLDao
+        }
     ],
     exports:[
         ...sequelizeProvider,
@@ -63,6 +69,10 @@ import { CommentSQLDAO } from "./mssql/dao/comment.dao";
          {
             provide: CommentsAbstractSQLDAO,
             useClass:CommentSQLDAO
+        },
+        {
+            provide: FollowAbstractSQLDao,
+            useClass:FollowSQLDao
         }
     ]
 })

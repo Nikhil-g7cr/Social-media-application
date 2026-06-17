@@ -4,7 +4,7 @@ import { MsSqlConstants } from '../connection/constant.mssql';
 import { FollowAbstractSQLDao } from '../abstract/follow.abstract.mssql';
 
 @Injectable()
-export class FollowDao implements FollowAbstractSQLDao {
+export class FollowSQLDao implements FollowAbstractSQLDao {
     constructor(
         @Inject(MsSqlConstants.FOLLOW)
         private readonly followModel: typeof Follow,

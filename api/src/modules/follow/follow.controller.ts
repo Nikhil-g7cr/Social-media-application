@@ -1,34 +1,86 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+    Controller,
+    Post,
+    Delete,
+    Get,
+    Param,
+    UseGuards,
+    Req,
+} from '@nestjs/common';
+import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 import { FollowService } from './follow.service';
-import { CreateFollowDto } from './dto/create-follow.dto';
-import { UpdateFollowDto } from './dto/update-follow.dto';
+
+
 
 @Controller('follow')
+@UseGuards(JwtAuthGuard)
 export class FollowController {
-  constructor(private readonly followService: FollowService) {}
+    constructor(
+        private readonly followService: FollowService,
+    ) {}
 
-  @Post()
-  create(@Body() createFollowDto: CreateFollowDto) {
-    return this.followService.create(createFollowDto);
-  }
+    @Post(':userId')
+    async followUser(
+        @Req() req,
+        @Param('userId') userId: string,
+    ) {
 
-  @Get()
-  findAll() {
-    return this.followService.findAll();
-  }
+        console.log('Current User:', req.user);
+console.log('Target User:', userId);
+        return this.followService.followUser(
+            req.user.sub,
+            userId,
+        );
+    }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.followService.findOne(+id);
-  }
+    @Delete(':userId')
+    async unfollowUser(
+        @Req() req,
+        @Param('userId') userId: string,
+    ) {
+        return this.followService.unfollowUser(
+            req.user.sub,
+            userId,
+        );
+    }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateFollowDto: UpdateFollowDto) {
-    return this.followService.update(+id, updateFollowDto);
-  }
+    @Get('followers/:userId')
+    async getFollowers(
+        @Param('userId') userId: string,
+    ) {
+        return this.followService.getFollowers(
+            userId,
+        );
+    }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.followService.remove(+id);
-  }
+    @Get('following/:userId')
+    async getFollowing(
+        @Param('userId') userId: string,
+    ) {
+        return this.followService.getFollowing(
+            userId,
+        );
+    }
+
+    @Get('status/:userId')
+    async isFollowing(
+        @Req() req,
+        @Param('userId') userId: string,
+    ) {
+        return this.followService.isFollowing(
+            req.user.sub,
+            userId,
+        );
+    }
+
+    @Get('profile/:userId')
+    async getProfileFollowInfo(
+        @Req() req,
+        @Param('userId') userId: string,
+    ) {
+        return this.followService.getProfileFollowInfo(
+            req.user.sub,
+            userId,
+        );
+    }
 }

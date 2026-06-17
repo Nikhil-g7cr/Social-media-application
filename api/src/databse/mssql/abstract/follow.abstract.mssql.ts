@@ -1,4 +1,3 @@
-import { AppResponse } from 'src/shared/appresponse.shared';
 import { Follow } from '../models';
 
 export abstract class FollowAbstractSQLDao {

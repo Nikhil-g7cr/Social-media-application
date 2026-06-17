@@ -1,11 +1,20 @@
 import { Tables } from '../connection/tables.mssql';
 import { Schema } from '../connection/schemas.mssql';
-import { BelongsTo, Column, DataType, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import {
+  BelongsTo,
+  Column,
+  DataType,
+  HasMany,
+  Model,
+  PrimaryKey,
+  Table,
+} from 'sequelize-typescript';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Posts } from './post.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
 import { UserRoles } from 'src/core/enums/user.enums';
+import { Follow } from './follow.model';
 // import { RefreshToken } from './refreshToken.model';
 
 export const enum UserColumns {
@@ -28,17 +37,17 @@ export const enum UserColumns {
 export const enum UserAlias {
   CreatedByUser = 'CreatedByUser',
   ModifiedByUser = 'ModifiedByUser',
-  UserRoles = 'UserRoles'
+  UserRoles = 'UserRoles',
 }
 
 export const enum UserRolesColumns {
-	UserRolesGuid = 'UserRolesGuid',
-	UserGuid = 'UserGuid',
-	RoleId = 'RoleId',
-	CreatedBy = 'CreatedBy',
-	EffectiveFrom = 'EffectiveFrom',
-	EffectiveTill = 'EffectiveTill',
-	ModifiedBy = 'ModifiedBy'
+  UserRolesGuid = 'UserRolesGuid',
+  UserGuid = 'UserGuid',
+  RoleId = 'RoleId',
+  CreatedBy = 'CreatedBy',
+  EffectiveFrom = 'EffectiveFrom',
+  EffectiveTill = 'EffectiveTill',
+  ModifiedBy = 'ModifiedBy',
 }
 
 export const enum RecordCreatedBy {
@@ -59,11 +68,11 @@ class Users extends Model<Users> {
   [UserColumns.ID]!: string;
 
   @Column({
-  type: `${SQLDataType.VARCHAR}(50)`,
-  allowNull: false,
-  unique: true,
-})
-[UserColumns.UserName]!: string;
+    type: `${SQLDataType.VARCHAR}(50)`,
+    allowNull: false,
+    unique: true,
+  })
+  [UserColumns.UserName]!: string;
 
   @Column({
     type: `${SQLDataType.VARCHAR}(50)`,
@@ -123,7 +132,7 @@ class Users extends Model<Users> {
   [UserColumns.CreatedBy]?: string;
 
   @Column({
-    type: DataType.DATE
+    type: DataType.DATE,
   })
   [UserColumns.CreatedAt]?: Date;
 
@@ -155,7 +164,6 @@ class Users extends Model<Users> {
   })
   ModifiedByUser!: Users;
 
-
   @HasMany(() => Posts, { foreignKey: 'UserID' })
   Posts!: Posts[];
 
@@ -165,9 +173,15 @@ class Users extends Model<Users> {
   @HasMany(() => Likes, { foreignKey: 'UserID' })
   Likes!: Likes[];
 
+  @HasMany(() => Follow, { foreignKey: 'FollowingID', as: 'Followers' })
+  Followers!: Follow[];
+
+  @HasMany(() => Follow, { foreignKey: 'FollowerID', as: 'Following' })
+  Following!: Follow[];
+  
   // Import RefreshToken at the top of the file
-	// @HasMany(() => RefreshToken, { foreignKey: 'UserID' })
-	// RefreshTokens!: RefreshToken[];
+  // @HasMany(() => RefreshToken, { foreignKey: 'UserID' })
+  // RefreshTokens!: RefreshToken[];
 }
 
-export {Users};
+export { Users };
