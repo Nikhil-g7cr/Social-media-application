@@ -1,26 +1,31 @@
 import { Injectable } from '@nestjs/common';
-import { CreateChatDto } from './dto/create-chat.dto';
-import { UpdateChatDto } from './dto/update-chat.dto';
+import { Message } from '../../databse/mssql/models/message.model';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ChatService {
-  create(createChatDto: CreateChatDto) {
-    return 'This action adds a new chat';
+  // 1. Save a real-time message to MSSQL
+  async saveMessage(payload: { conversationId: string; senderId: string; text: string }) {
+    // Call the create method directly on the Message model class
+    const newMessage = await Message.create({
+      ID: uuidv4(), 
+      ConversationID: payload.conversationId,
+      SenderID: payload.senderId,
+      Message: payload.text,
+      IsRead: false,
+      CreatedAt: new Date().toISOString(), // <-- Convert to string here
+      modefiedAt: new Date().toISOString(),
+    } as any);
+
+    return newMessage;
   }
 
-  findAll() {
-    return `This action returns all chat`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} chat`;
-  }
-
-  update(id: number, updateChatDto: UpdateChatDto) {
-    return `This action updates a #${id} chat`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} chat`;
+  // 2. Fetch past messages for a specific chat room
+  async getConversationHistory(conversationId: string) {
+    // Call the findAll method directly on the Message model class
+    return Message.findAll({
+      where: { ConversationID: conversationId },
+      order: [['CreatedAt', 'ASC']],
+    });
   }
 }

@@ -7,9 +7,10 @@ import { AuthModule } from '../auth/auth.module';
 import { PostModule } from '../post/post.module';
 import { LikeModule } from '../like/like.module';
 import { CommentModule } from '../comment/comment.module';
+import { ChatModule } from '../chat/chat.module';
 
 @Module({
-  imports: [UserModule,CoreModule,AuthModule,PostModule, LikeModule, CommentModule],
+  imports: [UserModule,CoreModule,AuthModule,PostModule, LikeModule, CommentModule,ChatModule],
   controllers: [AppController],
   providers: [AppService],
 })

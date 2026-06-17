@@ -11,5 +11,6 @@ export class MsSqlConstants {
 	static readonly COMMENT = 'COMMENT';
 	static readonly CONVERSATION_PARTICIPANTS = 'CONVERSATION_PARTICIPANTS'
 	static readonly POST_VIEW = 'POST_VIEW';
+	static readonly POST_MEDIA = 'POST_MEDIA'
 	static readonly MESSAGE_ATTACHMENT = 'MESSAGE_ATTACHMENT';
 }

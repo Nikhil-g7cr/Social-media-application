@@ -6,7 +6,7 @@ import { Posts } from './post.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
 import { UserRoles } from 'src/core/enums/user.enums';
-import { RefreshToken } from './refreshToken.model';
+// import { RefreshToken } from './refreshToken.model';
 
 export const enum UserColumns {
   ID = 'ID',
@@ -166,8 +166,8 @@ class Users extends Model<Users> {
   Likes!: Likes[];
 
   // Import RefreshToken at the top of the file
-	@HasMany(() => RefreshToken, { foreignKey: 'UserID' })
-	RefreshTokens!: RefreshToken[];
+	// @HasMany(() => RefreshToken, { foreignKey: 'UserID' })
+	// RefreshTokens!: RefreshToken[];
 }
 
 export {Users};

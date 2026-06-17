@@ -5,7 +5,7 @@ export enum Tables{
     tbl_Like = 'tbl_PostLike',
     tbl_Follow = 'tbl_Follow',
     tbl_Conversation = 'tbl_Conversation',
-    tbl_Message = 'tbl_Message',
+    tbl_Message = 'Message',
     tbl_Comment = 'tbl_Comment',
     tbl_Conversation_Participants = 'Conversation_Participants',
     tbl_Post_View = 'tbl_Post_View',

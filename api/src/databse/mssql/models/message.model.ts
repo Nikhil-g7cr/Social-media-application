@@ -36,7 +36,7 @@ export class Message extends Model<Message> { // ✅ Explicit generic parameter 
 
   @BelongsTo(() => Conversation, {
     foreignKey: 'ConversationID',
-    targetKey: 'ConversationId', // Links up directly to ConversationId inside conversation.model.ts
+    targetKey: 'ID', // Links up directly to ConversationId inside conversation.model.ts
     as: 'Conversation',
     onDelete: 'CASCADE',
   })

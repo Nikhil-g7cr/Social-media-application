@@ -10,6 +10,7 @@ import {
   PostView,
   Users,
 } from '../models';
+import { PostMedia } from '../models/postMedia.model';
 import { MsSqlConstants } from './constant.mssql';
 
 const msSqlDBModelsProvider = [
@@ -23,6 +24,8 @@ const msSqlDBModelsProvider = [
     { provide: MsSqlConstants.MESSAGE_ATTACHMENT, useValue: MessageAttachment },
     { provide: MsSqlConstants.MESSAGE, useValue: Message },
     { provide: MsSqlConstants.POST_VIEW, useValue: PostView },
+    { provide: MsSqlConstants.POST_MEDIA, useValue: PostMedia },
+
   ],
   models: any = msSqlDBModelsProvider.map((providers) => providers.useValue);
 

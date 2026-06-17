@@ -22,7 +22,7 @@ export const enum PostMediaColumns {
 }
 
 @Table({
-  tableName: 'tbl_PostMedia', // Ensure this matches your SQL table exactly
+  tableName: Tables.tbl_postMedia, // Ensure this matches your SQL table exactly
   timestamps: false,
 })
 export class PostMedia extends Model<PostMedia> {
