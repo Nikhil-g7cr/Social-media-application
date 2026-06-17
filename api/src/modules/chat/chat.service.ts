@@ -14,7 +14,7 @@ export class ChatService {
       Message: payload.text,
       IsRead: false,
       CreatedAt: new Date().toISOString(), // <-- Convert to string here
-      modefiedAt: new Date().toISOString(),
+      ModifiedAt: new Date().toISOString(),
     } as any);
 
     return newMessage;

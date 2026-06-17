@@ -1,43 +1,71 @@
-import { Table, Column, Model, DataType, HasMany } from 'sequelize-typescript';
-import { Sequelize } from 'sequelize';
+import {
+  Table,
+  Column,
+  Model,
+  DataType,
+  HasMany,
+} from 'sequelize-typescript';
 import { Message } from './message.model';
+import { Tables } from '../connection/tables.mssql';
 
 export const enum ConversationColumns {
   ID = 'ID',
-  Title = 'title', // Changed to match lowercase SQL 'title'
-  Type = 'type',   // Changed to match lowercase SQL 'type'
+  Title = 'Title',
+  Type = 'Type',
+  CreatedBy = 'CreatedBy',
   CreatedAt = 'CreatedAt',
-  // Removed CreatedBy and ModifiedAt because they are not in the SQL table
+  ModifiedAt = 'ModifiedAt',
 }
 
 @Table({
-  tableName: 'Conversation', // Changed from 'tbl_Conversation' to match SQL exactly
+  tableName: Tables.tbl_Conversation,
   timestamps: false,
 })
 export class Conversation extends Model<Conversation> {
-  @Column({ type: DataType.UUID, primaryKey: true })
+  @Column({
+    type: DataType.UUID,
+    primaryKey: true,
+    allowNull: false,
+  })
   [ConversationColumns.ID]!: string;
 
-  @Column({ type: DataType.STRING(100), allowNull: true })
+  @Column({
+    type: DataType.STRING(100),
+    allowNull: true,
+  })
   [ConversationColumns.Title]!: string;
 
-  @Column({ 
-    type: DataType.STRING(20), 
-    allowNull: false, 
+  @Column({
+    type: DataType.STRING(20),
+    allowNull: false,
     defaultValue: 'single',
-    validate: { isIn: [['single', 'group', 'broadcast']] }
+    validate: {
+      isIn: [['single', 'group', 'broadcast']],
+    },
   })
   [ConversationColumns.Type]!: string;
 
-  // Let SQL handle the exact time the conversation was created
-  @Column({ 
-    type: DataType.DATE, 
-    allowNull: false, 
-    defaultValue: Sequelize.literal('GETDATE()') 
+  @Column({
+    type: DataType.UUID,
+    allowNull: true,
+  })
+  [ConversationColumns.CreatedBy]!: string;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: false,
   })
   [ConversationColumns.CreatedAt]!: Date;
 
-  // Relationships
-  @HasMany(() => Message, { onDelete: 'CASCADE' })
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+  })
+  [ConversationColumns.ModifiedAt]!: Date;
+
+  @HasMany(() => Message, {
+    foreignKey: 'ConversationID',
+    onDelete: 'CASCADE',
+  })
   messages!: Message[];
 }

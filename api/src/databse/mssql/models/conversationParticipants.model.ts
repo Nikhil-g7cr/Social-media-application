@@ -83,7 +83,7 @@ export class CP extends Model<CP> {
 
   @BelongsTo(() => Conversation, {
     foreignKey: CPColumns.ConversationID,
-    targetKey: 'ID', // <-- Fixed this to match the newly corrected Conversation model
+    targetKey: 'ID', 
     as: CPAlias.Conversation,
     onDelete: 'CASCADE',
   })
