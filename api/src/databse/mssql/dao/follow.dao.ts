@@ -38,6 +38,13 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
                 FollowingID: userId,
             },
             include: ['Follower'],
+            attributes: [
+            'ID',
+            'UserName',
+            'FullName',
+            'ProfilePictureUrl',
+            'Bio',
+        ],
         });
     }
 
@@ -47,6 +54,13 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
                 FollowerID: userId,
             },
             include: ['Following'],
+            attributes: [
+            'ID',
+            'UserName',
+            'FullName',
+            'ProfilePictureUrl',
+            'Bio',
+        ],
         });
     }
 
