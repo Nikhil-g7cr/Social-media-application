@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable } from '@nestjs/common';
 
 import { AppConfig } from 'src/config/AppConfig';
 import AppLogger from 'src/core/logger/app-logger';
@@ -8,6 +8,7 @@ import { AppResponse } from 'src/shared/appresponse.shared';
 import { PostAbstractSvc } from './post.abstract';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { FileService } from '../azure/azure.service';
 
 @Injectable()
 export class PostService implements PostAbstractSvc {
@@ -15,33 +16,39 @@ export class PostService implements PostAbstractSvc {
     private readonly logger: AppLogger,
     private readonly appConfig: AppConfig,
     private readonly postDao: PostAbstractSQLDao,
+    private readonly fileService: FileService,
   ) {}
 
-  
-
   async createPost(
-  createPostDto: CreatePostDto,
-  userId: string,
-): Promise<AppResponse> {
-  this.logger.log(
-    '[PostService] Initiating createPost',
-    200,
-  );
+    createPostDto: CreatePostDto,
+    userId: string,
+  ): Promise<AppResponse> {
+    this.logger.log('[PostService] Initiating createPost', 200);
 
-  return await this.postDao.createPost(
-    createPostDto,
-    userId,
-  );
-}
+    return await this.postDao.createPost(createPostDto, userId);
+  }
 
   async getAllPosts(): Promise<AppResponse> {
     try {
-      this.logger.log(
-        '[PostService] Fetching all posts',
-        200,
-      );
+      this.logger.log('[PostService] Fetching all posts', 200);
 
-      return await this.postDao.getAllPosts();
+      // return await this.postDao.getAllPosts();
+      const response = await this.postDao.getAllPosts();
+      if (response.data && Array.isArray(response.data)) {
+        response.data = await Promise.all(
+          response.data.map(async (post: any) => {
+            if (post.MediaURL) {
+              post.MediaURL = await this.fileService.generateReadUrl(
+                post.MediaURL,
+              );
+            }
+
+            return post;
+          }),
+        );
+      }
+
+      return response;
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in getAllPosts: ${error.message}`,
@@ -51,18 +58,20 @@ export class PostService implements PostAbstractSvc {
     }
   }
 
-  async getPostById(
-    postId: string,
-  ): Promise<AppResponse> {
+  async getPostById(postId: string): Promise<AppResponse> {
     try {
-      this.logger.log(
-        `[PostService] Fetching post with ID: ${postId}`,
-        200,
-      );
+      this.logger.log(`[PostService] Fetching post with ID: ${postId}`, 200);
 
-      return await this.postDao.getPostById(
-        postId,
-      );
+      // return await this.postDao.getPostById(postId);
+      const response = await this.postDao.getPostById(postId);
+
+      if (response.data?.MediaURL) {
+        response.data.MediaURL = await this.fileService.generateReadUrl(
+          response.data.MediaURL,
+        );
+      }
+
+      return response;
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in getPostById (${postId}): ${error.message}`,
@@ -77,15 +86,9 @@ export class PostService implements PostAbstractSvc {
     updatePostDto: UpdatePostDto,
   ): Promise<AppResponse> {
     try {
-      this.logger.log(
-        `[PostService] Updating post with ID: ${postId}`,
-        200,
-      );
+      this.logger.log(`[PostService] Updating post with ID: ${postId}`, 200);
 
-      return await this.postDao.updatePost(
-        updatePostDto,
-        postId,
-      );
+      return await this.postDao.updatePost(updatePostDto, postId);
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in updatePost (${postId}): ${error.message}`,
@@ -95,18 +98,11 @@ export class PostService implements PostAbstractSvc {
     }
   }
 
-  async deletePost(
-    postId: string,
-  ): Promise<AppResponse> {
+  async deletePost(postId: string): Promise<AppResponse> {
     try {
-      this.logger.log(
-        `[PostService] Deleting post with ID: ${postId}`,
-        200,
-      );
+      this.logger.log(`[PostService] Deleting post with ID: ${postId}`, 200);
 
-      return await this.postDao.deletePost(
-        postId,
-      );
+      return await this.postDao.deletePost(postId);
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in deletePost (${postId}): ${error.message}`,

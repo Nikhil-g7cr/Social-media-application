@@ -1,34 +1,31 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { AzureService } from './azure.service';
-import { CreateAzureDto } from './dto/create-azure.dto';
-import { UpdateAzureDto } from './dto/update-azure.dto';
+import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
+import { FileService } from './azure.service';
+import { UploadUrlDto } from './dto/create-azure.dto';
 
-@Controller('azure')
-export class AzureController {
-  constructor(private readonly azureService: AzureService) {}
+@Controller('files')
+export class FileController {
+  constructor(private readonly fileService: FileService) {}
 
-  @Post()
-  create(@Body() createAzureDto: CreateAzureDto) {
-    return this.azureService.create(createAzureDto);
+  @Post('upload-url')
+  async getUploadUrl(
+    @Body()
+    dto: UploadUrlDto,
+  ) {
+    return this.fileService.generateUploadUrl(dto.fileName);
   }
 
-  @Get()
-  findAll() {
-    return this.azureService.findAll();
+  @Delete()
+  async deleteFile(
+    @Query('url')
+    url: string,
+  ) {
+    return this.fileService.deleteFile(url);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.azureService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateAzureDto: UpdateAzureDto) {
-    return this.azureService.update(+id, updateAzureDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.azureService.remove(+id);
+  @Get('read-url')
+  async getReadUrl(@Query('url') url: string) {
+    return {
+      url: await this.fileService.generateReadUrl(url),
+    };
   }
 }

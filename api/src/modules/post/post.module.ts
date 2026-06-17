@@ -5,9 +5,10 @@ import { PostAbstractSvc } from './post.abstract';
 import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
 import { PostSQLDAO } from 'src/databse/mssql/dao/post.dao';
 import { DatabaseModule } from 'src/databse/database.module';
+import { FileModule } from '../azure/azure.module';
 
 @Module({
-  imports:[DatabaseModule],
+  imports:[DatabaseModule,FileModule],
   controllers: [PostController],
   providers: [{
       provide: PostAbstractSvc,

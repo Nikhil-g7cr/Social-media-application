@@ -9,9 +9,10 @@ import { LikeModule } from '../like/like.module';
 import { CommentModule } from '../comment/comment.module';
 import { ChatModule } from '../chat/chat.module';
 import { FollowModule } from '../follow/follow.module';
+import { FileModule } from '../azure/azure.module';
 
 @Module({
-  imports: [UserModule,CoreModule,AuthModule,PostModule, LikeModule, CommentModule,ChatModule,FollowModule],
+  imports: [UserModule,CoreModule,AuthModule,PostModule, LikeModule, CommentModule,ChatModule,FollowModule, FileModule],
   controllers: [AppController],
   providers: [AppService],
 })
