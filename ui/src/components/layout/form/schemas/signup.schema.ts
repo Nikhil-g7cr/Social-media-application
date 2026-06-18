@@ -2,34 +2,20 @@ import { z } from "zod";
 
 export const signupSchema = z
   .object({
-    userName: z
+    FullName: z.string().min(3, "Full name is required"),
+    UserName: z.string().min(3, "Username is required"),
+    EmailAddress: z.email("Invalid email address"),
+    Password: z
       .string()
-      .min(3),
-
-    fullName: z
-      .string()
-      .min(3),
-
-    email: z.email(),
-
-    password: z
-      .string()
-      .min(6),
-
-    confirmPassword: z
-      .string()
-      .min(6),
+      .min(8, "Password must be at least 8 characters"),
+    ConfirmPassword: z.string(),
+    Bio: z.string().optional(),
+    ProfilePictureUrl: z.string().url().optional().or(z.literal("")),
+    Gender: z.enum(["Male", "Female", "Other"]),
   })
-  .refine(
-    (data) =>
-      data.password ===
-      data.confirmPassword,
-    {
-      message:
-        "Passwords do not match",
-      path: ["confirmPassword"],
-    }
-  );
+  .refine((data) => data.Password === data.ConfirmPassword, {
+    message: "Passwords do not match",
+    path: ["ConfirmPassword"],
+  });
 
-export type SignupFormData =
-  z.infer<typeof signupSchema>;
+export type SignupFormData = z.infer<typeof signupSchema>;
