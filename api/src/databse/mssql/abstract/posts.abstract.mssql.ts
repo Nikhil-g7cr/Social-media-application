@@ -5,7 +5,7 @@ import { UpdatePostDto } from 'src/modules/post/dto/update-post.dto';
 export abstract class PostAbstractSQLDao {
   abstract createPost(createPostDto: CreatePostDto,userID:string): Promise<AppResponse>;
 
-  abstract getAllPosts(): Promise<AppResponse>;
+  abstract getAllPosts(page:number,limit:number): Promise<AppResponse>;
 
   abstract getPostById(postId: string): Promise<AppResponse>;
 
@@ -15,4 +15,6 @@ export abstract class PostAbstractSQLDao {
   ): Promise<AppResponse>;
 
   abstract deletePost(postId: string): Promise<AppResponse>;
+
+  abstract getFeedPosts(followingIds: string[],page: number,limit: number,): Promise<AppResponse>;
 }

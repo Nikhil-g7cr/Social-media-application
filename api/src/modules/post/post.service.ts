@@ -1,14 +1,16 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 
 import { AppConfig } from 'src/config/AppConfig';
 import AppLogger from 'src/core/logger/app-logger';
 import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
-import { AppResponse } from 'src/shared/appresponse.shared';
+import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 
 import { PostAbstractSvc } from './post.abstract';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { FileService } from '../azure/azure.service';
+import { PaginationDto } from 'src/core/dto/pagination.dto';
+import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
 
 @Injectable()
 export class PostService implements PostAbstractSvc {
@@ -17,6 +19,7 @@ export class PostService implements PostAbstractSvc {
     private readonly appConfig: AppConfig,
     private readonly postDao: PostAbstractSQLDao,
     private readonly fileService: FileService,
+    private readonly followDao: FollowSQLDao
   ) {}
 
   async createPost(
@@ -28,12 +31,17 @@ export class PostService implements PostAbstractSvc {
     return await this.postDao.createPost(createPostDto, userId);
   }
 
-  async getAllPosts(): Promise<AppResponse> {
+  async getAllPosts(pagination:PaginationDto): Promise<AppResponse> {
     try {
       this.logger.log('[PostService] Fetching all posts', 200);
 
+      // pagination
+      const page = pagination.page || 1;
+      const limit = pagination.limit || 10;
+
       // return await this.postDao.getAllPosts();
-      const response = await this.postDao.getAllPosts();
+      const response = await this.postDao.getAllPosts(page,limit);
+
       if (response.data && Array.isArray(response.data)) {
         response.data = await Promise.all(
           response.data.map(async (post: any) => {
@@ -111,4 +119,46 @@ export class PostService implements PostAbstractSvc {
       throw error;
     }
   }
+
+
+  async getFeed(
+  userId: string,
+  pagination: PaginationDto,
+): Promise<AppResponse> {
+
+  try {
+
+    const followingIds =
+      await this.followDao.getFollowingIds(
+        userId,
+      );
+
+    // Include current user's posts
+    followingIds.push(userId);
+
+    return await this.postDao.getFeedPosts(
+      followingIds,
+      pagination.page,
+      pagination.limit,
+    );
+
+  } catch (error: any) {
+
+    this.logger.error(
+      error.stack,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+
+    return {
+      ...createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to retrieve feed',
+      ),
+      description: error.message,
+    };
+  }
 }
+
+}
+
+

@@ -93,4 +93,24 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
 
         return !!follow;
     }
+
+    async getFollowingIds(
+  userId: string,
+): Promise<string[]> {
+
+  const follows =
+    await this.followModel.findAll({
+      where: {
+        FollowerID: userId,
+      },
+      attributes: [
+        'FollowingID',
+      ],
+    });
+
+  return follows.map(
+    (follow) =>
+      follow.FollowingID,
+  );
+}
 }

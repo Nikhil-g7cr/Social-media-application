@@ -16,6 +16,7 @@ import { CreatePostDto } from 'src/modules/post/dto/create-post.dto';
 import { UpdatePostDto } from 'src/modules/post/dto/update-post.dto';
 import { Sequelize } from 'sequelize-typescript';
 import { messageFactory, messages } from 'src/shared/message.shared';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class PostSQLDAO implements PostAbstractSQLDao {
@@ -43,12 +44,9 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       // const newPost = await this.postModel.create(payload as any,{ transaction});
 
-      const newPost = await this.postModel.create(
-        payload as any,
-        {
-          transaction,
-        }
-      );
+      const newPost = await this.postModel.create(payload as any, {
+        transaction,
+      });
 
       await transaction.commit();
 
@@ -58,33 +56,59 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         newPost,
       );
     } catch (error: any) {
-        await transaction.rollback();
-        this.logger.error(`[PostSQLDAO] createPost: ${error.message}`,HttpStatus.INTERNAL_SERVER_ERROR);
-        return { ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)), description:error.message}
-    }
-  }
-
-  async getAllPosts(): Promise<AppResponse> {
-    try {
-      const posts = await this.postModel.findAll({
-        order: [['CreatedAt', 'DESC']], // Fetch newest posts first
-      });
-      return createResponse(HttpStatus.OK, 'Posts retrieved successfully', posts);
-    } catch (error: any) {
-      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      await transaction.rollback();
+      this.logger.error(
+        `[PostSQLDAO] createPost: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
         description: error.message,
       };
     }
   }
 
+  async getAllPosts(page: number, limit: number): Promise<AppResponse> {
+    try {
+      const offset = (page - 1) * limit;
+
+      const { rows, count } = await this.postModel.findAndCountAll({
+        limit,
+        offset,
+        order: [['CreatedAt', 'DESC']],
+      });
+
+      return createResponse(HttpStatus.OK, 'Posts retrieved successfully', {
+        posts: rows,
+        pagination: {
+          page,
+          limit,
+          totalRecords: count,
+          totalPages: Math.ceil(count / limit),
+          hasNextPage: page < Math.ceil(count / limit),
+          hasPreviousPage: page > 1,
+        },
+      });
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
+        description: error.message,
+      };
+    }
+  }
   async getPostById(postId: string): Promise<AppResponse> {
     try {
       const post = await this.postModel.findOne({
         where: { ID: postId },
       });
-
 
       if (!post) {
         return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
@@ -94,20 +118,25 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
         description: error.message,
       };
     }
   }
 
-  async updatePost(updatePostDto: UpdatePostDto, postId: string): Promise<AppResponse> {
+  async updatePost(
+    updatePostDto: UpdatePostDto,
+    postId: string,
+  ): Promise<AppResponse> {
     const transaction = await this.sequelize.transaction();
     try {
-      
       const updatePayload: any = {
-        ModifiedAt: this.sequelize.literal('GETDATE()') 
+        ModifiedAt: this.sequelize.literal('GETDATE()'),
       };
-      
+
       if (updatePostDto.type !== undefined) {
         updatePayload.Type = updatePostDto.type;
       }
@@ -118,13 +147,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         updatePayload.MediaURL = updatePostDto.mediaURL;
       }
 
-      const [updatedRowsCount] = await this.postModel.update(
-        updatePayload, 
-        {
-          where: { ID: postId },
-          transaction,
-        },
-      );
+      const [updatedRowsCount] = await this.postModel.update(updatePayload, {
+        where: { ID: postId },
+        transaction,
+      });
 
       if (updatedRowsCount === 0) {
         await transaction.rollback();
@@ -133,23 +159,31 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       await transaction.commit();
       return createResponse(HttpStatus.OK, 'Post updated successfully', null);
-      
     } catch (error: any) {
-      // 1. Try to rollback, but catch and ignore the "double rollback" error 
+      // 1. Try to rollback, but catch and ignore the "double rollback" error
       // if MS SQL Server already killed the transaction.
       try {
         await transaction.rollback();
       } catch (rollbackError: any) {
-         // We intentionally do nothing here except optionally log it. 
-         // If rollback fails, the transaction is already dead.
-         this.logger.error(`[PostSQLDAO] Rollback skipped: ${rollbackError.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+        // We intentionally do nothing here except optionally log it.
+        // If rollback fails, the transaction is already dead.
+        this.logger.error(
+          `[PostSQLDAO] Rollback skipped: ${rollbackError.message}`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
-      
+
       // 2. Log the REAL database error that caused the update to fail
-      this.logger.error(`[PostSQLDAO] updatePost DB Error: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
-      
+      this.logger.error(
+        `[PostSQLDAO] updatePost DB Error: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
         description: error.message,
       };
     }
@@ -174,9 +208,81 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       await transaction.rollback();
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2)),
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
         description: error.message,
       };
     }
   }
+
+  async getFeedPosts(
+  followingIds: string[],
+  page: number,
+  limit: number,
+): Promise<AppResponse> {
+
+  try {
+
+    const offset =
+      (page - 1) * limit;
+
+    const {
+      rows,
+      count,
+    } =
+      await this.postModel.findAndCountAll({
+        where: {
+          UserID: {
+            [Op.in]:
+              followingIds,
+          },
+        },
+        limit,
+        offset,
+        order: [
+          ['CreatedAt', 'DESC'],
+        ],
+      });
+
+    return createResponse(
+      HttpStatus.OK,
+      'Feed retrieved successfully',
+      {
+        posts: rows,
+        pagination: {
+          page,
+          limit,
+          totalRecords: count,
+          totalPages: Math.ceil(
+            count / limit,
+          ),
+          hasNextPage:
+            page <
+            Math.ceil(
+              count / limit,
+            ),
+          hasPreviousPage:
+            page > 1,
+        },
+      },
+    );
+
+  } catch (error: any) {
+
+    this.logger.error(
+      error.stack,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+
+    return {
+      ...createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Failed to retrieve feed',
+      ),
+      description: error.message,
+    };
+  }
+}
 }

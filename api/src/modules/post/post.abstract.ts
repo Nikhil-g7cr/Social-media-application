@@ -1,11 +1,12 @@
 import { AppResponse } from 'src/shared/appresponse.shared';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
+import { PaginationDto } from 'src/core/dto/pagination.dto';
 
 export abstract class PostAbstractSvc {
   abstract createPost(createPostDto: CreatePostDto,userId:string): Promise<AppResponse>;
 
-  abstract getAllPosts(): Promise<AppResponse>;
+  abstract getAllPosts(pagination:PaginationDto): Promise<AppResponse>;
 
   abstract getPostById(postId: string): Promise<AppResponse>;
 
@@ -15,4 +16,9 @@ export abstract class PostAbstractSvc {
   ): Promise<AppResponse>;
 
   abstract deletePost(postId: string): Promise<AppResponse>;
+
+  abstract getFeed(userID:string, pagination:PaginationDto):Promise<AppResponse>
+
+  // abstract getFeed(userId: string,pagination: PaginationDto,): Promise<AppResponse>;
+
 }
