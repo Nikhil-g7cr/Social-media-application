@@ -6,6 +6,9 @@ import SignupForm from "../components/features/Auth/Signup";
 import NotFoundPage from "../components/layout/Notfound";
 import HomePage from "../containers/Home";
 import { LoginPage } from "../components/features/Auth/Login";
+import ProfilePage from "../containers/profile";
+import MessagesPage from "../containers/Message";
+import ExplorePage from "../containers/Explore";
 
 // Create Reusable Role Arrays for cleaner code
 
@@ -24,6 +27,9 @@ const Approutes = () => {
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<HomePage />} />
+        <Route path="/profile" element={<ProfilePage/>}/>
+        <Route path="/message" element={<MessagesPage/>}/>
+        <Route path="/explore" element={<ExplorePage/>}/>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupForm />} />
 

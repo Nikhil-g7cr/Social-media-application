@@ -62,7 +62,7 @@ API.interceptors.response.use(
                 // Call your refresh endpoint. 
                 // The browser AUTOMATICALLY sends the HttpOnly refreshToken cookie here!
                 // Make sure to use basic axios (not the interceptor API instance) to avoid infinite loops
-                const result = await axios.post(`${environment.APP_API_URL}/auth/refresh`, {}, {
+                const result = await axios.post(`${environment.APP_API_URL}auth/refresh`, {}, {
                     withCredentials: true 
                 });
 
