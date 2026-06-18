@@ -1,5 +1,3 @@
-// types.ts
-
 export type FieldType =
   | "text"
   | "email"
@@ -18,16 +16,15 @@ export interface FieldOption {
 }
 
 export interface FieldConfig {
+  accept: string | undefined;
+  rows: number;
   name: string;
   label: string;
   type: FieldType;
 
   placeholder?: string;
+  required?: boolean;
   disabled?: boolean;
 
   options?: FieldOption[];
-
-  rows?: number;
-
-  accept?: string;
 }
