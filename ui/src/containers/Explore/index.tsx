@@ -56,11 +56,11 @@ const ExplorePage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 md:pb-10">
+    <div className="min-h-screen bg-gray-50 pb-20 mt-10 md:pb-10">
       
       {/* --- Sticky Header & Search --- */}
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
+        {/* <div className="max-w-7xl mx-auto px-4 py-3 sm:px-6 lg:px-8">
           <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input 
@@ -71,7 +71,7 @@ const ExplorePage: React.FC = () => {
               className="w-full pl-10 pr-4 py-2.5 bg-gray-100 border-transparent rounded-full focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition-all duration-200 text-sm sm:text-base"
             />
           </form>
-        </div>
+        </div> */}
 
         {/* --- Category Chips --- */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3">
@@ -115,7 +115,7 @@ const ExplorePage: React.FC = () => {
                 <img 
                   src={post.imageUrl} 
                   alt="Explore post" 
-                  className="w-full h-auto object-cover transform transition-transform duration-500 group-hover:scale-105"
+                  className="w-full h-40 object-cover transform transition-transform duration-500 group-hover:scale-105"
                   loading="lazy"
                 />
 

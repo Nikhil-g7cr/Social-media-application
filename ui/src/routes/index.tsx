@@ -9,6 +9,7 @@ import { LoginPage } from "../components/features/Auth/Login";
 import ProfilePage from "../containers/profile";
 import MessagesPage from "../containers/Message";
 import ExplorePage from "../containers/Explore";
+import Navbar from "../components/layout/Navbar";
 
 // Create Reusable Role Arrays for cleaner code
 
@@ -23,6 +24,7 @@ const Approutes = () => {
     <div>
       {/* Topbar is now visible on all pages so you can always access the Cart */}
       {/* <Topbar /> */}
+      <Navbar avatarUrl={"http://localhost 50000"}/>
       
       <Routes>
         {/* PUBLIC ROUTES */}
