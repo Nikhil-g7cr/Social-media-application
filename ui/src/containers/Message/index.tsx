@@ -404,7 +404,7 @@ const MessagesPage: React.FC = () => {
             {/* Chat Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg) => {
-                const isMe = msg.senderId === CURRENT_USER_ID;
+                const isMe = String(msg.senderId).toLowerCase() === String(CURRENT_USER_ID).toLowerCase();
                 return (
                   <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>

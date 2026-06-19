@@ -39,7 +39,14 @@ const parseJwt = (token: string): User | null => {
 // 2. Initialize Redux state exclusively by reading and parsing the token
 const storedToken = sessionStorage.getItem('accessToken');
 const storedRefreshToken = sessionStorage.getItem('refreshToken');
-const decodedUser = storedToken ? parseJwt(storedToken) : null;
+const rawDecodedUser = storedToken ? parseJwt(storedToken) : null;
+const decodedUser = rawDecodedUser ? {
+    id: rawDecodedUser.id || (rawDecodedUser as any).sub,
+    name: rawDecodedUser.name,
+    email: rawDecodedUser.email,
+    role: rawDecodedUser.role || (rawDecodedUser as any).roles?.[0],
+    image_url: rawDecodedUser.image_url,
+} : null;
 
 const initialState: AuthState = {
     user: decodedUser,
