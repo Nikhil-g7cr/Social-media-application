@@ -8,3 +8,4 @@ export * from './like.model';
 export * from './follow.model';
 export * from './comments.model';
 export * from './conversationParticipants.model';   
+export * from './notification.model';

@@ -5,9 +5,11 @@ import { LikeSQLDAO } from 'src/databse/mssql/dao/like.dao';
 import { DatabaseModule } from 'src/databse/database.module';
 import { LikeAbstractSvc } from './like.abstract';
 import { LikeAbstractSQLDAO } from 'src/databse/mssql/abstract/like.abstract.mssql';
+import { PostModule } from '../post/post.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, PostModule, NotificationModule],
   controllers: [LikeController],
   providers: [
     { provide: LikeAbstractSvc, useClass: LikeService },

@@ -13,4 +13,5 @@ export class MsSqlConstants {
 	static readonly POST_VIEW = 'POST_VIEW';
 	static readonly POST_MEDIA = 'POST_MEDIA'
 	static readonly MESSAGE_ATTACHMENT = 'MESSAGE_ATTACHMENT';
+	static readonly NOTIFICATION = 'NOTIFICATION';
 }

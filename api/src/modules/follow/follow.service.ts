@@ -7,6 +7,7 @@ import {
 import { UserAbsSQLDAO } from 'src/databse/mssql/abstract/user.abstract.mssql';
 import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
 import { UserSQLDao } from 'src/databse/mssql/dao/user.dao';
+import { NotificationService } from '../notification/notification.service';
 
 
 
@@ -15,6 +16,7 @@ export class FollowService {
     constructor(
         private readonly followDao: FollowSQLDao,
         @Inject(UserAbsSQLDAO)private readonly userDao: UserSQLDao,
+        private readonly notificationService: NotificationService,
     ) {}
 
     async followUser(
@@ -48,10 +50,19 @@ export class FollowService {
             );
         }
 
-        return this.followDao.create({
+        const followRecord = await this.followDao.create({
             FollowerID: followerId,
             FollowingID: followingId,
         });
+
+        // Notify the followed user
+        await this.notificationService.createNotification({
+            userId: followingId,
+            actorUserId: followerId,
+            type: 'FOLLOW'
+        });
+
+        return followRecord;
     }
 
     async unfollowUser(

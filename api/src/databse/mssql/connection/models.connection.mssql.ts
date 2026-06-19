@@ -9,6 +9,7 @@ import {
   Posts,
   PostView,
   Users,
+  Notification,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import { MsSqlConstants } from './constant.mssql';
@@ -25,6 +26,7 @@ const msSqlDBModelsProvider = [
     { provide: MsSqlConstants.MESSAGE, useValue: Message },
     { provide: MsSqlConstants.POST_VIEW, useValue: PostView },
     { provide: MsSqlConstants.POST_MEDIA, useValue: PostMedia },
+    { provide: MsSqlConstants.NOTIFICATION, useValue: Notification },
 
   ],
   models: any = msSqlDBModelsProvider.map((providers) => providers.useValue);

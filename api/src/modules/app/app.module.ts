@@ -13,6 +13,7 @@ import { FileModule } from '../azure/azure.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { MessageModule } from '../message/message.module';
 import { FeedModule } from '../feed/feed.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
   imports: [
@@ -27,7 +28,8 @@ import { FeedModule } from '../feed/feed.module';
     FileModule,
     ConversationModule,
     MessageModule,
-    FeedModule
+    FeedModule,
+    NotificationModule
   ],
   controllers: [AppController],
   providers: [AppService],

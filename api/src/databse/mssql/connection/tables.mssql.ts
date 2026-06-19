@@ -12,7 +12,7 @@ export enum Tables{
     // tbl_post_like='tbl_PostLike',
     tbl_postMedia = 'tbl_PostMedia',
     tbl_Message_Attachment = 'Message_Attachment',
-
+    tbl_Notification = 'tbl_Notification',
 }
 
 export class TableGroup{

@@ -4,9 +4,10 @@ import { FollowService } from "./follow.service";
 import { FollowSQLDao } from "src/databse/mssql/dao/follow.dao";
 import { DatabaseModule } from "src/databse/database.module";
 import { UserModule } from "../user/user.module";
+import { NotificationModule } from "../notification/notification.module";
 
 @Module({
-  imports:[DatabaseModule],
+  imports:[DatabaseModule, NotificationModule],
     controllers: [
         FollowController,
     ],
