@@ -14,6 +14,7 @@ export interface Post {
     comments: number;
     isLikedByMe?: boolean;
     mediaUrl?: string;
+    likedBy?: string[];
 }
 
 export const postApiSlice = apiSlice.injectEndpoints({
@@ -33,9 +34,10 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     },
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
-                    likes: 0, // Backend doesn't return this yet
+                    likes: p.Likes?.length || 0,
                     comments: 0,
                     isLikedByMe: false,
+                    likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 }));
             },
@@ -61,9 +63,10 @@ export const postApiSlice = apiSlice.injectEndpoints({
                                 },
                                 content: newPostRaw.Content || '',
                                 timestamp: new Date(newPostRaw.CreatedAt).toLocaleString(),
-                                likes: 0,
+                                likes: newPostRaw.Likes?.length || 0,
                                 comments: 0,
                                 isLikedByMe: false,
+                                likedBy: newPostRaw.Likes?.map((l: any) => l.UserID) || [],
                                 mediaUrl: newPostRaw.MediaURL,
                             };
                             draft.unshift(newPost); // Add new post to top of feed
@@ -89,9 +92,56 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     },
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
-                    likes: 0,
+                    likes: p.Likes?.length || 0,
                     comments: 0,
                     isLikedByMe: false,
+                    likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    mediaUrl: p.MediaURL,
+                }));
+            },
+            providesTags: ['Post'],
+        }),
+        getPostsByUserId: builder.query<Post[], string>({
+            query: (userId) => ({ url: `posts/user/${userId}` }),
+            transformResponse: (response: any) => {
+                const rawPosts = response?.data?.posts || [];
+                return rawPosts.map((p: any) => ({
+                    id: p.ID,
+                    author: {
+                        id: p.User?.ID || p.UserID,
+                        name: p.User?.FullName || 'Unknown',
+                        username: p.User?.UserName || 'unknown',
+                        avatarUrl: p.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                    },
+                    content: p.Content || '',
+                    timestamp: new Date(p.CreatedAt).toLocaleString(),
+                    likes: p.Likes?.length || 0,
+                    comments: 0,
+                    isLikedByMe: false,
+                    likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    mediaUrl: p.MediaURL,
+                }));
+            },
+            providesTags: ['Post'],
+        }),
+        getLikedPostsByUserId: builder.query<Post[], string>({
+            query: (userId) => ({ url: `posts/liked/user/${userId}` }),
+            transformResponse: (response: any) => {
+                const rawPosts = response?.data?.posts || [];
+                return rawPosts.map((p: any) => ({
+                    id: p.ID,
+                    author: {
+                        id: p.User?.ID || p.UserID,
+                        name: p.User?.FullName || 'Unknown',
+                        username: p.User?.UserName || 'unknown',
+                        avatarUrl: p.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                    },
+                    content: p.Content || '',
+                    timestamp: new Date(p.CreatedAt).toLocaleString(),
+                    likes: p.Likes?.length || 0,
+                    comments: 0,
+                    isLikedByMe: true, // We know they liked it
+                    likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 }));
             },
@@ -163,6 +213,8 @@ export const postApiSlice = apiSlice.injectEndpoints({
 export const {
     useGetPostsQuery,
     useGetAllExplorePostsQuery,
+    useGetPostsByUserIdQuery,
+    useGetLikedPostsByUserIdQuery,
     useGetPostByIdQuery,
     useCreatePostMutation,
     useUpdatePostMutation,

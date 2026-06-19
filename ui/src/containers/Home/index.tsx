@@ -148,24 +148,27 @@ export default function HomePage() {
                       </p>
 
                       {post.mediaUrl && (
-                        <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                        <div 
+                          className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
+                          onDoubleClick={() => toggleLike(post.id, post.likedBy?.includes(user?.id) || post.isLikedByMe)}
+                        >
                           <PostImage 
                             mediaUrl={post.mediaUrl} 
-                            className="w-full max-h-[500px] object-contain" 
+                            className="w-full max-h-[500px] object-contain cursor-pointer" 
                           />
                         </div>
                       )}
 
                       <div className="flex justify-between pt-4 mt-4 border-t">
                         <button
-                          onClick={() => toggleLike(post.id, post.isLikedByMe)}
-                          className={`flex items-center gap-2 p-2 rounded-full ${
-                            post.isLikedByMe ? "text-red-500" : "text-gray-500"
+                          onClick={() => toggleLike(post.id, post.likedBy?.includes(user?.id) || post.isLikedByMe)}
+                          className={`flex items-center gap-2 p-2 rounded-full transition-colors duration-200 ${
+                            (post.likedBy?.includes(user?.id) || post.isLikedByMe) ? "text-red-500" : "text-gray-500"
                           }`}
                         >
                           <Heart
                             className={`h-5 w-5 ${
-                              post.isLikedByMe ? "fill-current" : ""
+                              (post.likedBy?.includes(user?.id) || post.isLikedByMe) ? "fill-current text-red-500" : ""
                             }`}
                           />
                           <span>{post.likes}</span>

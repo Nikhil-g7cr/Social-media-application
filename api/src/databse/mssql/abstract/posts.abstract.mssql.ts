@@ -7,6 +7,8 @@ export abstract class PostAbstractSQLDao {
 
   abstract getAllPosts(page:number,limit:number): Promise<AppResponse>;
 
+  abstract getPostsByUserId(userId: string, page:number, limit:number): Promise<AppResponse>;
+
   abstract getPostById(postId: string): Promise<AppResponse>;
 
   abstract updatePost(
@@ -17,4 +19,6 @@ export abstract class PostAbstractSQLDao {
   abstract deletePost(postId: string): Promise<AppResponse>;
 
   abstract getFeedPosts(followingIds: string[],page: number,limit: number,): Promise<AppResponse>;
+
+  abstract getLikedPostsByUserId(userId: string, page: number, limit: number): Promise<AppResponse>;
 }

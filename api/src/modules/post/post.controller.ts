@@ -42,6 +42,14 @@ export class PostController {
 
 
 
+  @Get('user/:userId')
+  async getPostsByUserId(
+    @Param('userId') userId: string,
+    @Query() pagination: PaginationDto,
+  ): Promise<AppResponse> {
+    return await this.postService.getPostsByUserId(userId, pagination);
+  }
+
   @Get(':id')
   async getPostById(@Param('id') id: string): Promise<AppResponse> {
     return await this.postService.getPostById(id);
@@ -60,5 +68,11 @@ export class PostController {
     return await this.postService.deletePost(id);
   }
 
-  
+  @Get('liked/user/:userId')
+  async getLikedPosts(
+    @Param('userId') userId: string,
+    @Query() pagination: PaginationDto,
+  ): Promise<AppResponse> {
+    return await this.postService.getLikedPostsByUserId(userId, pagination);
+  }
 }

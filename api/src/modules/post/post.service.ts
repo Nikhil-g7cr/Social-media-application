@@ -96,6 +96,38 @@ export class PostService implements PostAbstractSvc {
     }
   }
 
+  async getPostsByUserId(userId: string, pagination:PaginationDto): Promise<AppResponse> {
+    try {
+      this.logger.log(`[PostService] Fetching posts for user: ${userId}`, 200);
+
+      const page = pagination.page || 1;
+      const limit = pagination.limit || 10;
+
+      const response = await this.postDao.getPostsByUserId(userId, page, limit);
+
+      if (response.data && Array.isArray(response.data.posts)) {
+        response.data.posts = await Promise.all(
+          response.data.posts.map(async (post: any) => {
+            if (post.MediaURL) {
+              post.MediaURL = await this.fileService.generateReadUrl(
+                post.MediaURL,
+              );
+            }
+            return post;
+          }),
+        );
+      }
+
+      return response;
+    } catch (error: any) {
+      this.logger.error(
+        `[PostService] Error in getPostsByUserId: ${error.message}`,
+        500,
+      );
+      throw error;
+    }
+  }
+
   async getPostById(postId: string): Promise<AppResponse> {
     try {
       this.logger.log(`[PostService] Fetching post with ID: ${postId}`, 200);
@@ -151,7 +183,37 @@ export class PostService implements PostAbstractSvc {
   }
 
 
+  async getLikedPostsByUserId(userId: string, pagination: PaginationDto): Promise<AppResponse> {
+    try {
+      this.logger.log(`[PostService] Fetching liked posts for user: ${userId}`, 200);
 
+      const page = pagination.page || 1;
+      const limit = pagination.limit || 10;
+
+      const response = await this.postDao.getLikedPostsByUserId(userId, page, limit);
+
+      if (response.data && Array.isArray(response.data.posts)) {
+        response.data.posts = await Promise.all(
+          response.data.posts.map(async (post: any) => {
+            if (post.MediaURL) {
+              post.MediaURL = await this.fileService.generateReadUrl(
+                post.MediaURL,
+              );
+            }
+            return post;
+          }),
+        );
+      }
+
+      return response;
+    } catch (error: any) {
+      this.logger.error(
+        `[PostService] Error in getLikedPostsByUserId: ${error.message}`,
+        500,
+      );
+      throw error;
+    }
+  }
 
 }
 

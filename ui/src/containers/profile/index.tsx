@@ -9,6 +9,8 @@ import {
   useGetFollowersQuery,
   useGetFollowingQuery
 } from '../../redux/features/user/userApiSlice';
+import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery } from '../../redux/features/post/postApiSlice';
+import { Edit3 } from 'lucide-react';
 
 const UsersModal = ({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
@@ -67,6 +69,8 @@ const ProfilePage: React.FC = () => {
 
   const { data: userProfile, isLoading: isUserLoading } = useGetUserByIdQuery(targetUserId, { skip: !targetUserId });
   const { data: followInfo, isLoading: isFollowInfoLoading } = useGetProfileFollowInfoQuery(targetUserId, { skip: !targetUserId });
+  const { data: userPosts, isLoading: isPostsLoading } = useGetPostsByUserIdQuery(targetUserId, { skip: !targetUserId });
+  const { data: likedPosts, isLoading: isLikedPostsLoading } = useGetLikedPostsByUserIdQuery(targetUserId, { skip: !targetUserId });
 
   const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'saved'>('posts');
   const [modalState, setModalState] = useState<{isOpen: boolean, type: 'followers' | 'following'}>({ isOpen: false, type: 'followers' });
@@ -89,7 +93,7 @@ const ProfilePage: React.FC = () => {
     bio: userProfile.bio || 'No bio available',
     avatarUrl: userProfile.avatarUrl || userProfile.image_url || `https://ui-avatars.com/api/?name=${userProfile.name || 'User'}&background=random`,
     stats: {
-      posts: 0, // Placeholder as posts count is not in User API yet
+      posts: userPosts ? userPosts.length : 0,
       followers: followInfo?.followersCount || 0,
       following: followInfo?.followingCount || 0,
     }
@@ -142,6 +146,10 @@ const ProfilePage: React.FC = () => {
             <span className="font-bold text-gray-900">{profile.stats.posts}</span>
             <span className="text-sm text-gray-500">Posts</span>
           </div>
+          <div className="flex flex-col items-center sm:flex-row sm:gap-2">
+            <span className="font-bold text-gray-900">{likedPosts?.length || 0}</span>
+            <span className="text-sm text-gray-500">Liked</span>
+          </div>
           <div 
             className="flex flex-col items-center sm:flex-row sm:gap-2 cursor-pointer hover:underline"
             onClick={() => setModalState({ isOpen: true, type: 'followers' })}
@@ -189,22 +197,78 @@ const ProfilePage: React.FC = () => {
 
           {/* Grid Content Area */}
           <div className="mt-6 grid grid-cols-3 gap-1 sm:gap-4 lg:grid-cols-4">
-            {/* Generating 12 placeholder squares for the feed */}
-            {Array.from({ length: 12 }).map((_, index) => (
-              <div
-                key={index}
-                className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
-              >
-                <img
-                  src={`https://images.unsplash.com/photo-${1500000000000 + index}?auto=format&fit=crop&w=500&q=60`}
-                  alt={`Post ${index + 1}`}
-                  className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center gap-4 text-white">
-                  <div className="flex items-center gap-1 font-semibold"><Heart className="w-5 h-5 fill-white" /> {Math.floor(Math.random() * 100)}</div>
-                </div>
+            {activeTab === 'posts' && isPostsLoading ? (
+              <div className="col-span-3 lg:col-span-4 text-center py-10">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
               </div>
-            ))}
+            ) : activeTab === 'posts' && (!userPosts || userPosts.length === 0) ? (
+              <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
+                No posts to show.
+              </div>
+            ) : activeTab === 'posts' && userPosts ? (
+              userPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
+                >
+                  {post.mediaUrl ? (
+                    <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                  ) : (
+                    <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
+                      {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
+                    <div className="flex items-center gap-4 font-semibold">
+                      <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white" /> {post.likes || 0}</span>
+                    </div>
+                    {isCurrentUser && (
+                      <button 
+                        className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          // navigate or open edit modal
+                        }}
+                      >
+                        <Edit3 className="w-4 h-4" /> Edit
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))
+            ) : activeTab === 'liked' && isLikedPostsLoading ? (
+              <div className="col-span-3 lg:col-span-4 text-center py-10">
+                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+              </div>
+            ) : activeTab === 'liked' && (!likedPosts || likedPosts.length === 0) ? (
+              <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
+                No liked posts yet.
+              </div>
+            ) : activeTab === 'liked' && likedPosts ? (
+              likedPosts.map((post) => (
+                <div
+                  key={post.id}
+                  className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
+                >
+                  {post.mediaUrl ? (
+                    <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                  ) : (
+                    <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
+                      {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
+                    <div className="flex items-center gap-4 font-semibold">
+                      <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white text-red-500" /> {post.likes || 0}</span>
+                    </div>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
+                Feature coming soon.
+              </div>
+            )}
           </div>
         </div>
       </div>

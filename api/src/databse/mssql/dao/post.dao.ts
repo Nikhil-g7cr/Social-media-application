@@ -79,11 +79,18 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         limit,
         offset,
         order: [['CreatedAt', 'DESC']],
-        include: [{
-          model: this.sequelize.models.Users,
-          as: 'User',
-          attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
-        }]
+        include: [
+          {
+            model: this.sequelize.models.Users,
+            as: 'User',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+          },
+          {
+            model: this.sequelize.models.Likes,
+            as: 'Likes',
+            attributes: ['UserID']
+          }
+        ]
       });
 
       return createResponse(HttpStatus.OK, 'Posts retrieved successfully', {
@@ -109,6 +116,53 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       };
     }
   }
+  async getPostsByUserId(userId: string, page: number, limit: number): Promise<AppResponse> {
+    try {
+      const offset = (page - 1) * limit;
+
+      const { rows, count } = await this.postModel.findAndCountAll({
+        where: { UserID: userId },
+        limit,
+        offset,
+        order: [['CreatedAt', 'DESC']],
+        include: [
+          {
+            model: this.sequelize.models.Users,
+            as: 'User',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+          },
+          {
+            model: this.sequelize.models.Likes,
+            as: 'Likes',
+            attributes: ['UserID']
+          }
+        ]
+      });
+
+      return createResponse(HttpStatus.OK, 'User posts retrieved successfully', {
+        posts: rows,
+        pagination: {
+          page,
+          limit,
+          totalRecords: count,
+          totalPages: Math.ceil(count / limit),
+          hasNextPage: page < Math.ceil(count / limit),
+          hasPreviousPage: page > 1,
+        },
+      });
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          messageFactory(messages.E2),
+        ),
+        description: error.message,
+      };
+    }
+  }
+
   async getPostById(postId: string): Promise<AppResponse> {
     try {
       const post = await this.postModel.findOne({
@@ -249,11 +303,18 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         order: [
           ['CreatedAt', 'DESC'],
         ],
-        include: [{
-          model: this.sequelize.models.Users,
-          as: 'User',
-          attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
-        }]
+        include: [
+          {
+            model: this.sequelize.models.Users,
+            as: 'User',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+          },
+          {
+            model: this.sequelize.models.Likes,
+            as: 'Likes',
+            attributes: ['UserID']
+          }
+        ]
       });
 
     return createResponse(
@@ -280,7 +341,6 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     );
 
   } catch (error: any) {
-
     this.logger.error(
       error.stack,
       HttpStatus.INTERNAL_SERVER_ERROR,
@@ -295,4 +355,79 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     };
   }
 }
+
+  async getLikedPostsByUserId(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<AppResponse> {
+    try {
+      const offset = (page - 1) * limit;
+
+      // Find all posts that this user liked
+      const { rows, count } = await this.postModel.findAndCountAll({
+        include: [
+          {
+            model: this.sequelize.models.Users,
+            as: 'User',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
+          },
+          {
+            model: this.sequelize.models.Likes,
+            as: 'Likes',
+            where: { UserID: userId }, // INNER JOIN basically, only fetch posts liked by the user
+            attributes: ['UserID'],
+          },
+        ],
+        limit,
+        offset,
+        order: [['CreatedAt', 'DESC']],
+      });
+
+      const postIds = rows.map((post) => post.ID);
+
+      const fullPosts = await this.postModel.findAll({
+        where: { ID: { [Op.in]: postIds } },
+        include: [
+          {
+            model: this.sequelize.models.Users,
+            as: 'User',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
+          },
+          {
+            model: this.sequelize.models.Likes,
+            as: 'Likes',
+            attributes: ['UserID'],
+          },
+        ],
+        order: [['CreatedAt', 'DESC']],
+      });
+
+      return createResponse(
+        HttpStatus.OK,
+        'Liked posts retrieved successfully',
+        {
+          posts: fullPosts,
+          pagination: {
+            page,
+            limit,
+            totalRecords: count,
+            totalPages: Math.ceil(count / limit),
+            hasNextPage: page < Math.ceil(count / limit),
+            hasPreviousPage: page > 1,
+          },
+        },
+      );
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Failed to retrieve liked posts',
+        ),
+        description: error.message,
+      };
+    }
+  }
 }

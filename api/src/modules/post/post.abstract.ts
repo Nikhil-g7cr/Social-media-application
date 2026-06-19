@@ -8,6 +8,8 @@ export abstract class PostAbstractSvc {
 
   abstract getAllPosts(pagination:PaginationDto): Promise<AppResponse>;
 
+  abstract getPostsByUserId(userId: string, pagination:PaginationDto): Promise<AppResponse>;
+
   abstract getPostById(postId: string): Promise<AppResponse>;
 
   abstract updatePost(
@@ -17,6 +19,6 @@ export abstract class PostAbstractSvc {
 
   abstract deletePost(postId: string): Promise<AppResponse>;
 
-
+  abstract getLikedPostsByUserId(userId: string, pagination: PaginationDto): Promise<AppResponse>;
 
 }
