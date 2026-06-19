@@ -65,4 +65,12 @@ export class NotificationSQLDao implements NotificationAbsSQLDAO {
       { where: { UserID: userId, IsRead: false } }
     );
   }
+
+  async delete(notificationId: string): Promise<void> {
+    await this.notificationModel.destroy({ where: { ID: notificationId } });
+  }
+
+  async deleteAll(userId: string): Promise<void> {
+    await this.notificationModel.destroy({ where: { UserID: userId } });
+  }
 }

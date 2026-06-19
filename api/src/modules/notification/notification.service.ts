@@ -39,4 +39,14 @@ export class NotificationService {
     await this.notificationDao.markAllAsRead(userId);
     return { success: true };
   }
+
+  async deleteNotification(notificationId: string) {
+    await this.notificationDao.delete(notificationId);
+    return { success: true };
+  }
+
+  async deleteAllNotifications(userId: string) {
+    await this.notificationDao.deleteAll(userId);
+    return { success: true };
+  }
 }

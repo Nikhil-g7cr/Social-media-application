@@ -27,9 +27,36 @@ export const chatApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getConversations: builder.query<Conversation[], void>({
             query: () => ({ url: 'conversation' }),
-            // Backend now returns properly shaped data directly
             transformResponse: (response: any) => response.data || response,
             providesTags: ['Conversation'],
+            async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }) {
+                const { initializeSocket } = await import('../../../utils/socket');
+                const socket = initializeSocket();
+                try {
+                    await cacheDataLoaded;
+                    const listener = (message: ChatMessage) => {
+                        let found = false;
+                        updateCachedData((draft) => {
+                            const conv = draft.find(c => c.id === message.conversationId);
+                            if (conv) {
+                                found = true;
+                                conv.latestMessage = message;
+                                // Move to top
+                                const index = draft.indexOf(conv);
+                                if (index > 0) {
+                                    draft.splice(index, 1);
+                                    draft.unshift(conv);
+                                }
+                            }
+                        });
+                        if (!found) {
+                            dispatch(apiSlice.util.invalidateTags(['Conversation']));
+                        }
+                    };
+                    socket.on('newMessage', listener);
+                } catch {}
+                await cacheEntryRemoved;
+            }
         }),
         startConversation: builder.mutation<{ conversationId: string }, string>({
             query: (userId) => ({
@@ -41,9 +68,27 @@ export const chatApiSlice = apiSlice.injectEndpoints({
         }),
         getMessagesByConversationId: builder.query<ChatMessage[], string>({
             query: (conversationId) => ({ url: `message/conversation/${conversationId}` }),
-            // Backend now returns normalized camelCase objects, no manual mapping needed
             transformResponse: (response: any) => response.data || response,
             providesTags: (_result, _error, conversationId) => [{ type: 'Chat', id: `Conv_${conversationId}` }],
+            async onCacheEntryAdded(conversationId, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
+                const { initializeSocket } = await import('../../../utils/socket');
+                const socket = initializeSocket();
+                try {
+                    await cacheDataLoaded;
+                    const listener = (message: ChatMessage) => {
+                        if (message.conversationId === conversationId) {
+                            updateCachedData((draft) => {
+                                // Avoid duplicate inserts
+                                if (!draft.find((m) => m.id === message.id)) {
+                                    draft.push(message);
+                                }
+                            });
+                        }
+                    };
+                    socket.on('newMessage', listener);
+                } catch {}
+                await cacheEntryRemoved;
+            }
         }),
     }),
 });

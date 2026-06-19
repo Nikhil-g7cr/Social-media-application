@@ -3,4 +3,6 @@ export abstract class NotificationAbsSQLDAO {
   abstract getNotifications(userId: string, limit?: number): Promise<any[]>;
   abstract markAsRead(notificationId: string): Promise<void>;
   abstract markAllAsRead(userId: string): Promise<void>;
+  abstract delete(notificationId: string): Promise<void>;
+  abstract deleteAll(userId: string): Promise<void>;
 }

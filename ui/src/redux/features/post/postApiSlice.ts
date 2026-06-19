@@ -40,7 +40,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         id: p.User?.ID || p.UserID,
                         name: p.User?.FullName || 'Unknown',
                         username: p.User?.UserName || 'unknown',
-                        avatarUrl: p.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                        avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
                     },
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
@@ -69,7 +69,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                                     id: newPostRaw.User?.ID || newPostRaw.UserID,
                                     name: newPostRaw.User?.FullName || 'Unknown',
                                     username: newPostRaw.User?.UserName || 'unknown',
-                                    avatarUrl: newPostRaw.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${newPostRaw.User?.FullName || 'User'}&background=random`
+                                    avatarUrl: newPostRaw.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${newPostRaw.User?.FullName || 'User'}&background=random`,
                                 },
                                 content: newPostRaw.Content || '',
                                 timestamp: new Date(newPostRaw.CreatedAt).toLocaleString(),
@@ -98,7 +98,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         id: p.User?.ID || p.UserID,
                         name: p.User?.FullName || 'Unknown',
                         username: p.User?.UserName || 'unknown',
-                        avatarUrl: p.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                        avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
                     },
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
@@ -121,7 +121,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         id: p.User?.ID || p.UserID,
                         name: p.User?.FullName || 'Unknown',
                         username: p.User?.UserName || 'unknown',
-                        avatarUrl: p.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                        avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
                     },
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(),
@@ -144,7 +144,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         id: p.User?.ID || p.UserID,
                         name: p.User?.FullName || 'Unknown',
                         username: p.User?.UserName || 'unknown',
-                        avatarUrl: p.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                        avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
                     },
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(),
@@ -224,7 +224,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 return rawComments.map((c: any) => ({
                     id: c.ID,
                     authorName: c.User?.FullName || 'Unknown',
-                    authorAvatar: c.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${c.User?.FullName || 'User'}&background=random`,
+                    authorAvatar: c.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${c.User?.FullName || 'User'}&background=random`,
                     content: c.Content,
                     time: new Date(c.CreatedAt).toLocaleString(),
                     likes: 0,

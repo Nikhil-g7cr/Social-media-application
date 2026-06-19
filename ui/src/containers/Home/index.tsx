@@ -123,10 +123,9 @@ export default function HomePage() {
                     >
                       <div className="flex justify-between">
                         <div className="flex gap-3">
-                          <img
-                            src={post.author.avatarUrl}
-                            alt=""
-                            className="h-10 w-10 rounded-full"
+                          <PostImage
+                            mediaUrl={post.author.avatarUrl}
+                            className="h-10 w-10 rounded-full object-cover"
                           />
 
                           <div>

@@ -84,7 +84,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
           },
           {
             model: this.sequelize.models.Likes,
@@ -136,7 +136,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
           },
           {
             model: this.sequelize.models.Likes,
@@ -320,7 +320,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
           },
           {
             model: this.sequelize.models.Likes,
@@ -388,7 +388,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
           },
           {
             model: this.sequelize.models.Likes,
@@ -411,7 +411,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
           },
           {
             model: this.sequelize.models.Likes,

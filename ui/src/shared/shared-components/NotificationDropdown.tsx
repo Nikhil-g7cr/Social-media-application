@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Heart, MessageCircle, UserPlus, Info, Check } from 'lucide-react';
-import { useGetNotificationsQuery, useMarkAsReadMutation, useMarkAllAsReadMutation, type Notification as ApiNotification } from '../../redux/features/notification/notificationApiSlice';
+import { useGetNotificationsQuery, useMarkAsReadMutation, useMarkAllAsReadMutation, useDeleteNotificationMutation, useClearAllNotificationsMutation, type Notification as ApiNotification } from '../../redux/features/notification/notificationApiSlice';
 import { formatDistanceToNow } from 'date-fns';
 import { initializeSocket } from '../../utils/socket';
 import { useDispatch } from 'react-redux';
 import { apiSlice } from '../../redux/apiSlice';
+import PostImage from './PostImage';
 
 // --- Types ---
 // Using ApiNotification from notificationApiSlice
@@ -14,19 +15,12 @@ const NotificationDropdown: React.FC = () => {
   const { data: serverNotifications = [], refetch } = useGetNotificationsQuery();
   const [markAsReadMutation] = useMarkAsReadMutation();
   const [markAllAsReadMutation] = useMarkAllAsReadMutation();
+  const [deleteNotification] = useDeleteNotificationMutation();
+  const [clearAllNotifications] = useClearAllNotificationsMutation();
   const dispatch = useDispatch();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    const socket = initializeSocket();
-    const handleNewNotification = () => {
-      dispatch(apiSlice.util.invalidateTags(['Notification']));
-    };
-    socket.on('newNotification', handleNewNotification);
-    return () => {
-      socket.off('newNotification', handleNewNotification);
-    };
-  }, [dispatch]);
+  // Socket listening is now handled entirely within notificationApiSlice
 
   const notifications = serverNotifications.map((n: ApiNotification) => ({
     id: n.ID,
@@ -59,6 +53,15 @@ const NotificationDropdown: React.FC = () => {
 
   const markAsRead = async (id: string) => {
     await markAsReadMutation(id).unwrap();
+  };
+
+  const handleClearAll = async () => {
+    await clearAllNotifications().unwrap();
+  };
+
+  const handleDelete = async (e: React.MouseEvent, id: string) => {
+    e.stopPropagation();
+    await deleteNotification(id).unwrap();
   };
 
   // --- Helper to get contextual icons ---
@@ -124,9 +127,8 @@ const NotificationDropdown: React.FC = () => {
                   >
                     {/* Avatar & Sub-Icon */}
                     <div className="relative flex-shrink-0">
-                      <img
-                        src={notification.actorAvatar}
-                        alt={notification.actorName}
+                      <PostImage
+                        mediaUrl={notification.actorAvatar}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                       {getNotificationIcon(notification.type)}
@@ -143,10 +145,19 @@ const NotificationDropdown: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Unread Indicator Dot */}
-                    {!notification.isRead && (
-                      <div className="flex-shrink-0 w-2.5 h-2.5 bg-blue-600 rounded-full mt-2"></div>
-                    )}
+                    {/* Unread Indicator Dot & Delete Button */}
+                    <div className="flex-shrink-0 flex flex-col items-center gap-2">
+                      {!notification.isRead && (
+                        <div className="w-2.5 h-2.5 bg-blue-600 rounded-full mt-2"></div>
+                      )}
+                      <button 
+                        onClick={(e) => handleDelete(e, notification.id)}
+                        className="text-gray-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100 mt-1"
+                        title="Clear notification"
+                      >
+                        <span className="text-xs font-bold">X</span>
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -154,9 +165,15 @@ const NotificationDropdown: React.FC = () => {
           </div>
 
           {/* Footer */}
-          <div className="border-t border-gray-100">
-            <button className="w-full py-3 text-sm font-medium text-blue-600 hover:bg-gray-50 transition text-center">
-              View all notifications
+          <div className="border-t border-gray-100 flex items-center justify-between">
+            <button className="flex-1 py-3 text-sm font-medium text-blue-600 hover:bg-gray-50 transition text-center border-r border-gray-100">
+              View all
+            </button>
+            <button 
+              onClick={handleClearAll}
+              className="flex-1 py-3 text-sm font-medium text-red-600 hover:bg-red-50 transition text-center"
+            >
+              Clear notifications
             </button>
           </div>
         </div>

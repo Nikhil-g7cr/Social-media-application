@@ -94,26 +94,9 @@ const MessagesPage: React.FC = () => {
   // Track a newly created conversation so we can auto-open it after refetch
   const pendingConvIdRef = useRef<string | null>(null);
 
-  // --- WebSocket: Initialize once, handle incoming real-time messages ---
+  // --- WebSocket: Initialize once, handle online/offline status ---
   useEffect(() => {
     const socket = initializeSocket();
-
-    socket.on("newMessage", (message: ChatMessage) => {
-      // Backend now sends normalized shape: { id, senderId, content, conversationId, createdAt }
-      const uiMsg: UIMessage = {
-        id: message.id,
-        senderId: message.senderId,
-        text: message.content,
-        timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-      };
-
-      setMessages((prev) => {
-        // De-duplicate: skip if already in list (could be optimistic duplicate)
-        if (prev.find((m) => m.id === message.id)) return prev;
-        return [...prev, uiMsg];
-      });
-      scrollToBottom();
-    });
 
     socket.on("userOnline", (userId: string) => {
       setConversations((prev) =>
@@ -128,11 +111,15 @@ const MessagesPage: React.FC = () => {
     });
 
     return () => {
-      socket.off("newMessage");
       socket.off("userOnline");
       socket.off("userOffline");
     };
   }, []);
+
+  // Auto-scroll when messages update
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages.length]);
 
   // --- JOIN ROOM when switching active conversation (Bug Fix #6) ---
   useEffect(() => {
