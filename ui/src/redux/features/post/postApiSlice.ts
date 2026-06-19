@@ -124,6 +124,19 @@ export const postApiSlice = apiSlice.injectEndpoints({
             }),
             invalidatesTags: (_result, _error, id) => [{ type: 'Post', id }],
         }),
+        getUploadUrl: builder.mutation<{ uploadUrl: string; blobPath: string; expiresIn: string }, { fileName: string; contentType: string }>({
+            query: (data) => ({
+                url: 'files/upload-url',
+                method: 'POST',
+                data,
+            }),
+        }),
+        getReadUrl: builder.query<{ url: string }, string>({
+            query: (blobPath) => ({
+                url: `files/read-url?url=${encodeURIComponent(blobPath)}`,
+                method: 'GET',
+            }),
+        }),
     }),
 });
 
@@ -134,4 +147,6 @@ export const {
     useCreatePostMutation,
     useUpdatePostMutation,
     useDeletePostMutation,
+    useGetUploadUrlMutation,
+    useGetReadUrlQuery,
 } = postApiSlice;

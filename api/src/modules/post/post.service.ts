@@ -39,6 +39,11 @@ export class PostService implements PostAbstractSvc {
         const followers = await this.followDao.getFollowers(userId);
         const postData = response.data;
         
+        // Sign the media URL before broadcasting so it loads immediately in the feed
+        if (postData.MediaURL) {
+          postData.MediaURL = await this.fileService.generateReadUrl(postData.MediaURL);
+        }
+        
         // Emit to the author's own room so they see it instantly
         this.chatGateway.server.to(`user_${userId}`).emit('newPostInFeed', postData);
         

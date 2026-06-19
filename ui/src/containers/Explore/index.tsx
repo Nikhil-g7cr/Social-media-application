@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Heart, MessageCircle, TrendingUp, Image as ImageIcon, PlayCircle } from 'lucide-react';
 import { useGetAllExplorePostsQuery } from '../../redux/features/post/postApiSlice';
+import PostImage from '../../shared/shared-components/PostImage';
 
 const CATEGORIES = ['For You', 'Trending', 'Technology', 'Art', 'Sports', 'Entertainment', 'News', 'Travel', 'Food'];
 
@@ -54,11 +55,9 @@ const ExplorePage: React.FC = () => {
               >
                 {/* Post Image or Text Fallback */}
                 {post.mediaUrl ? (
-                  <img 
-                    src={post.mediaUrl} 
-                    alt="Explore post" 
+                  <PostImage 
+                    mediaUrl={post.mediaUrl} 
                     className="w-full h-auto min-h-[160px] object-cover transform transition-transform duration-500 group-hover:scale-105"
-                    loading="lazy"
                   />
                 ) : (
                   <div className="w-full h-40 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 p-4 text-center transition-transform duration-500 group-hover:scale-105">

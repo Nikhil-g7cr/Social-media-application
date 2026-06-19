@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import {
   BlobServiceClient,
   StorageSharedKeyCredential,
@@ -10,11 +10,12 @@ import { AppConfig } from 'src/config/AppConfig';
 import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
-export class FileService {
+export class FileService implements OnModuleInit {
   private readonly containerName: string;
   private readonly accountName: string;
   private readonly sharedKeyCredential: StorageSharedKeyCredential;
   private readonly blobServiceClient: BlobServiceClient;
+  private readonly logger = new Logger(FileService.name);
 
   constructor(private readonly appConfig: AppConfig) {
     const blobConfig = this.appConfig.get('blobStorage');
@@ -34,6 +35,29 @@ export class FileService {
     );
   }
 
+  async onModuleInit() {
+    try {
+      this.logger.log('Configuring Azure Blob Storage CORS rules...');
+      const properties = await this.blobServiceClient.getProperties();
+      
+      // Ensure our frontend can upload directly to blob storage
+      properties.cors = [
+        {
+          allowedOrigins: 'http://localhost:3000,http://127.0.0.1:3000',
+          allowedMethods: 'GET,PUT,POST,HEAD,OPTIONS,DELETE',
+          allowedHeaders: '*',
+          exposedHeaders: '*',
+          maxAgeInSeconds: 3600,
+        },
+      ];
+      
+      await this.blobServiceClient.setProperties(properties);
+      this.logger.log('Successfully configured Azure Blob Storage CORS rules.');
+    } catch (error) {
+      this.logger.error('Failed to configure Azure Blob Storage CORS rules', error);
+    }
+  }
+
   async generateUploadUrl(fileName: string) {
     const extension = fileName.split('.').pop();
 
@@ -50,7 +74,7 @@ export class FileService {
         containerName: this.containerName,
         blobName,
         permissions: BlobSASPermissions.parse('racwd'),
-        startsOn: new Date(),
+        startsOn: new Date(Date.now() - 5 * 60 * 1000),
         expiresOn: new Date(Date.now() + 15 * 60 * 1000),
       },
       this.sharedKeyCredential,
@@ -94,7 +118,7 @@ export class FileService {
         containerName: this.containerName,
         blobName: blobPath,
         permissions: BlobSASPermissions.parse('r'),
-        startsOn: new Date(),
+        startsOn: new Date(Date.now() - 5 * 60 * 1000),
         expiresOn: new Date(Date.now() + 60 * 60 * 1000),
       },
       this.sharedKeyCredential,

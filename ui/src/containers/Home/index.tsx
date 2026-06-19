@@ -17,6 +17,7 @@ import ExplorePage from "../Explore";
 import { useGetPostsQuery } from "../../redux/features/post/postApiSlice";
 import { useLikePostMutation, useUnlikePostMutation } from "../../redux/features/like/likeApiSlice";
 import CreatePost from "../../shared/shared-components/CreatePost";
+import PostImage from "../../shared/shared-components/PostImage";
 export default function HomePage() {
   const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
   
@@ -145,6 +146,15 @@ export default function HomePage() {
                       <p className="mt-4 text-gray-800 whitespace-pre-wrap">
                         {post.content}
                       </p>
+
+                      {post.mediaUrl && (
+                        <div className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50">
+                          <PostImage 
+                            mediaUrl={post.mediaUrl} 
+                            className="w-full max-h-[500px] object-contain" 
+                          />
+                        </div>
+                      )}
 
                       <div className="flex justify-between pt-4 mt-4 border-t">
                         <button
