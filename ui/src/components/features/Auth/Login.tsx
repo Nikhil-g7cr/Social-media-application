@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import API from "../../../config/axiosConfig";
 import { notification } from "antd";
 import DynamicForm from "../../../shared/shared-components/DynamicForm";
 import { loginFields } from "../../layout/form/fields/login.fields";
 import { loginSchema } from "../../layout/form/schemas/login.schema";
+import { useLoginMutation } from "../../../redux/features/auth/authApiSlice";
+import { useAppDispatch } from "../../../redux/hooks";
+import { login } from "../../../redux/features/auth/AuthSlice";
 
 interface LoginFormValues {
   email: string;
@@ -12,37 +14,29 @@ interface LoginFormValues {
 }
 
 export const LoginPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useAppDispatch();
+  const [loginApi, { isLoading }] = useLoginMutation();
 
   const handleLogin = async (values: LoginFormValues) => {
     try {
-      setIsLoading(true);
-
-      const response = await API.post("/auth/login", {
+      const response = await loginApi({
         EmailAddress: values.email,
         Password: values.password,
-      });
+      }).unwrap();
 
-      const token = response.data?.accessToken;
+      // Depending on backend structure, data could be nested
+      const data = response?.data || response;
+      const accessToken = data?.accessToken;
+      const refreshToken = data?.refreshToken;
 
-      //   const response = await API.post('/auth/login', values);
-
-      // Axios 'data' -> Your Backend's 'data' -> accessToken
-      const accessToken = response.data.data.accessToken;
-      const refreshToken = response.data.data.refreshToken;
-
-      console.log("Access Token:", accessToken);
-      console.log("Refresh Token:", refreshToken);
-
-      // Store them
-      sessionStorage.setItem("accessToken", accessToken);
-      // You might want to store the refresh token in localStorage or sessionStorage too
-      sessionStorage.setItem("refreshToken", refreshToken);
-
-      if (token) {
-        sessionStorage.setItem("accessToken", token);
-      }
+      // Dispatch to Redux store (this also sets sessionStorage internally in AuthSlice)
+      dispatch(
+        login({
+          accessToken,
+          refreshToken,
+        })
+      );
 
       notification.success({
         message: "Login Successful",
@@ -57,12 +51,10 @@ export const LoginPage = () => {
       notification.error({
         message: "Login Failed",
         description:
-          error?.response?.data?.message ||
+          error?.data?.message ||
           "Invalid credentials. Please try again.",
         placement: "topRight",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 

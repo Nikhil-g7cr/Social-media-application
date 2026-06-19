@@ -6,6 +6,7 @@ import DynamicForm from "../../../shared/shared-components/DynamicForm";
 import { signupFields } from "../../layout/form/fields/signup.field";
 import { signupSchema } from "../../layout/form/schemas/signup.schema";
 import API from "../../../config/axiosConfig";
+import { useSignupMutation } from "../../../redux/features/auth/authApiSlice";
 
 interface SignupFormData {
   FullName: string;
@@ -19,13 +20,11 @@ interface SignupFormData {
 }
 
 const SignupPage = () => {
-  const [isLoading, setIsLoading] = useState(false);
+  const [signup, { isLoading }] = useSignupMutation();
   const navigate = useNavigate();
 
   const handleSignup = async (values: SignupFormData) => {
     try {
-      setIsLoading(true);
-
       const payload = {
         FullName: values.FullName,
         UserName: values.UserName,
@@ -36,12 +35,9 @@ const SignupPage = () => {
         Gender: values.Gender,
       };
 
-      const response = await API.post(
-        "/auth/signup",
-        payload
-      );
+      const response = await signup(payload).unwrap();
 
-      console.log("Signup Success:", response.data);
+      console.log("Signup Success:", response);
 
       notification.success({
         message: "Account Created",
@@ -57,13 +53,11 @@ const SignupPage = () => {
       notification.error({
         message: "Signup Failed",
         description:
-          error?.response?.data?.message ||
+          error?.data?.message ||
           error?.message ||
           "Something went wrong while creating your account.",
         placement: "topRight",
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -81,7 +75,7 @@ const SignupPage = () => {
         </div>
 
         <DynamicForm
-          fields={signupFields}
+          fields={signupFields as any}
           validationSchema={signupSchema}
           submitButtonText="Create Account"
           loading={isLoading}

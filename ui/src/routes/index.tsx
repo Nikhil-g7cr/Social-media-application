@@ -10,6 +10,7 @@ import ProfilePage from "../containers/profile";
 import MessagesPage from "../containers/Message";
 import ExplorePage from "../containers/Explore";
 import Navbar from "../components/layout/Navbar";
+import PrivateRoute from "./ProtectedRoutes";
 
 // Create Reusable Role Arrays for cleaner code
 
@@ -29,11 +30,21 @@ const Approutes = () => {
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<HomePage />} />
-        <Route path="/profile" element={<ProfilePage/>}/>
-        <Route path="/message" element={<MessagesPage/>}/>
         <Route path="/explore" element={<ExplorePage/>}/>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupForm />} />
+
+        {/* PROTECTED ROUTES */}
+        <Route path="/profile" element={
+          <PrivateRoute>
+            <ProfilePage/>
+          </PrivateRoute>
+        }/>
+        <Route path="/message" element={
+          <PrivateRoute>
+            <MessagesPage/>
+          </PrivateRoute>
+        }/>
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
