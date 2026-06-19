@@ -20,6 +20,9 @@ import {
   type ChatMessage,
 } from "../../redux/features/chat/chatApiSlice";
 import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
+import { useSelector } from "react-redux";
+import type { RootState } from "@reduxjs/toolkit/query";
+import PostImage from "../../shared/shared-components/PostImage";
 
 // --- TypeScript Interfaces ---
 interface UIMessage {
@@ -32,7 +35,7 @@ interface UIMessage {
 interface UIConversation {
   id: string;
   participantName: string;
-  avatarUrl: string;
+  image_url: string;
   lastMessage: string;
   time: string;
   unreadCount: number;
@@ -145,7 +148,7 @@ const MessagesPage: React.FC = () => {
       const formattedConversations = apiConversations.map((conv: RTKConversation) => ({
         id: conv.id,
         participantName: conv.participant?.name || "Unknown User",
-        avatarUrl:
+        image_url:
           conv.participant?.avatarUrl ||
           `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.participant?.name || "U")}&background=random`,
         lastMessage: conv.latestMessage?.content || "No messages yet",
@@ -236,7 +239,7 @@ const MessagesPage: React.FC = () => {
       conversationId: activeConversation.id,
       text,
     });
-    
+
     setTimeout(scrollToBottom, 100);
 
 
@@ -285,12 +288,8 @@ const MessagesPage: React.FC = () => {
                         onClick={() => handleStartNewChat(u.id)}
                         className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
                       >
-                        <img
-                          src={u.avatarUrl}
-                          alt={u.name}
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${u.name || "User"}&background=random`;
-                          }}
+                        <PostImage
+                          mediaUrl={u.image_url || `https://ui-avatars.com/api/?name=${u.name || "User"}&background=random`}
                           className="w-8 h-8 rounded-full object-cover border border-gray-200"
                         />
                         <div className="flex flex-col truncate">
@@ -322,12 +321,8 @@ const MessagesPage: React.FC = () => {
                 className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition border-b border-gray-100 ${activeConversation?.id === conv.id ? "bg-blue-50/50" : ""}`}
               >
                 <div className="relative flex-shrink-0">
-                  <img
-                    src={conv.avatarUrl}
-                    alt={conv.participantName}
-                    onError={(e) => {
-                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${conv.participantName || "U"}&background=random`;
-                    }}
+                  <PostImage
+                    mediaUrl={conv.image_url}
                     className="h-12 w-12 rounded-full object-cover"
                   />
                   {conv.isOnline && (
@@ -371,12 +366,8 @@ const MessagesPage: React.FC = () => {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <img
-                  src={activeConversation.avatarUrl}
-                  alt={activeConversation.participantName}
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${activeConversation.participantName || "U"}&background=random`;
-                  }}
+                <PostImage
+                  mediaUrl={activeConversation.image_url}
                   className="h-10 w-10 rounded-full object-cover"
                 />
                 <div>
@@ -409,11 +400,10 @@ const MessagesPage: React.FC = () => {
                   <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
                     <div className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                       <div
-                        className={`px-4 py-2 rounded-2xl ${
-                          isMe
-                            ? "bg-blue-600 text-white rounded-br-none"
-                            : "bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm"
-                        }`}
+                        className={`px-4 py-2 rounded-2xl ${isMe
+                          ? "bg-blue-600 text-white rounded-br-none"
+                          : "bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm"
+                          }`}
                       >
                         <p className="text-sm">{msg.text}</p>
                       </div>

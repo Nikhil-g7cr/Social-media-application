@@ -26,6 +26,17 @@ export const userApiSlice = apiSlice.injectEndpoints({
         }),
         getUserById: builder.query<User, string>({
             query: (id) => ({ url: `user/${id}` }),
+            transformResponse: (response: any) => {
+                const u = response?.data || response;
+                return {
+                    id: u.ID || u.id,
+                    username: u.UserName || u.username,
+                    name: u.FullName || u.name,
+                    email: u.Email || u.email || '',
+                    avatarUrl: u.ProfilePictureUrl || u.avatarUrl || `https://ui-avatars.com/api/?name=${u.FullName || u.name || 'User'}&background=random`,
+                    bio: u.Bio || u.bio,
+                };
+            },
             providesTags: (_result, _error, id) => [{ type: 'User', id }],
         }),
         updateUserProfile: builder.mutation<User, Partial<User> & { id: string }>({
@@ -110,6 +121,36 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 { type: 'User' }
             ],
         }),
+        getFollowers: builder.query<User[], string>({
+            query: (userId) => ({ url: `follow/followers/${userId}` }),
+            transformResponse: (response: any) => {
+                const rawUsers = response?.data || response || [];
+                return rawUsers.map((u: any) => ({
+                    id: u.FollowerID || u.ID || u.id,
+                    username: u.Follower?.UserName || u.UserName || u.username,
+                    name: u.Follower?.FullName || u.FullName || u.name,
+                    email: u.Follower?.Email || u.Email || u.email || '',
+                    avatarUrl: u.Follower?.ProfilePictureUrl || u.ProfilePictureUrl || u.avatarUrl || `https://ui-avatars.com/api/?name=${u.Follower?.FullName || u.FullName || u.name || 'User'}&background=random`,
+                    bio: u.Follower?.Bio || u.Bio || u.bio,
+                }));
+            },
+            providesTags: ['User'],
+        }),
+        getFollowing: builder.query<User[], string>({
+            query: (userId) => ({ url: `follow/following/${userId}` }),
+            transformResponse: (response: any) => {
+                const rawUsers = response?.data || response || [];
+                return rawUsers.map((u: any) => ({
+                    id: u.FollowingID || u.ID || u.id,
+                    username: u.Following?.UserName || u.UserName || u.username,
+                    name: u.Following?.FullName || u.FullName || u.name,
+                    email: u.Following?.Email || u.Email || u.email || '',
+                    avatarUrl: u.Following?.ProfilePictureUrl || u.ProfilePictureUrl || u.avatarUrl || `https://ui-avatars.com/api/?name=${u.Following?.FullName || u.FullName || u.name || 'User'}&background=random`,
+                    bio: u.Following?.Bio || u.Bio || u.bio,
+                }));
+            },
+            providesTags: ['User'],
+        }),
     }),
 });
 
@@ -121,4 +162,6 @@ export const {
     useGetProfileFollowInfoQuery,
     useFollowUserMutation,
     useUnfollowUserMutation,
+    useGetFollowersQuery,
+    useGetFollowingQuery,
 } = userApiSlice;

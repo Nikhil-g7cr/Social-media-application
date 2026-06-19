@@ -35,7 +35,7 @@ const Approutes = () => {
         <Route path="/signup" element={<SignupForm />} />
 
         {/* PROTECTED ROUTES */}
-        <Route path="/profile" element={
+        <Route path="/profile/:userId?" element={
           <PrivateRoute>
             <ProfilePage/>
           </PrivateRoute>
