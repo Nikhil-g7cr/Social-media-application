@@ -27,9 +27,9 @@ export const enum CPAlias {
 }
 
 export const enum ConversationParticipantRoles {
-  MEMBER = 'MEMBER',
-  ADMIN = 'ADMIN',
-  OWNER = 'OWNER',
+  MEMBER = 'member',
+  ADMIN = 'admin',
+  OWNER = 'owner', // Although only member and admin are in the check constraint, we'll keep owner if it's used elsewhere, but we'll use 'admin' instead of 'owner' for new chats.
 }
 
 @Table({

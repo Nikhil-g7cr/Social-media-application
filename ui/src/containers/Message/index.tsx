@@ -12,31 +12,24 @@ import {
 import { initializeSocket } from "../../utils/socket";
 import { useLocation } from "react-router-dom";
 import { useAppSelector } from "../../redux/hooks";
-import { 
-  useGetConversationsQuery, 
-  useGetMessagesByConversationIdQuery, 
-  useSendMessageMutation,
+import {
+  useGetConversationsQuery,
+  useGetMessagesByConversationIdQuery,
   useStartConversationMutation,
-  type Conversation as RTKConversation
+  type Conversation as RTKConversation,
+  type ChatMessage,
 } from "../../redux/features/chat/chatApiSlice";
 import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
 
 // --- TypeScript Interfaces ---
-interface Message {
+interface UIMessage {
   id: string;
   senderId: string;
   text: string;
   timestamp: string;
 }
 
-interface SocketMessage {
-  id: string;
-  senderId: string;
-  text: string;
-  timestamp: string;
-}
-
-interface Conversation {
+interface UIConversation {
   id: string;
   participantName: string;
   avatarUrl: string;
@@ -50,15 +43,15 @@ interface Conversation {
 const MessagesPage: React.FC = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const targetConvId = searchParams.get('convId');
+  const targetConvId = searchParams.get("convId");
 
   const { user } = useAppSelector((state) => state.auth);
   const CURRENT_USER_ID = user?.id || "";
 
   // --- State ---
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [conversations, setConversations] = useState<UIConversation[]>([]);
+  const [activeConversation, setActiveConversation] = useState<UIConversation | null>(null);
+  const [messages, setMessages] = useState<UIMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
@@ -92,44 +85,42 @@ const MessagesPage: React.FC = () => {
   const { data: apiMessages } = useGetMessagesByConversationIdQuery(activeConversation?.id || "", {
     skip: !activeConversation,
   });
-  const [sendMessageMutation] = useSendMessageMutation();
   const [startConversation] = useStartConversationMutation();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Track a newly created conversation so we can auto-open it after refetch
   const pendingConvIdRef = useRef<string | null>(null);
 
-  // --- Mock Data & Data Fetching ---
+  // --- WebSocket: Initialize once, handle incoming real-time messages ---
   useEffect(() => {
-    // ==========intialize websocket============
     const socket = initializeSocket();
-    socket.on("newMessage", (message: SocketMessage) => {
-      console.log("New MEssage recieved", message);
 
-      setMessages((prevMessages) => {
-        if (prevMessages.find((m) => m.id === message.id)) return prevMessages;
+    socket.on("newMessage", (message: ChatMessage) => {
+      // Backend now sends normalized shape: { id, senderId, content, conversationId, createdAt }
+      const uiMsg: UIMessage = {
+        id: message.id,
+        senderId: message.senderId,
+        text: message.content,
+        timestamp: new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
 
-        return [...prevMessages, message];
+      setMessages((prev) => {
+        // De-duplicate: skip if already in list (could be optimistic duplicate)
+        if (prev.find((m) => m.id === message.id)) return prev;
+        return [...prev, uiMsg];
       });
       scrollToBottom();
     });
 
-    // 2. Listen for users coming online
     socket.on("userOnline", (userId: string) => {
       setConversations((prev) =>
-        prev.map((conv) =>
-          // Assuming your conversation object has a participantId to match against
-          conv.participantId === userId ? { ...conv, isOnline: true } : conv,
-        ),
+        prev.map((conv) => conv.participantId === userId ? { ...conv, isOnline: true } : conv)
       );
     });
 
-    // 3. Listen for users going offline
     socket.on("userOffline", (userId: string) => {
       setConversations((prev) =>
-        prev.map((conv) =>
-          conv.participantId === userId ? { ...conv, isOnline: false } : conv,
-        ),
+        prev.map((conv) => conv.participantId === userId ? { ...conv, isOnline: false } : conv)
       );
     });
 
@@ -140,7 +131,15 @@ const MessagesPage: React.FC = () => {
     };
   }, []);
 
-  // Update conversations from RTK Query
+  // --- JOIN ROOM when switching active conversation (Bug Fix #6) ---
+  useEffect(() => {
+    if (activeConversation) {
+      const socket = initializeSocket();
+      socket.emit("joinRoom", { conversationId: activeConversation.id });
+    }
+  }, [activeConversation]);
+
+  // --- Update conversations from RTK Query ---
   useEffect(() => {
     if (apiConversations) {
       const formattedConversations = apiConversations.map((conv: RTKConversation) => ({
@@ -148,10 +147,10 @@ const MessagesPage: React.FC = () => {
         participantName: conv.participant?.name || "Unknown User",
         avatarUrl:
           conv.participant?.avatarUrl ||
-          `https://ui-avatars.com/api/?name=${conv.participant?.name}&background=random`,
+          `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.participant?.name || "U")}&background=random`,
         lastMessage: conv.latestMessage?.content || "No messages yet",
-        time: conv.latestMessage?.createdAt 
-          ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+        time: conv.latestMessage?.createdAt
+          ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
           : "",
         unreadCount: 0,
         isOnline: false,
@@ -159,9 +158,9 @@ const MessagesPage: React.FC = () => {
       }));
       setConversations(formattedConversations);
 
-      // Auto-open conversation if convId is in URL
+      // Auto-open via URL param
       if (targetConvId && !activeConversation) {
-        const target = formattedConversations.find(c => c.id === targetConvId);
+        const target = formattedConversations.find((c) => c.id === targetConvId);
         if (target) {
           setActiveConversation(target);
           setIsMobileChatOpen(true);
@@ -170,7 +169,7 @@ const MessagesPage: React.FC = () => {
 
       // Auto-open a newly started conversation after refetch
       if (pendingConvIdRef.current) {
-        const target = formattedConversations.find(c => c.id === pendingConvIdRef.current);
+        const target = formattedConversations.find((c) => c.id === pendingConvIdRef.current);
         if (target) {
           pendingConvIdRef.current = null;
           setActiveConversation(target);
@@ -180,33 +179,30 @@ const MessagesPage: React.FC = () => {
     }
   }, [apiConversations, targetConvId]);
 
-  // Fetch messages when a conversation is selected
+  // --- Load message history when a conversation is selected ---
   useEffect(() => {
     if (apiMessages) {
-      const formattedMessages = apiMessages.map((msg) => ({
+      // Backend returns normalized camelCase objects: { id, senderId, content, createdAt }
+      const formattedMessages: UIMessage[] = apiMessages.map((msg) => ({
         id: msg.id,
         senderId: msg.senderId,
         text: msg.content,
-        timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
+        timestamp: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       }));
       setMessages(formattedMessages);
       scrollToBottom();
     }
   }, [apiMessages]);
 
-
-
   // --- Handlers ---
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSelectConversation = (conv: Conversation) => {
+  const handleSelectConversation = (conv: UIConversation) => {
     setActiveConversation(conv);
-    setIsMobileChatOpen(true); // Slide in chat on mobile
+    setMessages([]); // Clear old messages while new ones load
+    setIsMobileChatOpen(true);
   };
 
   const handleStartNewChat = async (userId: string) => {
@@ -215,12 +211,10 @@ const MessagesPage: React.FC = () => {
       if (res.conversationId) {
         setIsSearchOpen(false);
         setSearchTerm("");
-        // If the conversation is already in our list, select it immediately
-        const existing = conversations.find(c => c.id === res.conversationId);
+        const existing = conversations.find((c) => c.id === res.conversationId);
         if (existing) {
           handleSelectConversation(existing);
         } else {
-          // New conversation — store ID so the next refetch auto-selects it
           pendingConvIdRef.current = res.conversationId;
         }
       }
@@ -229,36 +223,30 @@ const MessagesPage: React.FC = () => {
     }
   };
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newMessage.trim() || !activeConversation) return;
 
-    const newMsgObj: Message = {
-      id: Date.now().toString(),
-      senderId: CURRENT_USER_ID,
-      text: newMessage,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    // Optimistic UI update
-    setMessages((prev) => [...prev, newMsgObj]);
+    const text = newMessage;
     setNewMessage("");
+
+    // Optimistic UI: add message locally with a temp ID
+    const tempId = `temp-${Date.now()}`;
+    const optimisticMsg: UIMessage = {
+      id: tempId,
+      senderId: CURRENT_USER_ID,
+      text,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
     setTimeout(scrollToBottom, 100);
 
-    // Save to DB via REST API
-    try {
-      await sendMessageMutation({ conversationId: activeConversation.id, content: newMessage }).unwrap();
-    } catch (e) {
-      console.error("Failed to save message", e);
-    }
-
+    // Send via WebSocket — the gateway saves to DB and broadcasts back
+    // The real message from `newMessage` event will replace the temp one via de-duplication
     const socket = initializeSocket();
     socket.emit("sendMessage", {
       conversationId: activeConversation.id,
-      text: newMessage,
+      text,
     });
   };
 
@@ -271,8 +259,6 @@ const MessagesPage: React.FC = () => {
   }
 
   return (
-    // Container height assumes you have a standard Navbar taking up some space (e.g., h-16 or 4rem).
-    // Adjust h-[calc(100vh-4rem)] as needed.
     <div className="flex h-[calc(100vh-4rem)] bg-white overflow-hidden border-t border-gray-200">
       {/* --- LEFT COLUMN: CONVERSATION LIST --- */}
       <div
@@ -302,15 +288,17 @@ const MessagesPage: React.FC = () => {
                 ) : searchResults && searchResults.length > 0 ? (
                   <ul className="py-2">
                     {searchResults.map((u) => (
-                      <li 
+                      <li
                         key={u.id}
                         onClick={() => handleStartNewChat(u.id)}
                         className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
                       >
-                        <img 
-                          src={u.avatarUrl} 
-                          alt={u.name} 
-                          onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${u.name || 'User'}&background=random`; }}
+                        <img
+                          src={u.avatarUrl}
+                          alt={u.name}
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${u.name || "User"}&background=random`;
+                          }}
                           className="w-8 h-8 rounded-full object-cover border border-gray-200"
                         />
                         <div className="flex flex-col truncate">
@@ -328,46 +316,51 @@ const MessagesPage: React.FC = () => {
           </div>
         </div>
 
-        {/* List */}
+        {/* Conversation List */}
         <div className="flex-1 overflow-y-auto">
-          {conversations.map((conv) => (
-            <div
-              key={conv.id}
-              onClick={() => handleSelectConversation(conv)}
-              className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition border-b border-gray-100 ${activeConversation?.id === conv.id ? "bg-blue-50/50" : ""}`}
-            >
-              <div className="relative flex-shrink-0">
-                <img
-                  src={conv.avatarUrl}
-                  alt={conv.participantName}
-                  className="h-12 w-12 rounded-full object-cover"
-                />
-                {conv.isOnline && (
-                  <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>
+          {conversations.length === 0 ? (
+            <div className="p-6 text-center text-sm text-gray-400">
+              No conversations yet. Search for someone above!
+            </div>
+          ) : (
+            conversations.map((conv) => (
+              <div
+                key={conv.id}
+                onClick={() => handleSelectConversation(conv)}
+                className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition border-b border-gray-100 ${activeConversation?.id === conv.id ? "bg-blue-50/50" : ""}`}
+              >
+                <div className="relative flex-shrink-0">
+                  <img
+                    src={conv.avatarUrl}
+                    alt={conv.participantName}
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${conv.participantName || "U"}&background=random`;
+                    }}
+                    className="h-12 w-12 rounded-full object-cover"
+                  />
+                  {conv.isOnline && (
+                    <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-baseline mb-1">
+                    <h3 className="text-sm font-semibold text-gray-900 truncate">
+                      {conv.participantName}
+                    </h3>
+                    <span className="text-xs text-gray-500 flex-shrink-0">{conv.time}</span>
+                  </div>
+                  <p className={`text-sm truncate ${conv.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}>
+                    {conv.lastMessage}
+                  </p>
+                </div>
+                {conv.unreadCount > 0 && (
+                  <div className="flex-shrink-0 bg-blue-600 text-white text-xs font-bold h-5 w-5 flex items-center justify-center rounded-full">
+                    {conv.unreadCount}
+                  </div>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-baseline mb-1">
-                  <h3 className="text-sm font-semibold text-gray-900 truncate">
-                    {conv.participantName}
-                  </h3>
-                  <span className="text-xs text-gray-500 flex-shrink-0">
-                    {conv.time}
-                  </span>
-                </div>
-                <p
-                  className={`text-sm truncate ${conv.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}
-                >
-                  {conv.lastMessage}
-                </p>
-              </div>
-              {conv.unreadCount > 0 && (
-                <div className="flex-shrink-0 bg-blue-600 text-white text-xs font-bold h-5 w-5 flex items-center justify-center rounded-full">
-                  {conv.unreadCount}
-                </div>
-              )}
-            </div>
-          ))}
+            ))
+          )}
         </div>
       </div>
 
@@ -389,6 +382,9 @@ const MessagesPage: React.FC = () => {
                 <img
                   src={activeConversation.avatarUrl}
                   alt={activeConversation.participantName}
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${activeConversation.participantName || "U"}&background=random`;
+                  }}
                   className="h-10 w-10 rounded-full object-cover"
                 />
                 <div>
@@ -418,13 +414,8 @@ const MessagesPage: React.FC = () => {
               {messages.map((msg) => {
                 const isMe = msg.senderId === CURRENT_USER_ID;
                 return (
-                  <div
-                    key={msg.id}
-                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isMe ? "items-end" : "items-start"}`}
-                    >
+                  <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
+                    <div className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
                       <div
                         className={`px-4 py-2 rounded-2xl ${
                           isMe
@@ -434,9 +425,7 @@ const MessagesPage: React.FC = () => {
                       >
                         <p className="text-sm">{msg.text}</p>
                       </div>
-                      <span className="text-[10px] text-gray-400 mt-1 mx-1">
-                        {msg.timestamp}
-                      </span>
+                      <span className="text-[10px] text-gray-400 mt-1 mx-1">{msg.timestamp}</span>
                     </div>
                   </div>
                 );
@@ -446,25 +435,15 @@ const MessagesPage: React.FC = () => {
 
             {/* Chat Input Area */}
             <div className="p-4 bg-white border-t border-gray-200">
-              <form
-                onSubmit={handleSendMessage}
-                className="flex items-end gap-2"
-              >
+              <form onSubmit={handleSendMessage} className="flex items-end gap-2">
                 <div className="flex items-center gap-2 text-gray-400 pb-2">
-                  <button
-                    type="button"
-                    className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition"
-                  >
+                  <button type="button" className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition">
                     <ImageIcon className="h-5 w-5" />
                   </button>
-                  <button
-                    type="button"
-                    className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition hidden sm:block"
-                  >
+                  <button type="button" className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition hidden sm:block">
                     <Smile className="h-5 w-5" />
                   </button>
                 </div>
-
                 <textarea
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
@@ -478,7 +457,6 @@ const MessagesPage: React.FC = () => {
                     }
                   }}
                 />
-
                 <button
                   type="submit"
                   disabled={!newMessage.trim()}
@@ -490,17 +468,14 @@ const MessagesPage: React.FC = () => {
             </div>
           </>
         ) : (
-          /* Empty State for Desktop */
+          /* Empty State */
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
             <div className="h-20 w-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
               <Send className="h-10 w-10 ml-1" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">
-              Your Messages
-            </h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">Your Messages</h3>
             <p className="text-gray-500 max-w-sm">
-              Select a conversation from the sidebar to start chatting or start
-              a new conversation.
+              Search for someone above to start a new conversation, or select one from the sidebar.
             </p>
           </div>
         )}

@@ -1,7 +1,7 @@
 import { io, Socket } from 'socket.io-client';
 
 // Define the URL of your NestJS backend
-const SOCKET_URL = 'http://localhost:5000';
+const SOCKET_URL = 'http://localhost:5001';
 
 let socket: Socket | null = null;
 

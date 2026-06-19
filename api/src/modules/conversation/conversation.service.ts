@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { Conversation } from '../../databse/mssql/models/conversation.model';
 import { CP } from '../../databse/mssql/models/conversationParticipants.model';
 import { Users } from '../../databse/mssql/models/user.model';
@@ -9,7 +9,6 @@ import { Op } from 'sequelize';
 @Injectable()
 export class ConversationService {
   async findAllForUser(userId: string) {
-    // Find all conversations the user is a part of
     const userCps = await CP.findAll({
       where: { UserID: userId },
       attributes: ['ConversationID'],
@@ -17,7 +16,11 @@ export class ConversationService {
 
     const conversationIds = userCps.map((cp) => cp.ConversationID);
 
-    // Fetch those conversations along with the OTHER participants and the latest message
+    // Guard: return empty array if user has no conversations
+    if (conversationIds.length === 0) {
+      return [];
+    }
+
     const conversations = await Conversation.findAll({
       where: { ID: { [Op.in]: conversationIds } },
       include: [
@@ -31,7 +34,6 @@ export class ConversationService {
       order: [['CreatedAt', 'DESC']],
     });
 
-    // We also need the other participant's details for 1-on-1 chats
     const result: any[] = [];
     for (const conv of conversations) {
       const otherParticipantCp = await CP.findOne({
@@ -42,11 +44,26 @@ export class ConversationService {
         include: [{ model: Users, as: 'User', attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'] }],
       });
 
+      const p = otherParticipantCp?.User as any;
+      const lm = conv.messages && conv.messages.length > 0 ? conv.messages[0] as any : null;
+
       result.push({
         id: conv.ID,
         type: conv.Type,
-        participant: otherParticipantCp ? otherParticipantCp.User : null,
-        latestMessage: conv.messages && conv.messages.length > 0 ? conv.messages[0] : null,
+        // Serialize to camelCase for the frontend
+        participant: p ? {
+          id: p.ID,
+          name: p.FullName,
+          username: p.UserName,
+          avatarUrl: p.ProfilePictureUrl || null,
+        } : null,
+        latestMessage: lm ? {
+          id: lm.ID,
+          conversationId: lm.ConversationID,
+          senderId: lm.SenderID,
+          content: lm.Message,
+          createdAt: lm.CreatedAt,
+        } : null,
         createdAt: conv.CreatedAt,
       });
     }
@@ -59,30 +76,23 @@ export class ConversationService {
       throw new Error('Cannot start conversation with yourself');
     }
 
-    // Check if a 1-on-1 conversation already exists between these two users
-    const currentUserCps = await CP.findAll({ where: { UserID: currentUserId } });
-    const targetUserCps = await CP.findAll({ where: { UserID: targetUserId } });
+    const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
+    const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
 
     const currentUserConvIds = currentUserCps.map(cp => cp.ConversationID);
     const targetUserConvIds = targetUserCps.map(cp => cp.ConversationID);
 
-    // Intersection
     const sharedConvIds = currentUserConvIds.filter(id => targetUserConvIds.includes(id));
 
     if (sharedConvIds.length > 0) {
-      // Check if any shared conversation is a 'single' type (1-on-1)
       const existingConv = await Conversation.findOne({
-        where: {
-          ID: { [Op.in]: sharedConvIds },
-          Type: 'single',
-        }
+        where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' }
       });
       if (existingConv) {
         return { conversationId: existingConv.ID };
       }
     }
 
-    // Create a new Conversation
     const newConvId = uuidv4();
     await Conversation.create({
       ID: newConvId,
@@ -91,21 +101,19 @@ export class ConversationService {
       CreatedAt: new Date(),
     } as any);
 
-    // Create CP for current user
     await CP.create({
       ID: uuidv4(),
       ConversationID: newConvId,
       UserID: currentUserId,
-      Role: 'OWNER',
+      Role: 'admin',
       JoinedAt: new Date(),
     } as any);
 
-    // Create CP for target user
     await CP.create({
       ID: uuidv4(),
       ConversationID: newConvId,
       UserID: targetUserId,
-      Role: 'MEMBER',
+      Role: 'member',
       JoinedAt: new Date(),
     } as any);
 

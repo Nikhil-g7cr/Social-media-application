@@ -5,7 +5,7 @@ import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 @Controller('conversation')
 @UseGuards(JwtAuthGuard)
 export class ConversationController {
-  constructor(private readonly conversationService: ConversationService) {}
+  constructor(private readonly conversationService: ConversationService) { }
 
   @Get()
   findAllForUser(@Req() req: any) {
@@ -17,3 +17,4 @@ export class ConversationController {
     return this.conversationService.startConversation(req.user.sub, targetUserId);
   }
 }
+

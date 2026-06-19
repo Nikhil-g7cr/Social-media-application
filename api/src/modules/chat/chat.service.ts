@@ -4,28 +4,44 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class ChatService {
-  // 1. Save a real-time message to MSSQL
+  // 1. Save a real-time message to MSSQL, return a normalized plain object
   async saveMessage(payload: { conversationId: string; senderId: string; text: string }) {
-    // Call the create method directly on the Message model class
-    const newMessage = await Message.create({
-      ID: uuidv4(), 
+    const now = new Date();
+    const id = uuidv4();
+
+    await Message.create({
+      ID: id,
       ConversationID: payload.conversationId,
       SenderID: payload.senderId,
       Message: payload.text,
       IsRead: false,
-      CreatedAt: new Date().toISOString(), // <-- Convert to string here
-      ModifiedAt: new Date().toISOString(),
+      CreatedAt: now,
+      ModifiedAt: now,
     } as any);
 
-    return newMessage;
+    // Return a normalized object (not a Sequelize model instance)
+    return {
+      id,
+      conversationId: payload.conversationId,
+      senderId: payload.senderId,
+      content: payload.text,
+      createdAt: now.toISOString(),
+    };
   }
 
-  // 2. Fetch past messages for a specific chat room
+  // 2. Fetch past messages for a specific chat room — normalized
   async getConversationHistory(conversationId: string) {
-    // Call the findAll method directly on the Message model class
-    return Message.findAll({
+    const messages = await Message.findAll({
       where: { ConversationID: conversationId },
       order: [['CreatedAt', 'ASC']],
     });
+
+    return messages.map((m: any) => ({
+      id: m.ID,
+      conversationId: m.ConversationID,
+      senderId: m.SenderID,
+      content: m.Message,
+      createdAt: m.CreatedAt,
+    }));
   }
 }

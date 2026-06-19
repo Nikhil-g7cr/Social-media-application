@@ -11,31 +11,31 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   const configObj = app.get(AppConfig);
   const logger = app.get(AppLogger)
-  const appConfig = configObj.get('app') 
-  const {port} = appConfig
+  const appConfig = configObj.get('app')
+  const { port } = appConfig
   // global filters
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   // validation pipe
   app.useGlobalPipes(
-  new ValidationPipe({
-    whitelist: true,
-    forbidNonWhitelisted: true,
-    transform: true,
-  }),
-);
+    new ValidationPipe({
+      whitelist: true,
+      forbidNonWhitelisted: true,
+      transform: true,
+    }),
+  );
 
-  try{
-    corebootstrap(app,configObj);
-    await app.listen(port,()=>{
-      const successMsg = messageFactory(messages.S1,[port]);
+  try {
+    corebootstrap(app, configObj);
+    await app.listen(port, () => {
+      const successMsg = messageFactory(messages.S1, [port]);
       logger.log(successMsg, 200);
     })
-    console.log("http://localhost:5001/api/docs/swagger")
+    console.log(`http://localhost:${port}/api/docs/swagger`)
   }
-  catch(error:any){
-    const errMsg = messageFactory(messages.E1, [ error.message])
-    logger.error(errMsg,500);
+  catch (error: any) {
+    const errMsg = messageFactory(messages.E1, [error.message])
+    logger.error(errMsg, 500);
   }
 }
 

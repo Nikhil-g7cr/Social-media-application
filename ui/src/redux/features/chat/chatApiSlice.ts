@@ -12,7 +12,7 @@ export interface ConversationParticipant {
     id: string;
     name: string;
     username: string;
-    avatarUrl: string;
+    avatarUrl: string | null;
 }
 
 export interface Conversation {
@@ -27,6 +27,7 @@ export const chatApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getConversations: builder.query<Conversation[], void>({
             query: () => ({ url: 'conversation' }),
+            // Backend now returns properly shaped data directly
             transformResponse: (response: any) => response.data || response,
             providesTags: ['Conversation'],
         }),
@@ -40,25 +41,9 @@ export const chatApiSlice = apiSlice.injectEndpoints({
         }),
         getMessagesByConversationId: builder.query<ChatMessage[], string>({
             query: (conversationId) => ({ url: `message/conversation/${conversationId}` }),
-            transformResponse: (response: any) => {
-                const messages = response.data || response;
-                return messages.map((m: any) => ({
-                    id: m.ID,
-                    conversationId: m.ConversationID,
-                    senderId: m.SenderID,
-                    content: m.Message,
-                    createdAt: m.CreatedAt,
-                }));
-            },
+            // Backend now returns normalized camelCase objects, no manual mapping needed
+            transformResponse: (response: any) => response.data || response,
             providesTags: (_result, _error, conversationId) => [{ type: 'Chat', id: `Conv_${conversationId}` }],
-        }),
-        sendMessage: builder.mutation<ChatMessage, { conversationId: string, content: string }>({
-            query: (data) => ({
-                url: 'chat/messages',
-                method: 'POST',
-                data,
-            }),
-            invalidatesTags: (_result, _error, { conversationId }) => [{ type: 'Chat', id: `Conv_${conversationId}` }],
         }),
     }),
 });
@@ -67,5 +52,4 @@ export const {
     useGetConversationsQuery,
     useStartConversationMutation,
     useGetMessagesByConversationIdQuery,
-    useSendMessageMutation,
 } = chatApiSlice;
