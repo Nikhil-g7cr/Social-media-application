@@ -41,6 +41,6 @@ const axiosBaseQuery =
 export const apiSlice = createApi({
   reducerPath: 'api',
   baseQuery: axiosBaseQuery({ baseUrl: '' }), // baseUrl is handled by axiosConfig
-  tagTypes: ['User', 'Post', 'Comment', 'Like', 'Chat', 'Profile'],
+  tagTypes: ['User', 'Post', 'Comment', 'Like', 'Chat', 'Profile', 'Conversation'],
   endpoints: () => ({}), // Endpoints will be injected by feature slices
 });

@@ -10,9 +10,23 @@ import { CommentModule } from '../comment/comment.module';
 import { ChatModule } from '../chat/chat.module';
 import { FollowModule } from '../follow/follow.module';
 import { FileModule } from '../azure/azure.module';
+import { ConversationModule } from '../conversation/conversation.module';
+import { MessageModule } from '../message/message.module';
 
 @Module({
-  imports: [UserModule,CoreModule,AuthModule,PostModule, LikeModule, CommentModule,ChatModule,FollowModule, FileModule],
+  imports: [
+    UserModule,
+    CoreModule,
+    AuthModule,
+    PostModule,
+    LikeModule,
+    CommentModule,
+    ChatModule,
+    FollowModule,
+    FileModule,
+    ConversationModule,
+    MessageModule
+  ],
   controllers: [AppController],
   providers: [AppService],
 })

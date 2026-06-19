@@ -10,7 +10,16 @@ import {
   Smile,
 } from "lucide-react";
 import { initializeSocket } from "../../utils/socket";
-import API from "../../config/axiosConfig";
+import { useLocation } from "react-router-dom";
+import { useAppSelector } from "../../redux/hooks";
+import { 
+  useGetConversationsQuery, 
+  useGetMessagesByConversationIdQuery, 
+  useSendMessageMutation,
+  useStartConversationMutation,
+  type Conversation as RTKConversation
+} from "../../redux/features/chat/chatApiSlice";
+import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
 
 // --- TypeScript Interfaces ---
 interface Message {
@@ -38,19 +47,57 @@ interface Conversation {
   participantId: string;
 }
 
-const CURRENT_USER_ID = "me"; // Replace with actual logged-in user ID
-
 const MessagesPage: React.FC = () => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const targetConvId = searchParams.get('convId');
+
+  const { user } = useAppSelector((state) => state.auth);
+  const CURRENT_USER_ID = user?.id || "";
+
   // --- State ---
   const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [activeConversation, setActiveConversation] =
-    useState<Conversation | null>(null);
+  const [activeConversation, setActiveConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+
+  // --- Search State ---
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedTerm, setDebouncedTerm] = useState("");
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const searchWrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedTerm(searchTerm), 500);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  const { data: searchResults, isFetching: isSearchFetching } = useSearchUsersQuery(debouncedTerm, {
+    skip: debouncedTerm.length === 0,
+  });
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // --- RTK Query ---
+  const { data: apiConversations, isLoading: isConversationsLoading } = useGetConversationsQuery();
+  const { data: apiMessages } = useGetMessagesByConversationIdQuery(activeConversation?.id || "", {
+    skip: !activeConversation,
+  });
+  const [sendMessageMutation] = useSendMessageMutation();
+  const [startConversation] = useStartConversationMutation();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // Track a newly created conversation so we can auto-open it after refetch
+  const pendingConvIdRef = useRef<string | null>(null);
 
   // --- Mock Data & Data Fetching ---
   useEffect(() => {
@@ -91,117 +138,66 @@ const MessagesPage: React.FC = () => {
       socket.off("userOnline");
       socket.off("userOffline");
     };
-
-    // ===========end websocket==============
-    // TODO: Replace with actual API call: API.get('/conversations')
-    // const fetchConversations = () => {
-    //   setTimeout(() => {
-    //     setConversations([
-    //       {
-    //         id: 'conv1',
-    //         participantName: 'Alex Johnson',
-    //         avatarUrl: 'https://ui-avatars.com/api/?name=Alex+Johnson&background=EBF4FF&color=1E3A8A',
-    //         lastMessage: 'Hey! Are we still on for tomorrow?',
-    //         time: '10:42 AM',
-    //         unreadCount: 2,
-    //         isOnline: true,
-    //       },
-    //       {
-    //         id: 'conv2',
-    //         participantName: 'Sarah Smith',
-    //         avatarUrl: 'https://ui-avatars.com/api/?name=Sarah+Smith&background=FCE7F3&color=9D174D',
-    //         lastMessage: 'Thanks for the help earlier!',
-    //         time: 'Yesterday',
-    //         unreadCount: 0,
-    //         isOnline: false,
-    //       },
-    //       {
-    //         id: 'conv3',
-    //         participantName: 'Tech Group',
-    //         avatarUrl: 'https://ui-avatars.com/api/?name=Tech+Group&background=DEF7EC&color=03543F',
-    //         lastMessage: 'Nikhil: I just pushed the new backend updates.',
-    //         time: 'Mon',
-    //         unreadCount: 5,
-    //         isOnline: true,
-    //       }
-    //     ]);
-    //     setIsLoading(false);
-    //   }, 500);
-    // };
-
-    // fetchConversations();
   }, []);
+
+  // Update conversations from RTK Query
+  useEffect(() => {
+    if (apiConversations) {
+      const formattedConversations = apiConversations.map((conv: RTKConversation) => ({
+        id: conv.id,
+        participantName: conv.participant?.name || "Unknown User",
+        avatarUrl:
+          conv.participant?.avatarUrl ||
+          `https://ui-avatars.com/api/?name=${conv.participant?.name}&background=random`,
+        lastMessage: conv.latestMessage?.content || "No messages yet",
+        time: conv.latestMessage?.createdAt 
+          ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) 
+          : "",
+        unreadCount: 0,
+        isOnline: false,
+        participantId: conv.participant?.id || "",
+      }));
+      setConversations(formattedConversations);
+
+      // Auto-open conversation if convId is in URL
+      if (targetConvId && !activeConversation) {
+        const target = formattedConversations.find(c => c.id === targetConvId);
+        if (target) {
+          setActiveConversation(target);
+          setIsMobileChatOpen(true);
+        }
+      }
+
+      // Auto-open a newly started conversation after refetch
+      if (pendingConvIdRef.current) {
+        const target = formattedConversations.find(c => c.id === pendingConvIdRef.current);
+        if (target) {
+          pendingConvIdRef.current = null;
+          setActiveConversation(target);
+          setIsMobileChatOpen(true);
+        }
+      }
+    }
+  }, [apiConversations, targetConvId]);
 
   // Fetch messages when a conversation is selected
   useEffect(() => {
-    if (activeConversation) {
-      const fetchMessageHistory = async () => {
-        try {
-          // Fetch messages for this specific conversation ID
-          const response = await API.get(
-            `/message/conversation/${activeConversation.id}`,
-          );
-
-          const history = response.data.data || response.data;
-
-          const formattedMessages = history.map((msg: any) => ({
-            id: msg.id,
-            senderId: msg.senderId,
-            text: msg.content || msg.text, // Depends on your backend schema
-            timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          }));
-
-          setMessages(formattedMessages);
-          scrollToBottom();
-        } catch (error) {
-          console.error("Failed to load messages:", error);
-        }
-      };
-
-      fetchMessageHistory();
+    if (apiMessages) {
+      const formattedMessages = apiMessages.map((msg) => ({
+        id: msg.id,
+        senderId: msg.senderId,
+        text: msg.content,
+        timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      }));
+      setMessages(formattedMessages);
+      scrollToBottom();
     }
-  }, [activeConversation]);
+  }, [apiMessages]);
 
-  //   fetching the chats==========================
-  useEffect(() => {
-    const fetchConversations = async () => {
-      try {
-        setIsLoading(true);
-        // Fetch from your NestJS conversation controller
-        // Adjust the URL if your endpoint is named differently (e.g., '/conversations')
-        const response = await API.get("/conversation");
 
-        // Assuming your backend wraps data in a standard format
-        const realConversations = response.data.data || response.data;
-
-        // Map backend data to match our UI interface (adjust keys based on your NestJS entity)
-        const formattedConversations = realConversations.map((conv: any) => ({
-          id: conv.id,
-          participantName: conv.user?.fullName || "Unknown User", // Example mapping
-          avatarUrl:
-            conv.user?.avatarUrl ||
-            `https://ui-avatars.com/api/?name=${conv.user?.fullName}&background=random`,
-          lastMessage: conv.lastMessage?.text || "No messages yet",
-          time: conv.lastMessage?.createdAt || "",
-          unreadCount: conv.unreadCount || 0,
-          isOnline: false, // We will update this via WebSockets below!
-        }));
-
-        setConversations(formattedConversations);
-      } catch (error) {
-        console.error("Failed to load conversations:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchConversations();
-  }, []);
-
-  //   ==================================================
 
   // --- Handlers ---
   const scrollToBottom = () => {
@@ -211,6 +207,26 @@ const MessagesPage: React.FC = () => {
   const handleSelectConversation = (conv: Conversation) => {
     setActiveConversation(conv);
     setIsMobileChatOpen(true); // Slide in chat on mobile
+  };
+
+  const handleStartNewChat = async (userId: string) => {
+    try {
+      const res = await startConversation(userId).unwrap();
+      if (res.conversationId) {
+        setIsSearchOpen(false);
+        setSearchTerm("");
+        // If the conversation is already in our list, select it immediately
+        const existing = conversations.find(c => c.id === res.conversationId);
+        if (existing) {
+          handleSelectConversation(existing);
+        } else {
+          // New conversation — store ID so the next refetch auto-selects it
+          pendingConvIdRef.current = res.conversationId;
+        }
+      }
+    } catch (e) {
+      console.error("Failed to start chat", e);
+    }
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -232,19 +248,21 @@ const MessagesPage: React.FC = () => {
     setNewMessage("");
     setTimeout(scrollToBottom, 100);
 
-    // TODO: Send via WebSockets or REST API
+    // Save to DB via REST API
+    try {
+      await sendMessageMutation({ conversationId: activeConversation.id, content: newMessage }).unwrap();
+    } catch (e) {
+      console.error("Failed to save message", e);
+    }
 
     const socket = initializeSocket();
-
     socket.emit("sendMessage", {
       conversationId: activeConversation.id,
       text: newMessage,
     });
-    // e.g., socket.emit('sendMessage', { conversationId: activeConversation.id, text: newMessage })
-    // OR await API.post('/messages', { conversationId: activeConversation.id, text: newMessage })
   };
 
-  if (isLoading) {
+  if (isConversationsLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
@@ -261,15 +279,52 @@ const MessagesPage: React.FC = () => {
         className={`w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 flex flex-col ${isMobileChatOpen ? "hidden md:flex" : "flex"}`}
       >
         {/* Header & Search */}
-        <div className="p-4 border-b border-gray-200">
+        <div className="p-4 border-b border-gray-200" ref={searchWrapperRef}>
           <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
               type="text"
-              placeholder="Search messages..."
+              placeholder="Search users to chat..."
+              value={searchTerm}
+              onChange={(e) => {
+                setSearchTerm(e.target.value);
+                setIsSearchOpen(true);
+              }}
+              onFocus={() => setIsSearchOpen(true)}
               className="w-full pl-10 pr-4 py-2 bg-gray-100 border-transparent rounded-full focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
             />
+            {/* Search Dropdown */}
+            {isSearchOpen && debouncedTerm.length > 0 && (
+              <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-64 overflow-y-auto z-50">
+                {isSearchFetching ? (
+                  <div className="p-4 text-center text-sm text-gray-500">Searching...</div>
+                ) : searchResults && searchResults.length > 0 ? (
+                  <ul className="py-2">
+                    {searchResults.map((u) => (
+                      <li 
+                        key={u.id}
+                        onClick={() => handleStartNewChat(u.id)}
+                        className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
+                      >
+                        <img 
+                          src={u.avatarUrl} 
+                          alt={u.name} 
+                          onError={(e) => { (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${u.name || 'User'}&background=random`; }}
+                          className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                        />
+                        <div className="flex flex-col truncate">
+                          <span className="text-sm font-semibold text-gray-900 truncate">{u.name}</span>
+                          <span className="text-xs text-gray-500 truncate">@{u.username}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="p-4 text-center text-sm text-gray-500">No users found.</div>
+                )}
+              </div>
+            )}
           </div>
         </div>
 

@@ -6,7 +6,7 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript';
-import { Sequelize } from 'sequelize'; // <-- Added this
+import { DataType } from 'sequelize-typescript';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 
@@ -65,11 +65,10 @@ export class CP extends Model<CP> {
   })
   [CPColumns.Role]!: ConversationParticipantRoles;
 
-  // Let SQL handle the exact time they joined
+  // Explicitly set by application code on creation
   @Column({
-    type: SQLDataType.DATETIME,
+    type: DataType.DATE,
     allowNull: false,
-    defaultValue: Sequelize.literal('GETDATE()'),
   })
   [CPColumns.JoinedAt]!: Date;
 
