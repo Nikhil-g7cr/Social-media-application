@@ -59,16 +59,26 @@ API.interceptors.response.use(
             isRefreshing = true;
 
             try {
+                const refreshToken = sessionStorage.getItem('refreshToken');
+                if (!refreshToken) {
+                    throw new Error("No refresh token available");
+                }
+
                 // Call your refresh endpoint. 
-                // The browser AUTOMATICALLY sends the HttpOnly refreshToken cookie here!
                 // Make sure to use basic axios (not the interceptor API instance) to avoid infinite loops
-                const result = await axios.post(`${environment.APP_API_URL}auth/refresh`, {}, {
+                const result = await axios.post(`${environment.APP_API_URL}auth/refresh-token`, {
+                    refreshToken
+                }, {
                     withCredentials: true 
                 });
 
-                // Assuming your backend returns { accessToken: 'new_token' }
-                const newAccessToken = result.data.accessToken;
+                // Assuming your backend returns { data: { accessToken: 'new_token' } }
+                const newAccessToken = result.data?.data?.accessToken || result.data?.accessToken;
                 
+                if (!newAccessToken) {
+                    throw new Error('Failed to retrieve new access token');
+                }
+
                 // Update sessionStorage with the new token
                 sessionStorage.setItem('accessToken', newAccessToken);
 
