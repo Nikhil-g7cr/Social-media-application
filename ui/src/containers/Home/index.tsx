@@ -14,96 +14,29 @@ import { Link } from "react-router-dom";
 import CommentSection from "../../shared/shared-components/CommentSection";
 import { useAppSelector } from "../../redux/hooks";
 import ExplorePage from "../Explore";
-
-interface Author {
-  id: string;
-  name: string;
-  username: string;
-  avatarUrl: string;
-}
-
-interface Post {
-  id: string;
-  author: Author;
-  content: string;
-  timestamp: string;
-  likes: number;
-  comments: number;
-  isLikedByMe?: boolean;
-  commentsCount?:number
-}
-
-const MOCK_CURRENT_USER: Author = {
-  id: "u1",
-  name: "Nikhil",
-  username: "@nikhil_dev",
-  avatarUrl:
-    "https://ui-avatars.com/api/?name=Nikhil&background=0D8ABC&color=fff",
-};
-
-const INITIAL_POSTS: Post[] = [
-  {
-    id: "p1",
-    author: {
-      id: "u2",
-      name: "Sarah Connor",
-      username: "@sarah_c",
-      avatarUrl:
-        "https://ui-avatars.com/api/?name=Sarah+Connor&background=F59E0B&color=fff",
-    },
-    content:
-      "Just launched my new portfolio website! Super excited to share it with everyone. Let me know what you think! 🚀💻",
-    timestamp: "2 hours ago",
-    likes: 45,
-    comments: 12,
-    isLikedByMe: false,
-  },
-  {
-    id: "p2",
-    author: {
-      id: "u3",
-      name: "Alex Developer",
-      username: "@alex_dev",
-      avatarUrl:
-        "https://ui-avatars.com/api/?name=Alex+Dev&background=10B981&color=fff",
-    },
-    content:
-      "Does anyone else spend 90% of their debugging time fixing a typo, or is it just me? 😅",
-    timestamp: "5 hours ago",
-    likes: 128,
-    comments: 34,
-    isLikedByMe: true,
-  },
-];
-
+import { useGetPostsQuery, useCreatePostMutation } from "../../redux/features/post/postApiSlice";
+import { useLikePostMutation, useUnlikePostMutation } from "../../redux/features/like/likeApiSlice";
 export default function HomePage() {
-  const [posts, setPosts] = useState<Post[]>(INITIAL_POSTS);
+  const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
+  
+  // RTK Query hooks
+  const { data: posts = [], isLoading: isPostsLoading } = useGetPostsQuery(undefined, { skip: !isAuthenticated });
+  const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
+  const [likePost] = useLikePostMutation();
+  const [unlikePost] = useUnlikePostMutation();
+
   const [newPostContent, setNewPostContent] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const { isAuthenticated } = useAppSelector((state: any) => state.auth);
 
-  const handleCreatePost = (e: React.FormEvent) => {
+  const handleCreatePost = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!newPostContent.trim()) return;
 
-    setIsSubmitting(true);
-
-    setTimeout(() => {
-      const newPost: Post = {
-        id: `p${Date.now()}`,
-        author: MOCK_CURRENT_USER,
-        content: newPostContent,
-        timestamp: "Just now",
-        likes: 0,
-        comments: 0,
-        isLikedByMe: false,
-      };
-
-      setPosts((prev) => [newPost, ...prev]);
+    try {
+      await createPost({ content: newPostContent, type: 'TEXT' } as any).unwrap();
       setNewPostContent("");
-      setIsSubmitting(false);
-    }, 500);
+    } catch (error) {
+      console.error("Failed to create post", error);
+    }
   };
 
   const handleLogout = () => {
@@ -111,18 +44,16 @@ export default function HomePage() {
     window.location.href = "/login";
   };
 
-  const toggleLike = (postId: string) => {
-    setPosts((prev) =>
-      prev.map((post) =>
-        post.id === postId
-          ? {
-              ...post,
-              isLikedByMe: !post.isLikedByMe,
-              likes: post.isLikedByMe ? post.likes - 1 : post.likes + 1,
-            }
-          : post,
-      ),
-    );
+  const toggleLike = async (postId: string, isLikedByMe: boolean | undefined) => {
+    try {
+      if (isLikedByMe) {
+        await unlikePost(postId).unwrap();
+      } else {
+        await likePost(postId).unwrap();
+      }
+    } catch (error) {
+      console.error("Error toggling like", error);
+    }
   };
 
   return (
@@ -194,7 +125,7 @@ export default function HomePage() {
                 <div className="bg-white rounded-2xl border p-5 shadow-sm">
                   <div className="flex gap-4">
                     <img
-                      src={MOCK_CURRENT_USER.avatarUrl}
+                      src={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
                       alt=""
                       className="h-10 w-10 rounded-full"
                     />
@@ -229,62 +160,68 @@ export default function HomePage() {
                 </div>
 
                 {/* Posts */}
-                {posts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition"
-                  >
-                    <div className="flex justify-between">
-                      <div className="flex gap-3">
-                        <img
-                          src={post.author.avatarUrl}
-                          alt=""
-                          className="h-10 w-10 rounded-full"
-                        />
-
-                        <div>
-                          <h3 className="font-semibold">{post.author.name}</h3>
-
-                          <p className="text-sm text-gray-500">
-                            {post.author.username} • {post.timestamp}
-                          </p>
-                        </div>
-                      </div>
-
-                      <button>
-                        <MoreHorizontal className="h-5 w-5 text-gray-400" />
-                      </button>
-                    </div>
-
-                    <p className="mt-4 text-gray-800 whitespace-pre-wrap">
-                      {post.content}
-                    </p>
-
-                    <div className="flex justify-between pt-4 mt-4 border-t">
-                      <button
-                        onClick={() => toggleLike(post.id)}
-                        className={`flex items-center gap-2 p-2 rounded-full ${
-                          post.isLikedByMe ? "text-red-500" : "text-gray-500"
-                        }`}
-                      >
-                        <Heart
-                          className={`h-5 w-5 ${
-                            post.isLikedByMe ? "fill-current" : ""
-                          }`}
-                        />
-                        <span>{post.likes}</span>
-                      </button>
-
-                      <div className="flex items-center gap-2 p-2 rounded-full text-gray-500">
-                        <CommentSection postId={post.id} initialCommentCount={post.commentsCount} />
-                      </div>
-
-                      <button className="flex items-center gap-2 p-2 rounded-full text-gray-500">
-                        <Share2 className="h-5 w-5" />
-                      </button>
-                    </div>
+                {isPostsLoading ? (
+                  <div className="flex justify-center p-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                   </div>
-                ))}
+                ) : (
+                  posts.map((post: any) => (
+                    <div
+                      key={post.id}
+                      className="bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition"
+                    >
+                      <div className="flex justify-between">
+                        <div className="flex gap-3">
+                          <img
+                            src={post.author.avatarUrl}
+                            alt=""
+                            className="h-10 w-10 rounded-full"
+                          />
+
+                          <div>
+                            <h3 className="font-semibold">{post.author.name}</h3>
+
+                            <p className="text-sm text-gray-500">
+                              {post.author.username} • {post.timestamp}
+                            </p>
+                          </div>
+                        </div>
+
+                        <button>
+                          <MoreHorizontal className="h-5 w-5 text-gray-400" />
+                        </button>
+                      </div>
+
+                      <p className="mt-4 text-gray-800 whitespace-pre-wrap">
+                        {post.content}
+                      </p>
+
+                      <div className="flex justify-between pt-4 mt-4 border-t">
+                        <button
+                          onClick={() => toggleLike(post.id, post.isLikedByMe)}
+                          className={`flex items-center gap-2 p-2 rounded-full ${
+                            post.isLikedByMe ? "text-red-500" : "text-gray-500"
+                          }`}
+                        >
+                          <Heart
+                            className={`h-5 w-5 ${
+                              post.isLikedByMe ? "fill-current" : ""
+                            }`}
+                          />
+                          <span>{post.likes}</span>
+                        </button>
+
+                        <div className="flex items-center gap-2 p-2 rounded-full text-gray-500">
+                          <CommentSection postId={post.id} initialCommentCount={post.commentsCount} />
+                        </div>
+
+                        <button className="flex items-center gap-2 p-2 rounded-full text-gray-500">
+                          <Share2 className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
 
               {/* Right Sidebar */}

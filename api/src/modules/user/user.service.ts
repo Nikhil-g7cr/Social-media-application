@@ -40,6 +40,18 @@ export class UserService implements UsersAbstractSvc {
             return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2));
         }
     }
+
+    async searchUsers(query: string): Promise<AppResponse> {
+        try {
+            if (!query) {
+                return createResponse(HttpStatus.OK, 'Empty query', []);
+            }
+            return await this.userSQLAbsDAO.searchUsers(query);
+        } catch (error: any) {
+            this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+            return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, messageFactory(messages.E2));
+        }
+    }
     
     async getUserByID(userID: string): Promise<AppResponse> {
         try {

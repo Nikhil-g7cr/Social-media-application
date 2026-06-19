@@ -1,6 +1,7 @@
 import React from "react";
 import { Search } from "lucide-react";
 import NotificationDropdown from "../../../shared/shared-components/NotificationDropdown";
+import SearchBar from "../SearchBar";
 import { Link } from "react-router-dom";
 
 interface NavbarProps {
@@ -23,14 +24,8 @@ const Navbar: React.FC<NavbarProps> = ({ avatarUrl }) => {
             </Link>
 
           {/* Search */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8">
-            <div className="relative w-full">
-              <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-              <input
-                className="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                placeholder="Search..."
-              />
-            </div>
+          <div className="hidden md:flex flex-1 max-w-md mx-8 justify-center">
+            <SearchBar />
           </div>
 
           {/* Right */}

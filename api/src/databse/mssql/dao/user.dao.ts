@@ -1,6 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { Sequelize } from 'sequelize-typescript';
+import { Op } from 'sequelize';
 import { Users } from '../models';
 import AppLogger from 'src/core/logger/app-logger';
 import { UsersDTO } from 'src/modules/user/dto/users.dto';
@@ -26,6 +27,28 @@ export class UserSQLDao implements UserAbsSQLDAO {
     try {
       const users = await this._user.findAll();
       return createResponse(200, 'Users retrieved successfully', users);
+    } catch (error: any) {
+      this.logger.error(error.stack, 500);
+      return {
+        ...createResponse(500, messageFactory(messages.E2)),
+        description: error.message,
+      };
+    }
+  }
+
+  async searchUsers(query: string): Promise<AppResponse> {
+    try {
+      const users = await this._user.findAll({
+        where: {
+          [Op.or]: [
+            { UserName: { [Op.like]: `%${query}%` } },
+            { FullName: { [Op.like]: `%${query}%` } }
+          ]
+        },
+        attributes: ['ID', 'UserName', 'FullName', 'ProfilePictureUrl', 'Bio'], // Don't return password hashes!
+        limit: 20
+      });
+      return createResponse(200, 'Users found', users);
     } catch (error: any) {
       this.logger.error(error.stack, 500);
       return {

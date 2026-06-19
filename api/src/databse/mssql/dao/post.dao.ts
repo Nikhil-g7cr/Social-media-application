@@ -79,6 +79,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         limit,
         offset,
         order: [['CreatedAt', 'DESC']],
+        include: [{
+          model: this.sequelize.models.Users,
+          as: 'User',
+          attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+        }]
       });
 
       return createResponse(HttpStatus.OK, 'Posts retrieved successfully', {
@@ -244,6 +249,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         order: [
           ['CreatedAt', 'DESC'],
         ],
+        include: [{
+          model: this.sequelize.models.Users,
+          as: 'User',
+          attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL']
+        }]
       });
 
     return createResponse(

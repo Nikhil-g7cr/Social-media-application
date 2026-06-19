@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Req,
   UseGuards,
 } from '@nestjs/common';
@@ -28,6 +29,15 @@ export class UserController {
     // const payload: AtPayload = req.user;
     // return await this.userService.getAllUser(payload);
     return await this.userService.getAllUser();
+  }
+
+  /**
+   * GET /user/search?q={query}
+   * Searches for users by UserName or FullName.
+   */
+  @Get('search')
+  async searchUsers(@Query('q') query: string): Promise<AppResponse> {
+    return await this.userService.searchUsers(query || '');
   }
 
   /**
