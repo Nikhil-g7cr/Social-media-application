@@ -1,13 +1,18 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
 import { Conversation } from '../../databse/mssql/models/conversation.model';
 import { CP } from '../../databse/mssql/models/conversationParticipants.model';
 import { Users } from '../../databse/mssql/models/user.model';
 import { Message } from '../../databse/mssql/models/message.model';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
+import { FollowAbstractSQLDao } from 'src/databse/mssql/abstract/follow.abstract.mssql';
 
 @Injectable()
 export class ConversationService {
+  constructor(
+    @Inject(FollowAbstractSQLDao) private readonly followDao: FollowAbstractSQLDao,
+  ) {}
+
   async findAllForUser(userId: string) {
     const userCps = await CP.findAll({
       where: { UserID: userId },
@@ -76,6 +81,16 @@ export class ConversationService {
       throw new Error('Cannot start conversation with yourself');
     }
 
+    // Mutual Follow Guard
+    const [iFollowThem, theyFollowMe] = await Promise.all([
+      this.followDao.isFollowing(currentUserId, targetUserId),
+      this.followDao.isFollowing(targetUserId, currentUserId),
+    ]);
+
+    if (!iFollowThem || !theyFollowMe) {
+      throw new ForbiddenException('You can only chat with people who mutually follow you.');
+    }
+
     const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
     const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
 
@@ -120,3 +135,4 @@ export class ConversationService {
     return { conversationId: newConvId };
   }
 }
+

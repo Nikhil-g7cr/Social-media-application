@@ -1,7 +1,8 @@
 import { io, Socket } from 'socket.io-client';
+import { environment } from '../environment/environment';
 
-// Define the URL of your NestJS backend
-const SOCKET_URL = 'http://localhost:5001';
+// Extract base URL from APP_API_URL (e.g., 'http://localhost:5000/api/' -> 'http://localhost:5000')
+const SOCKET_URL = environment.APP_API_URL.replace(/\/api\/?$/, '');
 
 let socket: Socket | null = null;
 
