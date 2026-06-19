@@ -230,24 +230,16 @@ const MessagesPage: React.FC = () => {
     const text = newMessage;
     setNewMessage("");
 
-    // Optimistic UI: add message locally with a temp ID
-    const tempId = `temp-${Date.now()}`;
-    const optimisticMsg: UIMessage = {
-      id: tempId,
-      senderId: CURRENT_USER_ID,
-      text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-    setMessages((prev) => [...prev, optimisticMsg]);
-    setTimeout(scrollToBottom, 100);
-
     // Send via WebSocket — the gateway saves to DB and broadcasts back
-    // The real message from `newMessage` event will replace the temp one via de-duplication
     const socket = initializeSocket();
     socket.emit("sendMessage", {
       conversationId: activeConversation.id,
       text,
     });
+    
+    setTimeout(scrollToBottom, 100);
+
+
   };
 
   if (isConversationsLoading) {
