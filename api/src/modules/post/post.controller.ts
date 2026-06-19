@@ -40,17 +40,7 @@ export class PostController {
     return await this.postService.getAllPosts(pagination);
   }
 
-  @Get('feed')
-  @UseGuards(JwtAuthGuard)
-  async getFeed(
-    @CurrentUser('sub')
-    userId: string,
 
-    @Query()
-    pagination: PaginationDto,
-  ): Promise<AppResponse> {
-    return await this.postService.getFeed(userId, pagination);
-  }
 
   @Get(':id')
   async getPostById(@Param('id') id: string): Promise<AppResponse> {

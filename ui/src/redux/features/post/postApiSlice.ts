@@ -19,7 +19,7 @@ export interface Post {
 export const postApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getPosts: builder.query<Post[], void>({
-            query: () => ({ url: 'posts/feed' }),
+            query: () => ({ url: 'feed' }),
             transformResponse: (response: any) => {
                 // response is AppResponse -> data -> posts
                 const rawPosts = response?.data?.posts || [];
@@ -40,6 +40,40 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 }));
             },
             providesTags: ['Post'],
+            async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
+                // Connect to socket and listen for real-time feed updates
+                const { initializeSocket } = await import('../../../utils/socket');
+                const socket = initializeSocket();
+                try {
+                    await cacheDataLoaded;
+                    const listener = (newPostRaw: any) => {
+                        updateCachedData((draft) => {
+                            // Avoid duplicates
+                            if (draft.find((p) => p.id === newPostRaw.ID)) return;
+                            
+                            const newPost: Post = {
+                                id: newPostRaw.ID,
+                                author: {
+                                    id: newPostRaw.User?.ID || newPostRaw.UserID,
+                                    name: newPostRaw.User?.FullName || 'Unknown',
+                                    username: newPostRaw.User?.UserName || 'unknown',
+                                    avatarUrl: newPostRaw.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${newPostRaw.User?.FullName || 'User'}&background=random`
+                                },
+                                content: newPostRaw.Content || '',
+                                timestamp: new Date(newPostRaw.CreatedAt).toLocaleString(),
+                                likes: 0,
+                                comments: 0,
+                                isLikedByMe: false,
+                                mediaUrl: newPostRaw.MediaURL,
+                            };
+                            draft.unshift(newPost); // Add new post to top of feed
+                        });
+                    };
+                    socket.on('newPostInFeed', listener);
+                } catch {}
+                
+                await cacheEntryRemoved;
+            }
         }),
         getAllExplorePosts: builder.query<Post[], void>({
             query: () => ({ url: 'posts' }),

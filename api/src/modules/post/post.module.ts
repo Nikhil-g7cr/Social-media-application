@@ -8,8 +8,10 @@ import { DatabaseModule } from 'src/databse/database.module';
 import { FileModule } from '../azure/azure.module';
 import { FollowModule } from '../follow/follow.module';
 
+import { ChatModule } from '../chat/chat.module';
+
 @Module({
-  imports:[DatabaseModule,FileModule,FollowModule],
+  imports:[DatabaseModule,FileModule,FollowModule, ChatModule],
   controllers: [PostController],
   providers: [{
       provide: PostAbstractSvc,

@@ -25,7 +25,7 @@ const Approutes = () => {
     <div>
       {/* Topbar is now visible on all pages so you can always access the Cart */}
       {/* <Topbar /> */}
-      <Navbar avatarUrl={"http://localhost 50000"}/>
+      <Navbar />
       
       <Routes>
         {/* PUBLIC ROUTES */}

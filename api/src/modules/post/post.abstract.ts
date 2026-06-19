@@ -17,8 +17,6 @@ export abstract class PostAbstractSvc {
 
   abstract deletePost(postId: string): Promise<AppResponse>;
 
-  abstract getFeed(userID:string, pagination:PaginationDto):Promise<AppResponse>
 
-  // abstract getFeed(userId: string,pagination: PaginationDto,): Promise<AppResponse>;
 
 }

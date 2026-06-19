@@ -103,6 +103,8 @@ export class AuthService implements AbstractAuthSvc {
         sub: user.ID,
         email: user.EmailAddress,
         roles: [user.Role],
+        name: user.FullName,
+        image_url: user.ProfilePictureUrl,
       };
 
       // Generate Tokens
@@ -210,6 +212,8 @@ export class AuthService implements AbstractAuthSvc {
         sub: verify.sub,
         email: verify.email,
         roles: verify.roles,
+        name: verify.name,
+        image_url: verify.image_url,
       };
 
       const accessToken = await this.jwtService.signAsync(payload, {

@@ -12,6 +12,7 @@ import { FollowModule } from '../follow/follow.module';
 import { FileModule } from '../azure/azure.module';
 import { ConversationModule } from '../conversation/conversation.module';
 import { MessageModule } from '../message/message.module';
+import { FeedModule } from '../feed/feed.module';
 
 @Module({
   imports: [
@@ -25,7 +26,8 @@ import { MessageModule } from '../message/message.module';
     FollowModule,
     FileModule,
     ConversationModule,
-    MessageModule
+    MessageModule,
+    FeedModule
   ],
   controllers: [AppController],
   providers: [AppService],

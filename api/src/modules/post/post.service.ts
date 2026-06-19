@@ -12,6 +12,8 @@ import { FileService } from '../azure/azure.service';
 import { PaginationDto } from 'src/core/dto/pagination.dto';
 import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
 
+import { ChatGateway } from '../chat/chat.gateway';
+
 @Injectable()
 export class PostService implements PostAbstractSvc {
   constructor(
@@ -19,7 +21,8 @@ export class PostService implements PostAbstractSvc {
     private readonly appConfig: AppConfig,
     private readonly postDao: PostAbstractSQLDao,
     private readonly fileService: FileService,
-    private readonly followDao: FollowSQLDao
+    private readonly followDao: FollowSQLDao,
+    private readonly chatGateway: ChatGateway
   ) {}
 
   async createPost(
@@ -28,7 +31,29 @@ export class PostService implements PostAbstractSvc {
   ): Promise<AppResponse> {
     this.logger.log('[PostService] Initiating createPost', 200);
 
-    return await this.postDao.createPost(createPostDto, userId);
+    const response = await this.postDao.createPost(createPostDto, userId);
+    
+    // Broadcast the new post to followers in real-time
+    if ((response.code === 201 || response.code === 200) && response.data) {
+      try {
+        const followers = await this.followDao.getFollowers(userId);
+        const postData = response.data;
+        
+        // Emit to the author's own room so they see it instantly
+        this.chatGateway.server.to(`user_${userId}`).emit('newPostInFeed', postData);
+        
+        // Emit to all followers
+        followers.forEach((f: any) => {
+          if (f.FollowerID) {
+            this.chatGateway.server.to(`user_${f.FollowerID}`).emit('newPostInFeed', postData);
+          }
+        });
+      } catch (err) {
+        this.logger.error(`[PostService] Failed to broadcast post: ${err}`, 500);
+      }
+    }
+
+    return response;
   }
 
   async getAllPosts(pagination:PaginationDto): Promise<AppResponse> {
@@ -121,43 +146,7 @@ export class PostService implements PostAbstractSvc {
   }
 
 
-  async getFeed(
-  userId: string,
-  pagination: PaginationDto,
-): Promise<AppResponse> {
 
-  try {
-
-    const followingIds =
-      await this.followDao.getFollowingIds(
-        userId,
-      );
-
-    // Include current user's posts
-    followingIds.push(userId);
-
-    return await this.postDao.getFeedPosts(
-      followingIds,
-      pagination.page,
-      pagination.limit,
-    );
-
-  } catch (error: any) {
-
-    this.logger.error(
-      error.stack,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
-
-    return {
-      ...createResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        'Failed to retrieve feed',
-      ),
-      description: error.message,
-    };
-  }
-}
 
 }
 

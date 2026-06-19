@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   Home,
   Search,
@@ -14,30 +14,16 @@ import { Link } from "react-router-dom";
 import CommentSection from "../../shared/shared-components/CommentSection";
 import { useAppSelector } from "../../redux/hooks";
 import ExplorePage from "../Explore";
-import { useGetPostsQuery, useCreatePostMutation } from "../../redux/features/post/postApiSlice";
+import { useGetPostsQuery } from "../../redux/features/post/postApiSlice";
 import { useLikePostMutation, useUnlikePostMutation } from "../../redux/features/like/likeApiSlice";
+import CreatePost from "../../shared/shared-components/CreatePost";
 export default function HomePage() {
   const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
   
   // RTK Query hooks
   const { data: posts = [], isLoading: isPostsLoading } = useGetPostsQuery(undefined, { skip: !isAuthenticated });
-  const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
   const [likePost] = useLikePostMutation();
   const [unlikePost] = useUnlikePostMutation();
-
-  const [newPostContent, setNewPostContent] = useState("");
-
-  const handleCreatePost = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newPostContent.trim()) return;
-
-    try {
-      await createPost({ content: newPostContent, type: 'TEXT' } as any).unwrap();
-      setNewPostContent("");
-    } catch (error) {
-      console.error("Failed to create post", error);
-    }
-  };
 
   const handleLogout = () => {
     sessionStorage.removeItem("accessToken");
@@ -60,50 +46,50 @@ export default function HomePage() {
     <div className="min-h-screen bg-gray-50">
       
       {/* Main Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Left Sidebar */}
-          <div className="hidden md:block">
-            <div className="sticky top-24 space-y-2">
+          {/* Left Sidebar / Bottom Nav on Mobile */}
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-40 md:relative md:block md:border-none md:bg-transparent md:z-auto">
+            <div className="flex justify-around p-2 md:sticky md:top-24 md:flex-col md:space-y-2 md:p-0 md:justify-start">
               {!isAuthenticated ? (
                 <>
-                  <div className="flex items-center px-4 py-3 rounded-xl bg-blue-50 text-blue-600 font-medium">
-                    <Search className="h-5 w-5 mr-3" />
-                    <Link to="/explore">Explore</Link>
-                  </div>
-                  <div className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100">
-                    <LogOut className="h-5 w-5 mr-3" />
-                    <Link to="/login">Login</Link>
-                  </div>
-                  <div className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100">
-                    <User className="h-5 w-5 mr-3" />
-                    <Link to="/signup">Signup</Link>
-                  </div>
+                  <Link to="/explore" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
+                    <Search className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0 font-medium">Explore</span>
+                  </Link>
+                  <Link to="/login" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
+                    <LogOut className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0 font-medium">Login</span>
+                  </Link>
+                  <Link to="/signup" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
+                    <User className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0 font-medium">Signup</span>
+                  </Link>
                 </>
               ) : (
                 <>
-                  <div className="flex items-center px-4 py-3 rounded-xl bg-blue-50 text-blue-600 font-medium">
-                    <Home className="h-5 w-5 mr-3" />
-                    Home
+                  <div className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl md:bg-blue-50 text-blue-600 font-medium flex-1 md:flex-none cursor-pointer">
+                    <Home className="h-6 w-6 md:h-5 md:w-5 md:mr-3" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0">Home</span>
                   </div>
-                  <div className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100">
-                    <Search className="h-5 w-5 mr-3" />
-                    <Link to="/explore">Explore</Link>
-                  </div>
-                  <div className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100">
-                    <MessageSquare className="h-5 w-5 mr-3" />
-                    <Link to="/message">Messages</Link>
-                  </div>
-                  <div className="flex items-center px-4 py-3 rounded-xl hover:bg-gray-100">
-                    <User className="h-5 w-5 mr-3" />
-                    <Link to="/profile">Profile</Link>
-                  </div>
+                  <Link to="/explore" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
+                    <Search className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Explore</span>
+                  </Link>
+                  <Link to="/message" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
+                    <MessageSquare className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Messages</span>
+                  </Link>
+                  <Link to="/profile" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
+                    <User className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Profile</span>
+                  </Link>
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center px-4 py-3 rounded-xl text-red-600 hover:bg-red-50"
+                    className="flex flex-col md:flex-row items-center justify-center p-2 md:px-4 md:py-3 rounded-xl text-red-600 hover:bg-red-50 flex-1 md:flex-none md:justify-start"
                   >
-                    <LogOut className="h-5 w-5 mr-3" />
-                    Logout
+                    <LogOut className="h-6 w-6 md:h-5 md:w-5 md:mr-3" />
+                    <span className="text-xs mt-1 md:text-base md:mt-0">Logout</span>
                   </button>
                 </>
               )}
@@ -121,43 +107,7 @@ export default function HomePage() {
             <>
               {/* Feed */}
               <div className="md:col-span-2 space-y-6">
-                {/* Create Post */}
-                <div className="bg-white rounded-2xl border p-5 shadow-sm">
-                  <div className="flex gap-4">
-                    <img
-                      src={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
-                      alt=""
-                      className="h-10 w-10 rounded-full"
-                    />
-
-                    <form onSubmit={handleCreatePost} className="flex-1">
-                      <textarea
-                        value={newPostContent}
-                        onChange={(e) => setNewPostContent(e.target.value)}
-                        rows={3}
-                        placeholder="What's on your mind?"
-                        className="w-full bg-gray-50 rounded-xl p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                      />
-
-                      <div className="flex justify-between items-center mt-3">
-                        <button
-                          type="button"
-                          className="p-2 rounded-full hover:bg-blue-50"
-                        >
-                          <ImageIcon className="h-5 w-5 text-gray-500" />
-                        </button>
-
-                        <button
-                          type="submit"
-                          disabled={isSubmitting || !newPostContent.trim()}
-                          className="px-6 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
-                        >
-                          {isSubmitting ? "Posting..." : "Post"}
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
+                <CreatePost />
 
                 {/* Posts */}
                 {isPostsLoading ? (

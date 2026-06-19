@@ -14,4 +14,14 @@ export interface JwtPayload {
    * Example: ["ADMIN"] or ["USER"]
    */
   roles: string[];
+
+  /**
+   * User name
+   */
+  name?: string;
+
+  /**
+   * User profile picture url
+   */
+  image_url?: string;
 }

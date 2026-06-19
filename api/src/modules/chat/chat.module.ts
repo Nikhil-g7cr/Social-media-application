@@ -10,5 +10,6 @@ import { AppConfig } from 'src/config/AppConfig';
   imports: [DatabaseModule, JwtModule.register({})],
   controllers: [ChatController],
   providers: [ChatService, ChatGateway, AppConfig],
+  exports: [ChatGateway],
 })
 export class ChatModule {}
