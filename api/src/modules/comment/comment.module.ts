@@ -5,9 +5,11 @@ import { CommentsAbstractSQLDAO } from 'src/databse/mssql/abstract/comment.abstr
 import { CommentSQLDAO } from 'src/databse/mssql/dao/comment.dao';
 import { CommentAbstractSvc } from './comment.abstract';
 import { DatabaseModule } from 'src/databse/database.module';
+import { PostModule } from '../post/post.module';
+import { NotificationModule } from '../notification/notification.module';
 
 @Module({
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, PostModule, NotificationModule],
   controllers: [CommentController],
   providers: [
     {

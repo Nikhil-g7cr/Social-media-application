@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Body, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Body, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 import { CommentService } from './comment.service';
@@ -25,5 +25,10 @@ export class CommentController {
       userId, 
       createCommentDto.commentText
     );
+  }
+
+  @Get(':postId')
+  async getCommentsByPostId(@Param('postId') postId: string) {
+    return await this.commentService.getCommentsByPostId(postId);
   }
 }

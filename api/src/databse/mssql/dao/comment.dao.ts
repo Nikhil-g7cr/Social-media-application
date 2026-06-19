@@ -3,7 +3,7 @@ import { randomUUID } from 'crypto';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { messageFactory, messages } from 'src/shared/message.shared';
-import { Comments } from '../models';
+import { Comments, Users } from '../models';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { CommentsAbstractSQLDAO } from '../abstract/comment.abstract.mssql';
 // Import your Comments model...
@@ -45,6 +45,40 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
           'Failed to add comment',
+        ),
+        description: error.message,
+      };
+    }
+  }
+
+  async getCommentsByPostId(postId: string): Promise<AppResponse> {
+    try {
+      const comments = await this.commentModel.findAll({
+        where: { PostID: postId },
+        include: [
+          {
+            model: Users,
+            as: 'User',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
+          },
+        ],
+        order: [['CreatedAt', 'DESC']],
+      });
+
+      return createResponse(
+        HttpStatus.OK,
+        'Comments retrieved successfully',
+        comments,
+      );
+    } catch (error: any) {
+      this.logger.error(
+        `[CommentSQLDAO] getCommentsByPostId Error: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Failed to retrieve comments',
         ),
         description: error.message,
       };

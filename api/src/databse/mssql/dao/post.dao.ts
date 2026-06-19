@@ -79,6 +79,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         limit,
         offset,
         order: [['CreatedAt', 'DESC']],
+        distinct: true,
         include: [
           {
             model: this.sequelize.models.Users,
@@ -89,6 +90,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             model: this.sequelize.models.Likes,
             as: 'Likes',
             attributes: ['UserID']
+          },
+          {
+            model: this.sequelize.models.Comments,
+            as: 'Comments',
+            attributes: ['ID']
           }
         ]
       });
@@ -125,6 +131,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         limit,
         offset,
         order: [['CreatedAt', 'DESC']],
+        distinct: true,
         include: [
           {
             model: this.sequelize.models.Users,
@@ -135,6 +142,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             model: this.sequelize.models.Likes,
             as: 'Likes',
             attributes: ['UserID']
+          },
+          {
+            model: this.sequelize.models.Comments,
+            as: 'Comments',
+            attributes: ['ID']
           }
         ]
       });
@@ -303,6 +315,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         order: [
           ['CreatedAt', 'DESC'],
         ],
+        distinct: true,
         include: [
           {
             model: this.sequelize.models.Users,
@@ -313,6 +326,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             model: this.sequelize.models.Likes,
             as: 'Likes',
             attributes: ['UserID']
+          },
+          {
+            model: this.sequelize.models.Comments,
+            as: 'Comments',
+            attributes: ['ID']
           }
         ]
       });
@@ -382,6 +400,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         limit,
         offset,
         order: [['CreatedAt', 'DESC']],
+        distinct: true,
       });
 
       const postIds = rows.map((post) => post.ID);
@@ -399,6 +418,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             as: 'Likes',
             attributes: ['UserID'],
           },
+          {
+            model: this.sequelize.models.Comments,
+            as: 'Comments',
+            attributes: ['ID'],
+          }
         ],
         order: [['CreatedAt', 'DESC']],
       });

@@ -21,5 +21,6 @@ import { ChatModule } from '../chat/chat.module';
       provide: PostAbstractSQLDao,
       useClass: PostSQLDAO,
     },],
+  exports: [PostAbstractSQLDao],
 })
 export class PostModule {}

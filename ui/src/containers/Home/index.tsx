@@ -175,7 +175,7 @@ export default function HomePage() {
                         </button>
 
                         <div className="flex items-center gap-2 p-2 rounded-full text-gray-500">
-                          <CommentSection postId={post.id} initialCommentCount={post.commentsCount} />
+                          <CommentSection postId={post.id} initialCommentCount={post.comments} />
                         </div>
 
                         <button className="flex items-center gap-2 p-2 rounded-full text-gray-500">

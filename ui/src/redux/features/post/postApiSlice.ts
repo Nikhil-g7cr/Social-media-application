@@ -1,5 +1,15 @@
 import { apiSlice } from '../../apiSlice';
 
+export interface Comment {
+    id: string;
+    authorName: string;
+    authorAvatar: string;
+    content: string;
+    time: string;
+    likes: number;
+    isLiked: boolean;
+}
+
 export interface Post {
     id: string;
     author: {
@@ -35,7 +45,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
                     likes: p.Likes?.length || 0,
-                    comments: 0,
+                    comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
@@ -64,7 +74,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                                 content: newPostRaw.Content || '',
                                 timestamp: new Date(newPostRaw.CreatedAt).toLocaleString(),
                                 likes: newPostRaw.Likes?.length || 0,
-                                comments: 0,
+                                comments: newPostRaw.Comments?.length || 0,
                                 isLikedByMe: false,
                                 likedBy: newPostRaw.Likes?.map((l: any) => l.UserID) || [],
                                 mediaUrl: newPostRaw.MediaURL,
@@ -93,7 +103,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
                     likes: p.Likes?.length || 0,
-                    comments: 0,
+                    comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
@@ -116,7 +126,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(),
                     likes: p.Likes?.length || 0,
-                    comments: 0,
+                    comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
@@ -139,7 +149,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     content: p.Content || '',
                     timestamp: new Date(p.CreatedAt).toLocaleString(),
                     likes: p.Likes?.length || 0,
-                    comments: 0,
+                    comments: p.Comments?.length || 0,
                     isLikedByMe: true, // We know they liked it
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
@@ -207,6 +217,30 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 }
             },
         }),
+        getCommentsByPostId: builder.query<Comment[], string>({
+            query: (postId) => ({ url: `comment/${postId}` }),
+            transformResponse: (response: any) => {
+                const rawComments = response?.data || [];
+                return rawComments.map((c: any) => ({
+                    id: c.ID,
+                    authorName: c.User?.FullName || 'Unknown',
+                    authorAvatar: c.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${c.User?.FullName || 'User'}&background=random`,
+                    content: c.Content,
+                    time: new Date(c.CreatedAt).toLocaleString(),
+                    likes: 0,
+                    isLiked: false,
+                }));
+            },
+            providesTags: (_result, _error, id) => [{ type: 'Comment', id }],
+        }),
+        createPostComment: builder.mutation<Comment, { postId: string; commentText: string }>({
+            query: ({ postId, commentText }) => ({
+                url: `comment/${postId}`,
+                method: 'POST',
+                data: { commentText },
+            }),
+            invalidatesTags: (_result, _error, { postId }) => [{ type: 'Comment', id: postId }, 'Post'],
+        }),
     }),
 });
 
@@ -222,4 +256,6 @@ export const {
     useGetUploadUrlMutation,
     useGetReadUrlQuery,
     useUploadImageToAzureMutation,
+    useGetCommentsByPostIdQuery,
+    useCreatePostCommentMutation,
 } = postApiSlice;
