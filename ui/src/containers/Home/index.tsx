@@ -25,6 +25,8 @@ export default function HomePage() {
   const { data: posts = [], isLoading: isPostsLoading } = useGetPostsQuery(undefined, { skip: !isAuthenticated });
   const [likePost] = useLikePostMutation();
   const [unlikePost] = useUnlikePostMutation();
+  
+  const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
   const handleLogout = () => {
     sessionStorage.removeItem("accessToken");
@@ -123,10 +125,15 @@ export default function HomePage() {
                     >
                       <div className="flex justify-between">
                         <div className="flex gap-3">
-                          <PostImage
-                            mediaUrl={post.author.avatarUrl}
-                            className="h-10 w-10 rounded-full object-cover"
-                          />
+                          <div className="relative">
+                            <PostImage
+                              mediaUrl={post.author.avatarUrl}
+                              className="h-10 w-10 rounded-full object-cover"
+                            />
+                            {onlineUserIds.includes(post.author.id) && (
+                              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white"></span>
+                            )}
+                          </div>
 
                           <div>
                             <h3 className="font-semibold">{post.author.name}</h3>

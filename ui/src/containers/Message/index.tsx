@@ -48,8 +48,9 @@ const MessagesPage: React.FC = () => {
   const searchParams = new URLSearchParams(location.search);
   const targetConvId = searchParams.get("convId");
 
-  const { user } = useAppSelector((state) => state.auth);
+  const { user } = useAppSelector((state: any) => state.auth);
   const CURRENT_USER_ID = user?.id || "";
+  const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
   // --- State ---
   const [conversations, setConversations] = useState<UIConversation[]>([]);
@@ -93,28 +94,6 @@ const MessagesPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Track a newly created conversation so we can auto-open it after refetch
   const pendingConvIdRef = useRef<string | null>(null);
-
-  // --- WebSocket: Initialize once, handle online/offline status ---
-  useEffect(() => {
-    const socket = initializeSocket();
-
-    socket.on("userOnline", (userId: string) => {
-      setConversations((prev) =>
-        prev.map((conv) => conv.participantId === userId ? { ...conv, isOnline: true } : conv)
-      );
-    });
-
-    socket.on("userOffline", (userId: string) => {
-      setConversations((prev) =>
-        prev.map((conv) => conv.participantId === userId ? { ...conv, isOnline: false } : conv)
-      );
-    });
-
-    return () => {
-      socket.off("userOnline");
-      socket.off("userOffline");
-    };
-  }, []);
 
   // Auto-scroll when messages update
   useEffect(() => {
@@ -312,7 +291,7 @@ const MessagesPage: React.FC = () => {
                     mediaUrl={conv.image_url}
                     className="h-12 w-12 rounded-full object-cover"
                   />
-                  {conv.isOnline && (
+                  {onlineUserIds.includes(conv.participantId) && (
                     <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>
                   )}
                 </div>
@@ -362,7 +341,7 @@ const MessagesPage: React.FC = () => {
                     {activeConversation.participantName}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {activeConversation.isOnline ? "Active now" : "Offline"}
+                    {onlineUserIds.includes(activeConversation.participantId) ? "Active now" : "Offline"}
                   </p>
                 </div>
               </div>

@@ -16,6 +16,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
   // Use user slice for avatar if possible, or just skip it if not needed directly.
   const authUser = useSelector((state: any) => state.auth?.user);
   const userAvatar = authUser?.image_url || `https://ui-avatars.com/api/?name=${authUser?.name || 'User'}&background=random`;
+  
+  const onlineUserIds = useSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
   const { data: comments = [], isLoading, isFetching } = useGetCommentsByPostIdQuery(postId, {
     skip: !isOpen, // Only fetch when opened
@@ -74,10 +76,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
                   comments.map((comment: any) => (
                     <div key={comment.id} className="flex gap-3 group">
                       {/* Avatar */}
-                      <PostImage 
-                        mediaUrl={comment.authorAvatar} 
-                        className="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer"
-                      />
+                      <div className="relative">
+                        <PostImage 
+                          mediaUrl={comment.authorAvatar} 
+                          className="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer"
+                        />
+                        {onlineUserIds.includes(comment.authorId) && (
+                          <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-green-500 ring-2 ring-white"></span>
+                        )}
+                      </div>
                       
                       {/* Comment Body */}
                       <div className="flex-1">

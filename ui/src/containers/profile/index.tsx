@@ -64,6 +64,7 @@ const UsersModal = ({ isOpen, onClose, title, userId, type }: { isOpen: boolean,
 const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const currentUser = useAppSelector((state: any) => state.auth.user);
+  const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
   
   const targetUserId = userId || (currentUser?.id);
 
@@ -107,8 +108,11 @@ const ProfilePage: React.FC = () => {
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mt-8">
           <div className="flex items-center gap-5">
             {/* Avatar */}
-            <div className="relative h-32 w-32 rounded-full border-4 border-white bg-white sm:h-40 sm:w-40 overflow-hidden shadow-md">
-              <PostImage mediaUrl={profile.avatarUrl} className="h-full w-full object-cover" />
+            <div className="relative h-32 w-32 rounded-full border-4 border-white bg-white sm:h-40 sm:w-40 shadow-md">
+              <PostImage mediaUrl={profile.avatarUrl} className="h-full w-full rounded-full object-cover" />
+              {onlineUserIds.includes(profile.id) && (
+                <span className="absolute bottom-2 right-2 block h-6 w-6 rounded-full bg-green-500 ring-4 ring-white"></span>
+              )}
             </div>
 
             <div className="hidden sm:block">

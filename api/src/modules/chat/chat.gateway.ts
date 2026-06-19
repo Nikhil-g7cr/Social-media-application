@@ -37,16 +37,40 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  // Track online users: userId -> count of active connections
+  private onlineUsers = new Map<string, number>();
+
   handleConnection(client: Socket) {
     const userId = this.extractUserIdFromSocket(client);
     console.log(`Client connected: ${client.id} | User: ${userId}`);
     if (userId) {
       client.join(`user_${userId}`);
+      
+      const count = this.onlineUsers.get(userId) || 0;
+      this.onlineUsers.set(userId, count + 1);
+      
+      if (count === 0) {
+        // First connection for this user
+        this.server.emit('userOnline', userId);
+      }
+      
+      // Sync currently online users to this newly connected client
+      client.emit('syncOnlineUsers', Array.from(this.onlineUsers.keys()));
     }
   }
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);
+    const userId = this.extractUserIdFromSocket(client);
+    if (userId) {
+      const count = this.onlineUsers.get(userId) || 0;
+      if (count > 1) {
+        this.onlineUsers.set(userId, count - 1);
+      } else {
+        this.onlineUsers.delete(userId);
+        this.server.emit('userOffline', userId);
+      }
+    }
   }
 
   @SubscribeMessage('joinRoom')
