@@ -36,12 +36,6 @@ export const signupFields = [
     placeholder: "Tell us about yourself",
   },
   {
-    name: "ProfilePictureUrl",
-    label: "Profile Picture URL",
-    type: "text",
-    placeholder: "https://example.com/profile.jpg",
-  },
-  {
     name: "Gender",
     label: "Gender",
     type: "select",

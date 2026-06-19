@@ -1,12 +1,14 @@
 import React, { useState, useRef } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
 import { useAppSelector } from "../../../redux/hooks";
-import { useCreatePostMutation, useGetUploadUrlMutation } from "../../../redux/features/post/postApiSlice";
+import { useCreatePostMutation, useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../../redux/features/post/postApiSlice";
+import PostImage from "../PostImage";
 
 export default function CreatePost() {
   const { user } = useAppSelector((state: any) => state.auth);
   const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
   const [getUploadUrl] = useGetUploadUrlMutation();
+  const [uploadImageToAzure] = useUploadImageToAzureMutation();
   const [newPostContent, setNewPostContent] = useState("");
   
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -45,18 +47,7 @@ export default function CreatePost() {
           contentType: selectedImage.type,
         }).unwrap();
 
-        const uploadResponse = await fetch(uploadUrl, {
-          method: 'PUT',
-          body: selectedImage,
-          headers: {
-            'x-ms-blob-type': 'BlockBlob',
-            'Content-Type': selectedImage.type,
-          },
-        });
-        
-        if (!uploadResponse.ok) {
-           throw new Error('Failed to upload image to Azure');
-        }
+        await uploadImageToAzure({ uploadUrl, file: selectedImage }).unwrap();
 
         mediaURL = blobPath;
         type = 'IMAGE';
@@ -76,9 +67,8 @@ export default function CreatePost() {
   return (
     <div className="bg-white rounded-2xl border p-5 shadow-sm">
       <div className="flex gap-4">
-        <img
-          src={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
-          alt=""
+        <PostImage
+          mediaUrl={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
           className="h-10 w-10 rounded-full object-cover"
         />
 

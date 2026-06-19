@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import NotificationDropdown from "../../../shared/shared-components/NotificationDropdown";
 import SearchBar from "../SearchBar";
 import { Link } from "react-router-dom";
+import PostImage from "../../../shared/shared-components/PostImage";
 
 const Navbar: React.FC = () => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -40,9 +41,8 @@ const Navbar: React.FC = () => {
                   <span className="text-sm font-medium text-gray-700">
                     {user?.name || "User"}
                   </span>
-                  <img
-                    src={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
-                    alt="profile"
+                  <PostImage
+                    mediaUrl={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
                     className="h-10 w-10 rounded-full border"
                   />
                 </div>

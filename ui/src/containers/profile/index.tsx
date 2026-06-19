@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Settings, MapPin, Calendar, Grid, Heart, Bookmark } from 'lucide-react';
 import API from '../../config/axiosConfig';
+import PostImage from '../../shared/shared-components/PostImage';
 
 // Interfaces to type our state
 interface UserProfile {
@@ -31,7 +32,7 @@ const ProfilePage: React.FC = () => {
         setIsLoading(true);
         // Replace this mock data with your actual backend response
         const response = await API.get('/auth/profile');
-        
+
         // Mocking backend data for demonstration
         setTimeout(() => {
           setProfile({
@@ -68,9 +69,9 @@ const ProfilePage: React.FC = () => {
     <div className="min-h-screen bg-gray-50 pb-10">
       {/* 1. Cover Photo */}
       <div className="h-48 w-full md:h-64 lg:h-80 relative bg-gray-300">
-        <img 
-          src={profile.coverUrl} 
-          alt="Cover" 
+        <img
+          src={profile.coverUrl}
+          alt="Cover"
           className="h-full w-full object-cover"
         />
       </div>
@@ -81,9 +82,9 @@ const ProfilePage: React.FC = () => {
           <div className="flex items-end gap-5">
             {/* Avatar */}
             <div className="relative h-32 w-32 rounded-full border-4 border-white bg-white sm:h-40 sm:w-40 overflow-hidden shadow-md">
-              <img src={profile.avatarUrl} alt={profile.fullName} className="h-full w-full object-cover" />
+              <PostImage mediaUrl={profile.avatarUrl} className="h-full w-full object-cover" />
             </div>
-            
+
             {/* Actions (Mobile view pushes this down, Desktop keeps it right) */}
             <div className="mb-2 hidden sm:block">
               <h1 className="text-2xl font-bold text-gray-900">{profile.fullName}</h1>
@@ -143,27 +144,24 @@ const ProfilePage: React.FC = () => {
           <div className="flex border-b border-gray-200">
             <button
               onClick={() => setActiveTab('posts')}
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${
-                activeTab === 'posts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'posts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
             >
               <Grid className="h-4 w-4" />
               Posts
             </button>
             <button
               onClick={() => setActiveTab('liked')}
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${
-                activeTab === 'liked' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'liked' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
             >
               <Heart className="h-4 w-4" />
               Liked
             </button>
             <button
               onClick={() => setActiveTab('saved')}
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${
-                activeTab === 'saved' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-              }`}
+              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'saved' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
             >
               <Bookmark className="h-4 w-4" />
               Saved
@@ -174,18 +172,18 @@ const ProfilePage: React.FC = () => {
           <div className="mt-6 grid grid-cols-3 gap-1 sm:gap-4 lg:grid-cols-4">
             {/* Generating 12 placeholder squares for the feed */}
             {Array.from({ length: 12 }).map((_, index) => (
-              <div 
-                key={index} 
+              <div
+                key={index}
                 className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
               >
-                <img 
-                  src={`https://images.unsplash.com/photo-${1500000000000 + index}?auto=format&fit=crop&w=500&q=60`} 
-                  alt={`Post ${index + 1}`} 
+                <img
+                  src={`https://images.unsplash.com/photo-${1500000000000 + index}?auto=format&fit=crop&w=500&q=60`}
+                  alt={`Post ${index + 1}`}
                   className="w-full h-full object-cover transition duration-300 group-hover:scale-105"
                 />
                 {/* Hover overlay */}
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex items-center justify-center gap-4 text-white">
-                  <div className="flex items-center gap-1 font-semibold"><Heart className="w-5 h-5 fill-white"/> {Math.floor(Math.random() * 100)}</div>
+                  <div className="flex items-center gap-1 font-semibold"><Heart className="w-5 h-5 fill-white" /> {Math.floor(Math.random() * 100)}</div>
                 </div>
               </div>
             ))}

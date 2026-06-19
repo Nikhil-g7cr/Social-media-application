@@ -22,7 +22,7 @@ export class AuthService implements AbstractAuthSvc {
     private readonly jwtService: JwtService,
     private readonly appConfig: AppConfig,
     private readonly logger: AppLogger,
-  ) {}
+  ) { }
 
   // =====================================================
   // SIGNUP

@@ -27,7 +27,7 @@ import { JwtStrategy } from "./models/jwt.strategy";
     JwtModule.register({}),
   ],
 
-  controllers: [AuthController,TestErrorsController],
+  controllers: [AuthController, TestErrorsController],
 
   providers: [
     AppConfig,
@@ -55,4 +55,4 @@ import { JwtStrategy } from "./models/jwt.strategy";
     JwtModule,
   ],
 })
-export class AuthModule {}
+export class AuthModule { }

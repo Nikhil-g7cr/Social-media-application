@@ -137,6 +137,26 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 method: 'GET',
             }),
         }),
+        uploadImageToAzure: builder.mutation<void, { uploadUrl: string; file: File }>({
+            queryFn: async ({ uploadUrl, file }) => {
+                try {
+                    const uploadResponse = await fetch(uploadUrl, {
+                        method: 'PUT',
+                        body: file,
+                        headers: {
+                            'x-ms-blob-type': 'BlockBlob',
+                            'Content-Type': file.type,
+                        },
+                    });
+                    if (!uploadResponse.ok) {
+                        return { error: { status: uploadResponse.status, data: 'Failed to upload image to Azure' } };
+                    }
+                    return { data: undefined };
+                } catch (error: any) {
+                    return { error: { status: 'FETCH_ERROR', error: error.message } };
+                }
+            },
+        }),
     }),
 });
 
@@ -149,4 +169,5 @@ export const {
     useDeletePostMutation,
     useGetUploadUrlMutation,
     useGetReadUrlQuery,
+    useUploadImageToAzureMutation,
 } = postApiSlice;
