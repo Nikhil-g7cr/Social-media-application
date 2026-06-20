@@ -16,6 +16,7 @@ export interface ProfileFollowInfo {
     followersCount: number;
     followingCount: number;
     isFollowing: boolean;
+    isRequested?: boolean;
 }
 
 export const userApiSlice = apiSlice.injectEndpoints({
@@ -80,8 +81,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 const patchResult = dispatch(
                     userApiSlice.util.updateQueryData('getProfileFollowInfo', userId, (draft) => {
                         if (draft) {
-                            draft.isFollowing = true;
-                            draft.followersCount += 1;
+                            draft.isRequested = true;
                         }
                     })
                 );
@@ -105,8 +105,11 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 const patchResult = dispatch(
                     userApiSlice.util.updateQueryData('getProfileFollowInfo', userId, (draft) => {
                         if (draft) {
-                            draft.isFollowing = false;
-                            draft.followersCount -= 1;
+                            if (draft.isFollowing) {
+                                draft.isFollowing = false;
+                                draft.followersCount = Math.max(0, draft.followersCount - 1);
+                            }
+                            draft.isRequested = false;
                         }
                     })
                 );
@@ -151,6 +154,35 @@ export const userApiSlice = apiSlice.injectEndpoints({
             },
             providesTags: ['User'],
         }),
+        acceptFollowRequest: builder.mutation<{ success: boolean }, string>({
+            query: (followerId) => ({
+                url: `follow/accept/${followerId}`,
+                method: 'POST',
+            }),
+            invalidatesTags: ['User', 'Profile'],
+        }),
+        rejectFollowRequest: builder.mutation<{ success: boolean }, string>({
+            query: (followerId) => ({
+                url: `follow/reject/${followerId}`,
+                method: 'POST',
+            }),
+            invalidatesTags: ['User', 'Profile'],
+        }),
+        getPendingRequests: builder.query<User[], void>({
+            query: () => ({ url: 'follow/requests' }),
+            transformResponse: (response: any) => {
+                const rawUsers = response?.data || response || [];
+                return rawUsers.map((u: any) => ({
+                    id: u.FollowerID || u.ID || u.id,
+                    username: u.Follower?.UserName || u.UserName || u.username,
+                    name: u.Follower?.FullName || u.FullName || u.name,
+                    email: u.Follower?.Email || u.Email || u.email || '',
+                    avatarUrl: u.Follower?.ProfilePictureUrl || u.ProfilePictureUrl || u.avatarUrl || `https://ui-avatars.com/api/?name=${u.Follower?.FullName || u.FullName || u.name || 'User'}&background=random`,
+                    bio: u.Follower?.Bio || u.Bio || u.bio,
+                }));
+            },
+            providesTags: ['User'],
+        }),
     }),
 });
 
@@ -164,4 +196,7 @@ export const {
     useUnfollowUserMutation,
     useGetFollowersQuery,
     useGetFollowingQuery,
+    useAcceptFollowRequestMutation,
+    useRejectFollowRequestMutation,
+    useGetPendingRequestsQuery,
 } = userApiSlice;

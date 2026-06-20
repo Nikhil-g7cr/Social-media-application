@@ -3,10 +3,9 @@ import { randomUUID } from 'crypto';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { messageFactory, messages } from 'src/shared/message.shared';
-import { Likes } from '../models';
+import { Likes, Posts, Users } from '../models';
 import { LikeAbstractSQLDAO } from '../abstract/like.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-// Import your Like model...
 
 @Injectable()
 export class LikeSQLDAO implements LikeAbstractSQLDAO {
@@ -15,12 +14,41 @@ export class LikeSQLDAO implements LikeAbstractSQLDAO {
     private readonly logger: AppLogger,
   ) {}
 
+  async getUserLikes(userId: string): Promise<AppResponse> {
+    try {
+      const likes = await this.likeModel.findAll({
+        where: { UserID: userId },
+        include: [
+          {
+            model: Posts,
+            as: 'Post',
+            include: [
+              {
+                model: Users,
+                as: 'User',
+                attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
+              }
+            ]
+          },
+        ],
+        order: [['CreatedAt', 'DESC']],
+      });
+      return createResponse(HttpStatus.OK, 'User likes retrieved successfully', likes);
+    } catch (error: any) {
+      this.logger.error(`[LikeSQLDAO] getUserLikes Error: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      return {
+        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Failed to retrieve user likes'),
+        description: error.message,
+      };
+    }
+  }
+
   async toggleLike(postId: string, userId: string): Promise<AppResponse> {
     try {
       // 1. Check if the user already liked this post
       const existingLike = await this.likeModel.findOne({
         where: {
-          PostID: postId, // Note: Your like.model.ts spells it 'PostsID'
+          PostID: postId, 
           UserID: userId,
         },
       });
@@ -35,12 +63,10 @@ export class LikeSQLDAO implements LikeAbstractSQLDAO {
       }
 
       // 3. If it doesn't exist, the user is trying to LIKE the post
-      // 3. If it doesn't exist, the user is trying to LIKE the post
       const newLikePayload = {
         ID: randomUUID(),
         PostID: postId,
         UserID: userId,
-        // No dates needed! Sequelize sees defaultValue: GETDATE() and lets SQL handle it
       };
 
       const newLike = await this.likeModel.create(newLikePayload as any);
@@ -50,8 +76,6 @@ export class LikeSQLDAO implements LikeAbstractSQLDAO {
         newLike,
       );
     } catch (error: any) {
-      // THIS IS THE IMPORTANT PART: Look at your terminal (where you ran 'npm run start')
-      // after making the request to see what prints here:
       console.error('=== RAW DATABASE ERROR ===');
       console.error(error);
       console.error('==========================');

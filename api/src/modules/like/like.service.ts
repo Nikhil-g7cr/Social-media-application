@@ -4,14 +4,19 @@ import { LikeAbstractSQLDAO } from 'src/databse/mssql/abstract/like.abstract.mss
 import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
 import { NotificationService } from '../notification/notification.service';
 import { HttpStatus } from '@nestjs/common';
+import { LikeAbstractSvc } from './like.abstract';
 
 @Injectable()
-export class LikeService {
+export class LikeService implements LikeAbstractSvc {
   constructor(
     private readonly likeDao: LikeAbstractSQLDAO,
     private readonly postDao: PostAbstractSQLDao,
     private readonly notificationService: NotificationService,
   ) {}
+
+  async getUserLikes(userId: string): Promise<AppResponse> {
+    return await this.likeDao.getUserLikes(userId);
+  }
 
   async toggleLike(postId: string, userId: string): Promise<AppResponse> {
     const res = await this.likeDao.toggleLike(postId, userId);

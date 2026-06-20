@@ -11,6 +11,8 @@ import UpdateProfilePage from "../containers/profile/UpdateProfile";
 import UpdatePostPage from "../containers/post/UpdatePost";
 import MessagesPage from "../containers/Message";
 import ExplorePage from "../containers/Explore";
+import ActivityPage from "../containers/activity";
+import YourActivityPage from "../containers/your-activity";
 import Navbar from "../components/layout/Navbar";
 import PrivateRoute from "./ProtectedRoutes";
 
@@ -55,6 +57,16 @@ const Approutes = () => {
         <Route path="/message" element={
           <PrivateRoute>
             <MessagesPage/>
+          </PrivateRoute>
+        }/>
+        <Route path="/activity" element={
+          <PrivateRoute>
+            <ActivityPage/>
+          </PrivateRoute>
+        }/>
+        <Route path="/your-activity" element={
+          <PrivateRoute>
+            <YourActivityPage/>
           </PrivateRoute>
         }/>
 

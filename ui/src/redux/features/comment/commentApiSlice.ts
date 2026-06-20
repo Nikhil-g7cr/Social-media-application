@@ -10,6 +10,10 @@ export interface Comment {
 
 export const commentApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
+        getUserComments: builder.query<any, void>({
+            query: () => ({ url: '/comment/user' }),
+            providesTags: ['Comment'],
+        }),
         getCommentsByPostId: builder.query<Comment[], string>({
             query: (postId) => ({ url: `/comment/post/${postId}` }),
             providesTags: (_result, _error, postId) => [{ type: 'Comment', id: `Post_${postId}` }],
@@ -34,6 +38,7 @@ export const commentApiSlice = apiSlice.injectEndpoints({
 });
 
 export const {
+    useGetUserCommentsQuery,
     useGetCommentsByPostIdQuery,
     useAddCommentMutation,
     useDeleteCommentMutation,

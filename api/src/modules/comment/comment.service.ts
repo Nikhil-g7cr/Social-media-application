@@ -14,6 +14,14 @@ export class CommentService implements CommentAbstractSvc{
     private readonly notificationService: NotificationService,
   ) {}
 
+  async getUserComments(userId: string): Promise<AppResponse> {
+    return await this.commentDao.getUserComments(userId);
+  }
+
+  async deleteComment(commentId: string, userId: string): Promise<AppResponse> {
+    return await this.commentDao.deleteComment(commentId, userId);
+  }
+
   async createComment(postId: string, userId: string, commentText: string): Promise<AppResponse> {
     const commentRes = await this.commentDao.createComment(postId, userId, commentText);
 

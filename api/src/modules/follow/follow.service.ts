@@ -53,13 +53,14 @@ export class FollowService {
         const followRecord = await this.followDao.create({
             FollowerID: followerId,
             FollowingID: followingId,
+            Status: 'PENDING',
         });
 
         // Notify the followed user
         await this.notificationService.createNotification({
             userId: followingId,
             actorUserId: followerId,
-            type: 'FOLLOW'
+            type: 'FOLLOW_REQUEST'
         });
 
         return followRecord;
@@ -129,6 +130,39 @@ export class FollowService {
         };
     }
 
+    async acceptFollowRequest(followerId: string, followingId: string) {
+        const follow = await this.followDao.findOne(followerId, followingId);
+        if (!follow || follow.Status !== 'PENDING') {
+            throw new BadRequestException('No pending follow request found');
+        }
+
+        await this.followDao.updateStatus(followerId, followingId, 'ACCEPTED');
+
+        // Notify the user who sent the request
+        await this.notificationService.createNotification({
+            userId: followerId,
+            actorUserId: followingId,
+            type: 'FOLLOW_ACCEPTED'
+        });
+
+        return { success: true, message: 'Follow request accepted' };
+    }
+
+    async rejectFollowRequest(followerId: string, followingId: string) {
+        const follow = await this.followDao.findOne(followerId, followingId);
+        if (!follow || follow.Status !== 'PENDING') {
+            throw new BadRequestException('No pending follow request found');
+        }
+
+        await this.followDao.delete(followerId, followingId);
+
+        return { success: true, message: 'Follow request rejected' };
+    }
+
+    async getPendingRequests(userId: string) {
+        return this.followDao.getPendingRequests(userId);
+    }
+
     async getProfileFollowInfo(
     currentUserId: string,
     profileUserId: string,
@@ -137,6 +171,7 @@ export class FollowService {
         followersCount,
         followingCount,
         isFollowing,
+        followRecord,
     ] = await Promise.all([
         this.followDao.countFollowers(profileUserId),
         this.followDao.countFollowing(profileUserId),
@@ -144,12 +179,14 @@ export class FollowService {
             currentUserId,
             profileUserId,
         ),
+        this.followDao.findOne(currentUserId, profileUserId),
     ]);
 
     return {
         followersCount,
         followingCount,
         isFollowing,
+        isRequested: followRecord ? followRecord.Status === 'PENDING' : false,
     };
 }
 }

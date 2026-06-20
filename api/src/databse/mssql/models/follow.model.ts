@@ -44,6 +44,13 @@ export class Follow extends Model<Follow> {
   })
   Following!: Users;
 
+  @Default('PENDING')
+  @Column({
+    type: DataType.STRING(20),
+    allowNull: false,
+  })
+  Status!: string;
+
   @Default(DataType.NOW)
   @Column({
     type: DataType.DATE,

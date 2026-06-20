@@ -83,4 +83,35 @@ console.log('Target User:', userId);
             userId,
         );
     }
+
+    @Post('accept/:followerId')
+    async acceptFollowRequest(
+        @Req() req,
+        @Param('followerId') followerId: string,
+    ) {
+        return this.followService.acceptFollowRequest(
+            followerId,
+            req.user.sub,
+        );
+    }
+
+    @Post('reject/:followerId')
+    async rejectFollowRequest(
+        @Req() req,
+        @Param('followerId') followerId: string,
+    ) {
+        return this.followService.rejectFollowRequest(
+            followerId,
+            req.user.sub,
+        );
+    }
+
+    @Get('requests')
+    async getPendingRequests(
+        @Req() req,
+    ) {
+        return this.followService.getPendingRequests(
+            req.user.sub,
+        );
+    }
 }

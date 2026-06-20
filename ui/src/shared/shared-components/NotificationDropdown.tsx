@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Heart, MessageCircle, UserPlus, Info, Check } from 'lucide-react';
 import { useGetNotificationsQuery, useMarkAsReadMutation, useMarkAllAsReadMutation, useDeleteNotificationMutation, useClearAllNotificationsMutation, type Notification as ApiNotification } from '../../redux/features/notification/notificationApiSlice';
+import { useAcceptFollowRequestMutation, useRejectFollowRequestMutation } from '../../redux/features/user/userApiSlice';
 import { formatDistanceToNow } from 'date-fns';
 import { initializeSocket } from '../../utils/socket';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { apiSlice } from '../../redux/apiSlice';
 import PostImage from './PostImage';
 
@@ -17,7 +19,10 @@ const NotificationDropdown: React.FC = () => {
   const [markAllAsReadMutation] = useMarkAllAsReadMutation();
   const [deleteNotification] = useDeleteNotificationMutation();
   const [clearAllNotifications] = useClearAllNotificationsMutation();
+  const [acceptFollowRequest] = useAcceptFollowRequestMutation();
+  const [rejectFollowRequest] = useRejectFollowRequestMutation();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Socket listening is now handled entirely within notificationApiSlice
@@ -25,9 +30,10 @@ const NotificationDropdown: React.FC = () => {
   const notifications = serverNotifications.map((n: ApiNotification) => ({
     id: n.ID,
     type: n.NotificationType,
+    actorId: n.ActorUserID,
     actorName: n.Actor?.UserName || 'Someone',
     actorAvatar: n.Actor?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${n.Actor?.UserName || 'User'}&background=random`,
-    content: n.NotificationType === 'LIKE' ? 'liked your post.' : n.NotificationType === 'FOLLOW' ? 'started following you.' : n.NotificationType === 'MESSAGE' ? 'sent you a message.' : 'system notification.',
+    content: n.NotificationType === 'LIKE' ? 'liked your post.' : n.NotificationType === 'FOLLOW' ? 'started following you.' : n.NotificationType === 'FOLLOW_REQUEST' ? 'sent you a follow request.' : n.NotificationType === 'FOLLOW_ACCEPTED' ? 'accepted your follow request.' : n.NotificationType === 'MESSAGE' ? 'sent you a message.' : 'system notification.',
     time: formatDistanceToNow(new Date(n.CreatedAt), { addSuffix: true }),
     isRead: n.IsRead,
   }));
@@ -64,6 +70,18 @@ const NotificationDropdown: React.FC = () => {
     await deleteNotification(id).unwrap();
   };
 
+  const handleAcceptRequest = async (e: React.MouseEvent, followerId: string, notificationId: string) => {
+    e.stopPropagation();
+    await acceptFollowRequest(followerId).unwrap();
+    await deleteNotification(notificationId).unwrap();
+  };
+
+  const handleRejectRequest = async (e: React.MouseEvent, followerId: string, notificationId: string) => {
+    e.stopPropagation();
+    await rejectFollowRequest(followerId).unwrap();
+    await deleteNotification(notificationId).unwrap();
+  };
+
   // --- Helper to get contextual icons ---
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -72,6 +90,8 @@ const NotificationDropdown: React.FC = () => {
       case 'MESSAGE':
         return <div className="absolute -bottom-1 -right-1 bg-blue-500 rounded-full p-1 border-2 border-white"><MessageCircle className="w-3 h-3 text-white fill-white" /></div>;
       case 'FOLLOW':
+      case 'FOLLOW_REQUEST':
+      case 'FOLLOW_ACCEPTED':
         return <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1 border-2 border-white"><UserPlus className="w-3 h-3 text-white" /></div>;
       default:
         return <div className="absolute -bottom-1 -right-1 bg-gray-700 rounded-full p-1 border-2 border-white"><Info className="w-3 h-3 text-white" /></div>;
@@ -143,6 +163,22 @@ const NotificationDropdown: React.FC = () => {
                       <span className="text-xs text-gray-500 mt-1 block">
                         {notification.time}
                       </span>
+                      {notification.type === 'FOLLOW_REQUEST' && (
+                        <div className="flex gap-2 mt-2">
+                          <button
+                            onClick={(e) => handleAcceptRequest(e, notification.actorId, notification.id)}
+                            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold py-1 px-3 rounded"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            onClick={(e) => handleRejectRequest(e, notification.actorId, notification.id)}
+                            className="bg-gray-200 hover:bg-gray-300 text-gray-800 text-xs font-semibold py-1 px-3 rounded"
+                          >
+                            Reject
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Unread Indicator Dot & Delete Button */}
@@ -166,7 +202,13 @@ const NotificationDropdown: React.FC = () => {
 
           {/* Footer */}
           <div className="border-t border-gray-100 flex items-center justify-between">
-            <button className="flex-1 py-3 text-sm font-medium text-blue-600 hover:bg-gray-50 transition text-center border-r border-gray-100">
+            <button 
+              onClick={() => {
+                setIsOpen(false);
+                navigate('/activity');
+              }}
+              className="flex-1 py-3 text-sm font-medium text-blue-600 hover:bg-gray-50 transition text-center border-r border-gray-100"
+            >
               View all
             </button>
             <button 

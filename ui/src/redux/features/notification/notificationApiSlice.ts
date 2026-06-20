@@ -5,7 +5,7 @@ export interface Notification {
     UserID: string;
     ActorUserID: string;
     PostID?: string;
-    NotificationType: 'LIKE' | 'MESSAGE' | 'FOLLOW' | 'SYSTEM';
+    NotificationType: 'LIKE' | 'MESSAGE' | 'FOLLOW' | 'SYSTEM' | 'FOLLOW_REQUEST' | 'FOLLOW_ACCEPTED';
     IsRead: boolean;
     CreatedAt: string;
     Actor?: {

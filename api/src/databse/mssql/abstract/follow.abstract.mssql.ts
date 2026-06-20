@@ -15,4 +15,6 @@ export abstract class FollowAbstractSQLDao {
     followerId: string,
     followingId: string,
   ): Promise<boolean>;
+  abstract updateStatus(followerId: string, followingId: string, status: string): Promise<number>;
+  abstract getPendingRequests(userId: string): Promise<Follow[]>;
 }

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Settings, MapPin, Calendar, Grid, Heart, Bookmark } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PostImage from '../../shared/shared-components/PostImage';
+import FollowButton from '../../components/features/Social/FollowButton';
 import { useAppSelector } from '../../redux/hooks';
 import { 
   useGetUserByIdQuery, 
@@ -46,9 +47,12 @@ const UsersModal = ({ isOpen, onClose, title, userId, type }: { isOpen: boolean,
                 }}
               >
                 <img src={u.avatarUrl || u.image_url || `https://ui-avatars.com/api/?name=${u.name || 'User'}&background=random`} alt={u.name} className="w-12 h-12 rounded-full object-cover" />
-                <div>
+                <div className="flex-1">
                   <div className="font-semibold text-gray-900">{u.name}</div>
                   <div className="text-sm text-gray-500">@{u.username || u.name.toLowerCase().replace(/\s+/g, '')}</div>
+                </div>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <FollowButton userId={u.id} />
                 </div>
               </div>
             ))
@@ -124,12 +128,20 @@ const ProfilePage: React.FC = () => {
 
           <div className="mt-4 flex gap-3 sm:mb-2 sm:mt-0">
             {isCurrentUser && (
-              <button 
-                onClick={() => navigate('/profile/update')}
-                className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:flex-none transition"
-              >
-                Edit Profile
-              </button>
+              <>
+                <button 
+                  onClick={() => navigate('/your-activity')}
+                  className="flex-1 rounded-md bg-gray-100 text-gray-700 px-4 py-2 text-sm font-semibold shadow-sm hover:bg-gray-200 sm:flex-none transition"
+                >
+                  Your Activity
+                </button>
+                <button 
+                  onClick={() => navigate('/profile/update')}
+                  className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:flex-none transition"
+                >
+                  Edit Profile
+                </button>
+              </>
             )}
             <button className="rounded-md bg-white p-2 text-gray-400 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
               <Settings className="h-5 w-5" />

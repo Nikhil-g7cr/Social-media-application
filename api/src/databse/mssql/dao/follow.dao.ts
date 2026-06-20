@@ -36,6 +36,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
         return this.followModel.findAll({
             where: {
                 FollowingID: userId,
+                Status: 'ACCEPTED',
             },
             include: ['Follower'],
         });
@@ -45,6 +46,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
         return this.followModel.findAll({
             where: {
                 FollowerID: userId,
+                Status: 'ACCEPTED',
             },
             include: ['Following'],
         });
@@ -54,6 +56,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
         return this.followModel.count({
             where: {
                 FollowingID: userId,
+                Status: 'ACCEPTED',
             },
         });
     }
@@ -62,6 +65,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
         return this.followModel.count({
             where: {
                 FollowerID: userId,
+                Status: 'ACCEPTED',
             },
         });
     }
@@ -74,6 +78,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
             where: {
                 FollowerID: followerId,
                 FollowingID: followingId,
+                Status: 'ACCEPTED',
             },
         });
 
@@ -88,6 +93,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
     await this.followModel.findAll({
       where: {
         FollowerID: userId,
+        Status: 'ACCEPTED',
       },
       attributes: [
         'FollowingID',
@@ -99,4 +105,27 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       follow.FollowingID,
   );
 }
+
+    async updateStatus(followerId: string, followingId: string, status: string): Promise<number> {
+        const [affectedCount] = await this.followModel.update(
+            { Status: status },
+            {
+                where: {
+                    FollowerID: followerId,
+                    FollowingID: followingId,
+                },
+            }
+        );
+        return affectedCount;
+    }
+
+    async getPendingRequests(userId: string): Promise<Follow[]> {
+        return this.followModel.findAll({
+            where: {
+                FollowingID: userId,
+                Status: 'PENDING',
+            },
+            include: ['Follower'],
+        });
+    }
 }

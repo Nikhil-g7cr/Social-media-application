@@ -1,4 +1,4 @@
-import { Controller, Post, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Post, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 import { LikeService } from './like.service';
@@ -10,6 +10,12 @@ import { LikeAbstractSvc } from './like.abstract';
 @ApiBearerAuth()         // Tells Swagger to expect a token
 export class LikeController {
   constructor(private readonly likeService: LikeAbstractSvc) {}
+
+  @Get('user')
+  async getUserLikes(@Req() req: any) {
+    const userId = req.user.sub;
+    return await this.likeService.getUserLikes(userId);
+  }
 
   @Post(':postId')
   async toggleLike(

@@ -16,6 +16,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
   const [unfollowUser, { isLoading: isUnfollowingMutationLoading }] = useUnfollowUserMutation();
 
   const isFollowing = profileFollowInfo?.isFollowing || false;
+  const isRequested = profileFollowInfo?.isRequested || false;
   const isMe = user?.id === userId;
 
   if (isMe) {
@@ -24,7 +25,7 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
 
   const handleToggleFollow = async () => {
     try {
-      if (isFollowing) {
+      if (isFollowing || isRequested) {
         await unfollowUser(userId).unwrap();
       } else {
         await followUser(userId).unwrap();
@@ -40,8 +41,8 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
     <button
       onClick={handleToggleFollow}
       disabled={isButtonLoading}
-      className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
-        isFollowing
+      className={`group px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-200 ${
+        isFollowing || isRequested
           ? 'bg-gray-100 text-gray-800 border border-gray-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'
           : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
       }`}
@@ -49,7 +50,15 @@ const FollowButton: React.FC<FollowButtonProps> = ({ userId }) => {
       {isButtonLoading ? (
         <span className="opacity-70">Wait...</span>
       ) : isFollowing ? (
-        <span className="group-hover:hidden">Following</span>
+        <>
+          <span className="group-hover:hidden">Following</span>
+          <span className="hidden group-hover:inline">Unfollow</span>
+        </>
+      ) : isRequested ? (
+        <>
+          <span className="group-hover:hidden">Requested</span>
+          <span className="hidden group-hover:inline">Cancel</span>
+        </>
       ) : (
         <span>Follow</span>
       )}

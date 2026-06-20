@@ -3,6 +3,10 @@ import { postApiSlice } from '../post/postApiSlice';
 
 export const likeApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
+        getUserLikes: builder.query<any, void>({
+            query: () => ({ url: 'like/user' }),
+            providesTags: ['Post'],
+        }),
         likePost: builder.mutation<{ success: boolean }, string>({
             query: (postId) => ({
                 url: `like/${postId}`,
@@ -89,6 +93,7 @@ export const likeApiSlice = apiSlice.injectEndpoints({
 });
 
 export const {
+    useGetUserLikesQuery,
     useLikePostMutation,
     useUnlikePostMutation,
 } = likeApiSlice;
