@@ -8,6 +8,7 @@ import HomePage from "../containers/Home";
 import { LoginPage } from "../components/features/Auth/Login";
 import ProfilePage from "../containers/profile";
 import UpdateProfilePage from "../containers/profile/UpdateProfile";
+import UpdatePostPage from "../containers/post/UpdatePost";
 import MessagesPage from "../containers/Message";
 import ExplorePage from "../containers/Explore";
 import Navbar from "../components/layout/Navbar";
@@ -39,6 +40,11 @@ const Approutes = () => {
         <Route path="/profile/update" element={
           <PrivateRoute>
             <UpdateProfilePage/>
+          </PrivateRoute>
+        }/>
+        <Route path="/post/update/:postId" element={
+          <PrivateRoute>
+            <UpdatePostPage/>
           </PrivateRoute>
         }/>
         <Route path="/profile/:userId?" element={

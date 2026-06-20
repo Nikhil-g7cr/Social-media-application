@@ -235,7 +235,7 @@ const ProfilePage: React.FC = () => {
                         className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // navigate or open edit modal
+                          navigate(`/post/update/${post.id}`);
                         }}
                       >
                         <Edit3 className="w-4 h-4" /> Edit

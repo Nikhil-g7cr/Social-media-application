@@ -160,6 +160,25 @@ export const postApiSlice = apiSlice.injectEndpoints({
         }),
         getPostById: builder.query<Post, string>({
             query: (id) => ({ url: `posts/${id}` }),
+            transformResponse: (response: any) => {
+                const p = response?.data?.post || response?.data || response;
+                return {
+                    id: p.ID,
+                    author: {
+                        id: p.User?.ID || p.UserID,
+                        name: p.User?.FullName || 'Unknown',
+                        username: p.User?.UserName || 'unknown',
+                        avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                    },
+                    content: p.Content || '',
+                    timestamp: new Date(p.CreatedAt).toLocaleString(),
+                    likes: p.Likes?.length || 0,
+                    comments: p.Comments?.length || 0,
+                    isLikedByMe: false, // Could check if currentUser is in p.Likes if needed
+                    likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    mediaUrl: p.MediaURL,
+                };
+            },
             providesTags: (_result, _error, id) => [{ type: 'Post', id }],
         }),
         createPost: builder.mutation<Post, Partial<Post>>({
@@ -171,9 +190,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
             invalidatesTags: ['Post'],
         }),
         updatePost: builder.mutation<Post, Partial<Post> & { id: string }>({
-            query: (post) => ({
-                url: `posts/${post.id}`,
-                method: 'PATCH',
+            query: ({ id, ...post }) => ({
+                url: `posts/${id}`,
+                method: 'PUT',
                 data: post,
             }),
             invalidatesTags: (_result, _error, { id }) => [{ type: 'Post', id }],
