@@ -40,8 +40,8 @@ export const userApiSlice = apiSlice.injectEndpoints({
             providesTags: (_result, _error, id) => [{ type: 'User', id }],
         }),
         updateUserProfile: builder.mutation<User, Partial<User> & { id: string }>({
-            query: (profile) => ({
-                url: `user/${profile.id}`,
+            query: ({ id, ...profile }) => ({
+                url: `user/${id}`,
                 method: 'PATCH',
                 data: profile,
             }),

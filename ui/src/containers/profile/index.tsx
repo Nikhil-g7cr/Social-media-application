@@ -62,6 +62,7 @@ const UsersModal = ({ isOpen, onClose, title, userId, type }: { isOpen: boolean,
 };
 
 const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const { userId } = useParams<{ userId: string }>();
   const currentUser = useAppSelector((state: any) => state.auth.user);
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
@@ -123,7 +124,10 @@ const ProfilePage: React.FC = () => {
 
           <div className="mt-4 flex gap-3 sm:mb-2 sm:mt-0">
             {isCurrentUser && (
-              <button className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:flex-none transition">
+              <button 
+                onClick={() => navigate('/profile/update')}
+                className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:flex-none transition"
+              >
                 Edit Profile
               </button>
             )}
