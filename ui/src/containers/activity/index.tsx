@@ -15,6 +15,7 @@ import {
 import { Bell, Heart, MessageCircle, UserPlus, Info, Check, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import PostImage from '../../shared/shared-components/PostImage';
+import Avatar from '../../shared/shared-components/Avatar';
 import { useNavigate } from 'react-router-dom';
 
 const ActivityPage: React.FC = () => {
@@ -38,7 +39,7 @@ const ActivityPage: React.FC = () => {
     type: n.NotificationType,
     actorId: n.ActorUserID,
     actorName: n.Actor?.UserName || 'Someone',
-    actorAvatar: n.Actor?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${n.Actor?.UserName || 'User'}&background=random`,
+    actorAvatar: n.Actor?.ProfilePictureUrl,
     content: n.NotificationType === 'LIKE' ? 'liked your post.' : n.NotificationType === 'FOLLOW' ? 'started following you.' : n.NotificationType === 'FOLLOW_REQUEST' ? 'sent you a follow request.' : n.NotificationType === 'FOLLOW_ACCEPTED' ? 'accepted your follow request.' : n.NotificationType === 'MESSAGE' ? 'sent you a message.' : 'system notification.',
     time: formatDistanceToNow(new Date(n.CreatedAt), { addSuffix: true }),
     isRead: n.IsRead,
@@ -144,10 +145,10 @@ const ActivityPage: React.FC = () => {
                       onClick={() => navigate(`/profile/${request.id}`)}
                     >
                       <div className="flex items-center gap-4">
-                        <img 
-                          src={request.avatarUrl || request.image_url || `https://ui-avatars.com/api/?name=${request.name}&background=random`} 
-                          alt={request.name} 
-                          className="w-12 h-12 rounded-full object-cover border border-gray-200" 
+                        <Avatar
+                          url={request.avatarUrl || request.image_url}
+                          name={request.name}
+                          className="w-12 h-12 rounded-full object-cover border border-gray-200"
                         />
                         <div>
                           <div className="font-semibold text-gray-900">{request.name}</div>
@@ -211,8 +212,9 @@ const ActivityPage: React.FC = () => {
                       >
                         <div className="flex items-start gap-4 flex-1">
                           <div className="relative flex-shrink-0 mt-1">
-                            <PostImage
-                              mediaUrl={notification.actorAvatar}
+                            <Avatar
+                              url={notification.actorAvatar}
+                              name={notification.actorName}
                               className="w-10 h-10 rounded-full object-cover"
                             />
                             {getNotificationIcon(notification.type)}

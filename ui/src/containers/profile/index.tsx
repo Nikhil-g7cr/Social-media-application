@@ -2,6 +2,7 @@ import React, { useState, useMemo, memo } from 'react';
 import { Settings, MapPin, Calendar, Grid, Heart, Bookmark } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PostImage from '../../shared/shared-components/PostImage';
+import Avatar from '../../shared/shared-components/Avatar';
 import FollowButton from '../../components/features/Social/FollowButton';
 import { useAppSelector } from '../../redux/hooks';
 import { 
@@ -46,7 +47,7 @@ const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boo
                   navigate(`/profile/${u.id}`);
                 }}
               >
-                <img src={u.avatarUrl || u.image_url || `https://ui-avatars.com/api/?name=${u.name || 'User'}&background=random`} alt={u.name} className="w-12 h-12 rounded-full object-cover" />
+                <Avatar url={u.avatarUrl || u.image_url} name={u.name} className="w-12 h-12 rounded-full object-cover" />
                 <div className="flex-1">
                   <div className="font-semibold text-gray-900">{u.name}</div>
                   <div className="text-sm text-gray-500">@{u.username || u.name.toLowerCase().replace(/\s+/g, '')}</div>
@@ -91,7 +92,7 @@ const ProfilePage: React.FC = () => {
       fullName: userProfile.name || 'Unknown User',
       userName: userProfile.username ? `@${userProfile.username}` : `@${(userProfile.name || 'user').toLowerCase().replace(/\s+/g, '')}`,
       bio: userProfile.bio || 'No bio available',
-      avatarUrl: userProfile.avatarUrl || userProfile.image_url || `https://ui-avatars.com/api/?name=${userProfile.name || 'User'}&background=random`,
+      avatarUrl: userProfile.avatarUrl || userProfile.image_url,
       stats: {
         posts: userPosts ? userPosts.length : 0,
         followers: followInfo?.followersCount || 0,
@@ -117,7 +118,7 @@ const ProfilePage: React.FC = () => {
           <div className="flex items-center gap-5">
             {/* Avatar */}
             <div className="relative h-32 w-32 rounded-full border-4 border-white bg-white sm:h-40 sm:w-40 shadow-md">
-              <PostImage mediaUrl={profile.avatarUrl} className="h-full w-full rounded-full object-cover" />
+              <Avatar url={profile.avatarUrl} name={profile.fullName} className="h-full w-full rounded-full object-cover" />
               {onlineUserIds.includes(profile.id) && (
                 <span className="absolute bottom-2 right-2 block h-6 w-6 rounded-full bg-green-500 ring-4 ring-white"></span>
               )}

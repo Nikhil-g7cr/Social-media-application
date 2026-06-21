@@ -23,6 +23,7 @@ import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
 import { useSelector } from "react-redux";
 import type { RootState } from "@reduxjs/toolkit/query";
 import PostImage from "../../shared/shared-components/PostImage";
+import Avatar from "../../shared/shared-components/Avatar";
 
 // --- TypeScript Interfaces ---
 interface UIMessage {
@@ -114,9 +115,7 @@ const MessagesPage: React.FC = () => {
       const formattedConversations = apiConversations.map((conv: RTKConversation) => ({
         id: conv.id,
         participantName: conv.participant?.name || "Unknown User",
-        image_url:
-          conv.participant?.avatarUrl ||
-          `https://ui-avatars.com/api/?name=${encodeURIComponent(conv.participant?.name || "U")}&background=random`,
+        image_url: conv.participant?.avatarUrl,
         lastMessage: conv.latestMessage?.content || "No messages yet",
         time: conv.latestMessage?.createdAt
           ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -254,8 +253,9 @@ const MessagesPage: React.FC = () => {
                         onClick={() => handleStartNewChat(u.id)}
                         className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
                       >
-                        <PostImage
-                          mediaUrl={u.image_url || `https://ui-avatars.com/api/?name=${u.name || "User"}&background=random`}
+                        <Avatar
+                          url={u.image_url}
+                          name={u.name}
                           className="w-8 h-8 rounded-full object-cover border border-gray-200"
                         />
                         <div className="flex flex-col truncate">
@@ -287,8 +287,9 @@ const MessagesPage: React.FC = () => {
                 className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition border-b border-gray-100 ${activeConversation?.id === conv.id ? "bg-blue-50/50" : ""}`}
               >
                 <div className="relative flex-shrink-0">
-                  <PostImage
-                    mediaUrl={conv.image_url}
+                  <Avatar
+                    url={conv.image_url}
+                    name={conv.participantName}
                     className="h-12 w-12 rounded-full object-cover"
                   />
                   {onlineUserIds.includes(conv.participantId) && (
@@ -332,8 +333,9 @@ const MessagesPage: React.FC = () => {
                 >
                   <ArrowLeft className="h-5 w-5" />
                 </button>
-                <PostImage
-                  mediaUrl={activeConversation.image_url}
+                <Avatar
+                  url={activeConversation.image_url}
+                  name={activeConversation.participantName}
                   className="h-10 w-10 rounded-full object-cover"
                 />
                 <div>

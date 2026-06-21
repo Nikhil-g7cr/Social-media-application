@@ -6,6 +6,7 @@ import NotificationDropdown from "../../../shared/shared-components/Notification
 import SearchBar from "../SearchBar";
 import { Link } from "react-router-dom";
 import PostImage from "../../../shared/shared-components/PostImage";
+import Avatar from "../../../shared/shared-components/Avatar";
 
 const Navbar: React.FC = () => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
@@ -41,8 +42,9 @@ const Navbar: React.FC = () => {
                   <span className="text-sm font-medium text-gray-700">
                     {user?.name || "User"}
                   </span>
-                  <PostImage
-                    mediaUrl={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
+                  <Avatar
+                    url={user?.image_url}
+                    name={user?.name}
                     className="h-10 w-10 rounded-full border"
                   />
                 </div>

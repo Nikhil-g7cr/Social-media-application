@@ -3,6 +3,7 @@ import { Image as ImageIcon, X } from "lucide-react";
 import { useAppSelector } from "../../../redux/hooks";
 import { useCreatePostMutation, useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../../redux/features/post/postApiSlice";
 import PostImage from "../PostImage";
+import Avatar from "../Avatar";
 
 export default function CreatePost() {
   const { user } = useAppSelector((state: any) => state.auth);
@@ -67,8 +68,9 @@ export default function CreatePost() {
   return (
     <div className="bg-white rounded-2xl border p-5 shadow-sm">
       <div className="flex gap-4">
-        <PostImage
-          mediaUrl={user?.image_url || `https://ui-avatars.com/api/?name=${user?.name || 'User'}&background=random`}
+        <Avatar
+          url={user?.image_url}
+          name={user?.name}
           className="h-10 w-10 rounded-full object-cover"
         />
 

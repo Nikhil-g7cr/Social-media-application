@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search } from 'lucide-react';
 import { useSearchUsersQuery } from '../../../redux/features/user/userApiSlice';
 import FollowButton from '../../features/Social/FollowButton';
+import Avatar from '../../../shared/shared-components/Avatar';
 
 const SearchBar: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -60,12 +61,9 @@ const SearchBar: React.FC = () => {
               {searchResults.map((user) => (
                 <li key={user.id} className="px-4 py-3 hover:bg-gray-50 flex items-center justify-between group transition-colors">
                   <div className="flex items-center gap-3 overflow-hidden">
-                    <img 
-                      src={user.avatarUrl} 
-                      alt={user.name} 
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = `https://ui-avatars.com/api/?name=${user.name || 'User'}&background=random`;
-                      }}
+                    <Avatar
+                      url={user.avatarUrl || user.image_url}
+                      name={user.name}
                       className="w-10 h-10 rounded-full object-cover border border-gray-200"
                     />
                     <div className="flex flex-col truncate">

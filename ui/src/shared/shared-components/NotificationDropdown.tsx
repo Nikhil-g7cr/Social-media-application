@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { apiSlice } from '../../redux/apiSlice';
 import PostImage from './PostImage';
+import Avatar from './Avatar';
 
 // --- Types ---
 // Using ApiNotification from notificationApiSlice
@@ -32,7 +33,7 @@ const NotificationDropdown: React.FC = () => {
     type: n.NotificationType,
     actorId: n.ActorUserID,
     actorName: n.Actor?.UserName || 'Someone',
-    actorAvatar: n.Actor?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${n.Actor?.UserName || 'User'}&background=random`,
+    actorAvatar: n.Actor?.ProfilePictureUrl,
     content: n.NotificationType === 'LIKE' ? 'liked your post.' : n.NotificationType === 'FOLLOW' ? 'started following you.' : n.NotificationType === 'FOLLOW_REQUEST' ? 'sent you a follow request.' : n.NotificationType === 'FOLLOW_ACCEPTED' ? 'accepted your follow request.' : n.NotificationType === 'MESSAGE' ? 'sent you a message.' : 'system notification.',
     time: formatDistanceToNow(new Date(n.CreatedAt), { addSuffix: true }),
     isRead: n.IsRead,
@@ -147,8 +148,9 @@ const NotificationDropdown: React.FC = () => {
                   >
                     {/* Avatar & Sub-Icon */}
                     <div className="relative flex-shrink-0">
-                      <PostImage
-                        mediaUrl={notification.actorAvatar}
+                      <Avatar
+                        url={notification.actorAvatar}
+                        name={notification.actorName}
                         className="w-10 h-10 rounded-full object-cover"
                       />
                       {getNotificationIcon(notification.type)}

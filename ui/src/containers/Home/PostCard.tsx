@@ -2,6 +2,7 @@ import React, { memo } from "react";
 import { MoreHorizontal, Heart, Share2 } from "lucide-react";
 import PostImage from "../../shared/shared-components/PostImage";
 import CommentSection from "../../shared/shared-components/CommentSection";
+import Avatar from "../../shared/shared-components/Avatar";
 
 interface PostCardProps {
   post: any;
@@ -18,8 +19,9 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
       <div className="flex justify-between">
         <div className="flex gap-3">
           <div className="relative">
-            <PostImage
-              mediaUrl={post.author.avatarUrl}
+            <Avatar
+              url={post.author.avatarUrl}
+              name={post.author.name}
               className="h-10 w-10 rounded-full object-cover"
             />
             {onlineUserIds.includes(post.author.id) && (

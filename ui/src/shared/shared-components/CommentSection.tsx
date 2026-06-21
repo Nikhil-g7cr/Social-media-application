@@ -3,6 +3,7 @@ import { MessageCircle, Heart, Send, MoreHorizontal } from 'lucide-react';
 import { useGetCommentsByPostIdQuery, useCreatePostCommentMutation } from '../../redux/features/post/postApiSlice';
 import { useSelector } from 'react-redux';
 import PostImage from './PostImage';
+import Avatar from './Avatar';
 
 interface CommentSectionProps {
   postId: string;
@@ -15,7 +16,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
   
   // Use user slice for avatar if possible, or just skip it if not needed directly.
   const authUser = useSelector((state: any) => state.auth?.user);
-  const userAvatar = useMemo(() => authUser?.image_url || `https://ui-avatars.com/api/?name=${authUser?.name || 'User'}&background=random`, [authUser?.image_url, authUser?.name]);
   
   const onlineUserIds = useSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
@@ -77,8 +77,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
                     <div key={comment.id} className="flex gap-3 group">
                       {/* Avatar */}
                       <div className="relative">
-                        <PostImage 
-                          mediaUrl={comment.authorAvatar} 
+                        <Avatar 
+                          url={comment.authorAvatar}
+                          name={comment.authorName}
                           className="w-8 h-8 rounded-full object-cover flex-shrink-0 cursor-pointer"
                         />
                         {onlineUserIds.includes(comment.authorId) && (
@@ -120,8 +121,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
 
               {/* Add Comment Input */}
               <div className="flex gap-3 items-center pt-2 mt-2 border-t border-gray-50">
-                <PostImage 
-                  mediaUrl={userAvatar} 
+                <Avatar 
+                  url={authUser?.image_url}
+                  name={authUser?.name}
                   className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                 />
                 <form onSubmit={handleAddComment} className="flex-1 relative">
