@@ -14,6 +14,7 @@ import {
 import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery } from '../../redux/features/post/postApiSlice';
 import { Edit3 } from 'lucide-react';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
+import ErrorDisplay from '../../components/errors/ErrorDisplay';
 
 const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
@@ -75,14 +76,14 @@ const ProfilePage: React.FC = () => {
   
   const targetUserId = userId || (currentUser?.id);
 
-  const { data: userProfile, isLoading: isUserLoading } = useGetUserByIdQuery(targetUserId, { skip: !targetUserId });
-  const { data: followInfo, isLoading: isFollowInfoLoading } = useGetProfileFollowInfoQuery(targetUserId, { skip: !targetUserId });
+  const { data: userProfile, isLoading: isUserLoading, isError: isUserError, error: userError, refetch: refetchUser } = useGetUserByIdQuery(targetUserId, { skip: !targetUserId });
+  const { data: followInfo, isLoading: isFollowInfoLoading, isError: isFollowInfoError, error: followInfoError, refetch: refetchFollowInfo } = useGetProfileFollowInfoQuery(targetUserId, { skip: !targetUserId });
   
   const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'saved'>('posts');
   const [page, setPage] = useState(1);
 
-  const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
-  const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'liked' });
+  const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
+  const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'liked' });
 
   const userPosts = userPostsData?.posts || [];
   const likedPosts = likedPostsData?.posts || [];
@@ -116,6 +117,14 @@ const ProfilePage: React.FC = () => {
       }
     };
   }, [userProfile, userPostsData, followInfo]);
+
+  if (isUserError) {
+    return (
+      <div className="flex h-screen items-center justify-center bg-gray-50">
+        <ErrorDisplay title="Profile Not Found" error={userError} onRetry={refetchUser} />
+      </div>
+    );
+  }
 
   if (isLoading || !userProfile || !profile) {
     return (
@@ -242,7 +251,11 @@ const ProfilePage: React.FC = () => {
             isLoading={isFetching}
           >
             <div className="mt-6 grid grid-cols-3 gap-1 sm:gap-4 lg:grid-cols-4">
-              {activeTab === 'posts' && isPostsLoading && page === 1 ? (
+              {activeTab === 'posts' && isPostsError && page === 1 ? (
+                <div className="col-span-3 lg:col-span-4 py-10">
+                  <ErrorDisplay title="Failed to load posts" error={postsError} onRetry={refetchPosts} />
+                </div>
+              ) : activeTab === 'posts' && isPostsLoading && page === 1 ? (
                 <div className="col-span-3 lg:col-span-4 text-center py-10">
                   <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                 </div>
@@ -281,6 +294,10 @@ const ProfilePage: React.FC = () => {
                     </div>
                   </div>
                 ))
+              ) : activeTab === 'liked' && isLikedPostsError && page === 1 ? (
+                <div className="col-span-3 lg:col-span-4 py-10">
+                  <ErrorDisplay title="Failed to load liked posts" error={likedPostsError} onRetry={refetchLikedPosts} />
+                </div>
               ) : activeTab === 'liked' && isLikedPostsLoading && page === 1 ? (
                 <div className="col-span-3 lg:col-span-4 text-center py-10">
                   <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>

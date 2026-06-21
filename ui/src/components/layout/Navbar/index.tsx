@@ -26,9 +26,11 @@ const Navbar: React.FC = () => {
           </Link>
 
           {/* Search */}
-          <div className="hidden md:flex flex-1 max-w-md mx-8 justify-center">
-            <SearchBar />
-          </div>
+          {isAuthenticated && (
+            <div className="hidden md:flex flex-1 max-w-md mx-8 justify-center">
+              <SearchBar />
+            </div>
+          )}
 
           {/* Right */}
           <div className="flex items-center space-x-4">

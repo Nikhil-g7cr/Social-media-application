@@ -9,13 +9,14 @@ import { useNavigate } from 'react-router-dom';
 import { apiSlice } from '../../redux/apiSlice';
 import PostImage from './PostImage';
 import Avatar from './Avatar';
+import ErrorDisplay from '../../components/errors/ErrorDisplay';
 
 // --- Types ---
 // Using ApiNotification from notificationApiSlice
 
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: serverNotifications = [], refetch } = useGetNotificationsQuery();
+  const { data: serverNotifications = [], refetch, isError, error } = useGetNotificationsQuery();
   const [markAsReadMutation] = useMarkAsReadMutation();
   const [markAllAsReadMutation] = useMarkAllAsReadMutation();
   const [deleteNotification] = useDeleteNotificationMutation();
@@ -133,7 +134,15 @@ const NotificationDropdown: React.FC = () => {
 
           {/* Notification List */}
           <div className="max-h-[70vh] overflow-y-auto">
-            {notifications.length === 0 ? (
+            {isError ? (
+              <ErrorDisplay 
+                title="Failed to load notifications" 
+                error={error} 
+                onRetry={refetch} 
+                compact={true} 
+                className="my-4 mx-4"
+              />
+            ) : notifications.length === 0 ? (
               <div className="p-8 text-center text-gray-500">
                 <Bell className="w-8 h-8 mx-auto mb-3 text-gray-300" />
                 <p>No notifications yet</p>

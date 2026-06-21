@@ -22,16 +22,17 @@ import CreatePost from "../../shared/shared-components/CreatePost";
 import PostImage from "../../shared/shared-components/PostImage";
 import PostCard from "./PostCard";
 import InfiniteScroll from "../../shared/shared-components/InfiniteScroll/index";
+import ErrorDisplay from "../../components/errors/ErrorDisplay";
 
 export default function HomePage() {
   const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
   
   // RTK Query hooks
   const [page, setPage] = useState(1);
-  const { data, isLoading: isPostsLoading, isFetching } = useGetPostsQuery({ page, limit: 10 }, { skip: !isAuthenticated });
+  const { data, isLoading: isPostsLoading, isFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsQuery({ page, limit: 10 }, { skip: !isAuthenticated });
   const posts = data?.posts || [];
   const hasMore = data?.hasMore || false;
-  const { data: trendingHashtags = [], isLoading: isTrendingLoading } = useGetTrendingHashtagsQuery(undefined, { skip: !isAuthenticated });
+  const { data: trendingHashtags = [], isLoading: isTrendingLoading, isError: isTrendingError, error: trendingError, refetch: refetchTrending } = useGetTrendingHashtagsQuery(undefined, { skip: !isAuthenticated });
   const [likePost] = useLikePostMutation();
   const [unlikePost] = useUnlikePostMutation();
   
@@ -81,6 +82,12 @@ export default function HomePage() {
                   <div className="flex justify-center p-8">
                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                   </div>
+                ) : isPostsError && page === 1 ? (
+                  <ErrorDisplay 
+                    title="Failed to load posts" 
+                    error={postsError} 
+                    onRetry={refetchPosts} 
+                  />
                 ) : (
                   <InfiniteScroll
                     onLoadMore={() => setPage((prev) => prev + 1)}
@@ -101,7 +108,13 @@ export default function HomePage() {
               </div>
 
               {/* Right Sidebar */}
-              <RightSidebar trendingHashtags={trendingHashtags} isTrendingLoading={isTrendingLoading} />
+              <RightSidebar 
+                trendingHashtags={trendingHashtags} 
+                isTrendingLoading={isTrendingLoading}
+                isTrendingError={isTrendingError}
+                trendingError={trendingError}
+                onRetry={refetchTrending}
+              />
             </>
           )}
         </div>

@@ -4,6 +4,7 @@ import { useGetAllExplorePostsQuery, useGetTrendingPostsQuery } from '../../redu
 import PostImage from '../../shared/shared-components/PostImage';
 import ExplorePostCard from './ExplorePostCard';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
+import ErrorDisplay from '../../components/errors/ErrorDisplay';
 
 const CATEGORIES = ['For You', 'Trending', 'Technology', 'Art', 'Sports', 'Entertainment', 'News', 'Travel', 'Food'];
 
@@ -12,8 +13,8 @@ const ExplorePage: React.FC = () => {
   const [page, setPage] = useState(1);
   
   // RTK Query hook replacing mock data
-  const { data: exploreData, isLoading: exploreLoading, isFetching: exploreFetching } = useGetAllExplorePostsQuery({ page, limit: 10 }, { skip: activeCategory === 'Trending' });
-  const { data: trendingData, isLoading: trendingLoading, isFetching: trendingFetching } = useGetTrendingPostsQuery({ page, limit: 10 }, { skip: activeCategory !== 'Trending' });
+  const { data: exploreData, isLoading: exploreLoading, isFetching: exploreFetching, isError: exploreError, error: exploreErrorData, refetch: refetchExplore } = useGetAllExplorePostsQuery({ page, limit: 10 }, { skip: activeCategory === 'Trending' });
+  const { data: trendingData, isLoading: trendingLoading, isFetching: trendingFetching, isError: trendingErrorStatus, error: trendingErrorData, refetch: refetchTrending } = useGetTrendingPostsQuery({ page, limit: 10 }, { skip: activeCategory !== 'Trending' });
 
   const explorePosts = exploreData?.posts || [];
   const trendingPosts = trendingData?.posts || [];
@@ -33,6 +34,9 @@ const ExplorePage: React.FC = () => {
   const posts = getFilteredPosts();
   const isLoading = activeCategory === 'Trending' ? trendingLoading : exploreLoading;
   const isFetching = activeCategory === 'Trending' ? trendingFetching : exploreFetching;
+  const isError = activeCategory === 'Trending' ? trendingErrorStatus : exploreError;
+  const currentError = activeCategory === 'Trending' ? trendingErrorData : exploreErrorData;
+  const retryFetch = activeCategory === 'Trending' ? refetchTrending : refetchExplore;
   const hasMore = activeCategory === 'Trending' ? (trendingData?.hasMore || false) : (exploreData?.hasMore || false);
 
   const handleCategoryChange = (category: string) => {
@@ -75,6 +79,14 @@ const ExplorePage: React.FC = () => {
           // Loading Skeleton
           <div className="flex h-64 items-center justify-center">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+          </div>
+        ) : isError && page === 1 ? (
+          <div className="py-12">
+            <ErrorDisplay 
+              title={`Failed to load ${activeCategory} posts`}
+              error={currentError}
+              onRetry={retryFetch}
+            />
           </div>
         ) : (
           <InfiniteScroll

@@ -1,4 +1,5 @@
 import React from "react";
+import ErrorDisplay from "../../components/errors/ErrorDisplay";
 
 interface TrendingHashtag {
   hashtag: string;
@@ -9,9 +10,18 @@ interface TrendingHashtag {
 interface RightSidebarProps {
   trendingHashtags: TrendingHashtag[];
   isTrendingLoading: boolean;
+  isTrendingError?: boolean;
+  trendingError?: any;
+  onRetry?: () => void;
 }
 
-export default function RightSidebar({ trendingHashtags, isTrendingLoading }: RightSidebarProps) {
+export default function RightSidebar({ 
+  trendingHashtags, 
+  isTrendingLoading, 
+  isTrendingError, 
+  trendingError, 
+  onRetry 
+}: RightSidebarProps) {
   return (
     <div className="hidden lg:block">
       <div className="sticky top-24 bg-white rounded-2xl border p-5 shadow-sm">
@@ -26,6 +36,13 @@ export default function RightSidebar({ trendingHashtags, isTrendingLoading }: Ri
                 <div className="h-2 bg-gray-200 rounded w-5/6"></div>
               </div>
             </div>
+          ) : isTrendingError ? (
+            <ErrorDisplay 
+              title="Couldn't load trending" 
+              error={trendingError} 
+              onRetry={onRetry}
+              compact={true} 
+            />
           ) : trendingHashtags.length > 0 ? (
             trendingHashtags.map((item, index) => (
               <div key={index}>

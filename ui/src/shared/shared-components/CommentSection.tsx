@@ -4,6 +4,7 @@ import { useGetCommentsByPostIdQuery, useCreatePostCommentMutation } from '../..
 import { useSelector } from 'react-redux';
 import PostImage from './PostImage';
 import Avatar from './Avatar';
+import ErrorDisplay from '../../components/errors/ErrorDisplay';
 
 interface CommentSectionProps {
   postId: string;
@@ -19,7 +20,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
   
   const onlineUserIds = useSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
-  const { data: comments = [], isLoading, isFetching } = useGetCommentsByPostIdQuery(postId, {
+  const { data: comments = [], isLoading, isFetching, isError, error, refetch } = useGetCommentsByPostIdQuery(postId, {
     skip: !isOpen, // Only fetch when opened
   });
 
@@ -65,6 +66,15 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
           {isLoading || isFetching ? (
             <div className="flex justify-center py-4">
               <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+            </div>
+          ) : isError ? (
+            <div className="py-2">
+              <ErrorDisplay 
+                title="Failed to load comments" 
+                error={error} 
+                onRetry={refetch} 
+                compact={true} 
+              />
             </div>
           ) : (
             <>
