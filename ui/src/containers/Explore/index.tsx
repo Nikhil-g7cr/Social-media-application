@@ -13,7 +13,19 @@ const ExplorePage: React.FC = () => {
   const { data: explorePosts = [], isLoading: exploreLoading } = useGetAllExplorePostsQuery(undefined, { skip: activeCategory === 'Trending' });
   const { data: trendingPosts = [], isLoading: trendingLoading } = useGetTrendingPostsQuery(undefined, { skip: activeCategory !== 'Trending' });
 
-  const posts = activeCategory === 'Trending' ? trendingPosts : explorePosts;
+  const getFilteredPosts = () => {
+    if (activeCategory === 'Trending') return trendingPosts;
+    if (activeCategory === 'For You') return explorePosts;
+    
+    // Filter by category for the rest
+    const searchTerm = activeCategory.toLowerCase();
+    return explorePosts.filter((post: any) => {
+      const content = (post.content || '').toLowerCase();
+      return content.includes(searchTerm) || content.includes(`#${searchTerm.replace(/\s+/g, '')}`);
+    });
+  };
+
+  const posts = getFilteredPosts();
   const isLoading = activeCategory === 'Trending' ? trendingLoading : exploreLoading;
 
   return (
