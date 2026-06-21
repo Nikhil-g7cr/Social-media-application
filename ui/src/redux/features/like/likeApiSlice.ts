@@ -18,8 +18,8 @@ export const likeApiSlice = apiSlice.injectEndpoints({
                 
                 // Optimistic update for feed
                 const patchResult = dispatch(
-                    postApiSlice.util.updateQueryData('getPosts', undefined, (draft) => {
-                        const post = draft.find(p => p.id === postId);
+                    postApiSlice.util.updateQueryData('getPosts', { page: 1, limit: 10 }, (draft) => {
+                        const post = draft.posts.find((p: any) => p.id === postId);
                         if (post) {
                             post.likes += 1;
                             post.isLikedByMe = true;
@@ -30,8 +30,8 @@ export const likeApiSlice = apiSlice.injectEndpoints({
                 
                 // Optimistic update for user posts
                 const patchUserResult = dispatch(
-                    postApiSlice.util.updateQueryData('getPostsByUserId', userId, (draft) => {
-                        const post = draft.find(p => p.id === postId);
+                    postApiSlice.util.updateQueryData('getPostsByUserId', { userId, page: 1, limit: 10 }, (draft) => {
+                        const post = draft.posts.find((p: any) => p.id === postId);
                         if (post) {
                             post.likes += 1;
                             post.isLikedByMe = true;
@@ -59,8 +59,8 @@ export const likeApiSlice = apiSlice.injectEndpoints({
                 const userId = state.auth?.user?.id;
 
                 const patchResult = dispatch(
-                    postApiSlice.util.updateQueryData('getPosts', undefined, (draft) => {
-                        const post = draft.find(p => p.id === postId);
+                    postApiSlice.util.updateQueryData('getPosts', { page: 1, limit: 10 }, (draft) => {
+                        const post = draft.posts.find((p: any) => p.id === postId);
                         if (post) {
                             post.likes -= 1;
                             post.isLikedByMe = false;
@@ -70,8 +70,8 @@ export const likeApiSlice = apiSlice.injectEndpoints({
                 );
                 
                 const patchUserResult = dispatch(
-                    postApiSlice.util.updateQueryData('getPostsByUserId', userId, (draft) => {
-                        const post = draft.find(p => p.id === postId);
+                    postApiSlice.util.updateQueryData('getPostsByUserId', { userId, page: 1, limit: 10 }, (draft) => {
+                        const post = draft.posts.find((p: any) => p.id === postId);
                         if (post) {
                             post.likes -= 1;
                             post.isLikedByMe = false;

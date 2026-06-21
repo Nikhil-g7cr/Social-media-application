@@ -3,15 +3,20 @@ import { Search, Heart, MessageCircle, TrendingUp, Image as ImageIcon, PlayCircl
 import { useGetAllExplorePostsQuery, useGetTrendingPostsQuery } from '../../redux/features/post/postApiSlice';
 import PostImage from '../../shared/shared-components/PostImage';
 import ExplorePostCard from './ExplorePostCard';
+import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 
 const CATEGORIES = ['For You', 'Trending', 'Technology', 'Art', 'Sports', 'Entertainment', 'News', 'Travel', 'Food'];
 
 const ExplorePage: React.FC = () => {
   const [activeCategory, setActiveCategory] = useState('For You');
+  const [page, setPage] = useState(1);
   
   // RTK Query hook replacing mock data
-  const { data: explorePosts = [], isLoading: exploreLoading } = useGetAllExplorePostsQuery(undefined, { skip: activeCategory === 'Trending' });
-  const { data: trendingPosts = [], isLoading: trendingLoading } = useGetTrendingPostsQuery(undefined, { skip: activeCategory !== 'Trending' });
+  const { data: exploreData, isLoading: exploreLoading, isFetching: exploreFetching } = useGetAllExplorePostsQuery({ page, limit: 10 }, { skip: activeCategory === 'Trending' });
+  const { data: trendingData, isLoading: trendingLoading, isFetching: trendingFetching } = useGetTrendingPostsQuery({ page, limit: 10 }, { skip: activeCategory !== 'Trending' });
+
+  const explorePosts = exploreData?.posts || [];
+  const trendingPosts = trendingData?.posts || [];
 
   const getFilteredPosts = () => {
     if (activeCategory === 'Trending') return trendingPosts;
@@ -27,6 +32,15 @@ const ExplorePage: React.FC = () => {
 
   const posts = getFilteredPosts();
   const isLoading = activeCategory === 'Trending' ? trendingLoading : exploreLoading;
+  const isFetching = activeCategory === 'Trending' ? trendingFetching : exploreFetching;
+  const hasMore = activeCategory === 'Trending' ? (trendingData?.hasMore || false) : (exploreData?.hasMore || false);
+
+  const handleCategoryChange = (category: string) => {
+    if (activeCategory !== category) {
+      setActiveCategory(category);
+      setPage(1);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-20 mt-10 md:pb-10">
@@ -39,7 +53,7 @@ const ExplorePage: React.FC = () => {
             {CATEGORIES.map((category) => (
               <button
                 key={category}
-                onClick={() => setActiveCategory(category)}
+                onClick={() => handleCategoryChange(category)}
                 className={`whitespace-nowrap px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   activeCategory === category 
                     ? 'bg-blue-600 text-white' 
@@ -57,18 +71,24 @@ const ExplorePage: React.FC = () => {
       {/* --- Main Content Area --- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         
-        {isLoading ? (
+        {isLoading && page === 1 ? (
           // Loading Skeleton
           <div className="flex h-64 items-center justify-center">
             <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
           </div>
         ) : (
-          // Masonry Grid using CSS Columns
-          <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
-            {posts.map((post: any) => (
-              <ExplorePostCard key={post.id} post={post} />
-            ))}
-          </div>
+          <InfiniteScroll
+            onLoadMore={() => setPage(p => p + 1)}
+            hasMore={hasMore}
+            isLoading={isFetching}
+          >
+            {/* Masonry Grid using CSS Columns */}
+            <div className="columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
+              {posts.map((post: any) => (
+                <ExplorePostCard key={post.id} post={post} />
+              ))}
+            </div>
+          </InfiniteScroll>
         )}
 
       </div>

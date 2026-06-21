@@ -13,6 +13,7 @@ import {
 } from '../../redux/features/user/userApiSlice';
 import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery } from '../../redux/features/post/postApiSlice';
 import { Edit3 } from 'lucide-react';
+import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 
 const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
@@ -76,14 +77,29 @@ const ProfilePage: React.FC = () => {
 
   const { data: userProfile, isLoading: isUserLoading } = useGetUserByIdQuery(targetUserId, { skip: !targetUserId });
   const { data: followInfo, isLoading: isFollowInfoLoading } = useGetProfileFollowInfoQuery(targetUserId, { skip: !targetUserId });
-  const { data: userPosts, isLoading: isPostsLoading } = useGetPostsByUserIdQuery(targetUserId, { skip: !targetUserId });
-  const { data: likedPosts, isLoading: isLikedPostsLoading } = useGetLikedPostsByUserIdQuery(targetUserId, { skip: !targetUserId });
-
+  
   const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'saved'>('posts');
+  const [page, setPage] = useState(1);
+
+  const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
+  const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'liked' });
+
+  const userPosts = userPostsData?.posts || [];
+  const likedPosts = likedPostsData?.posts || [];
+  const hasMore = activeTab === 'posts' ? (userPostsData?.hasMore || false) : (likedPostsData?.hasMore || false);
+  const isFetching = activeTab === 'posts' ? isPostsFetching : isLikedPostsFetching;
+
   const [modalState, setModalState] = useState<{isOpen: boolean, type: 'followers' | 'following'}>({ isOpen: false, type: 'followers' });
 
   const isCurrentUser = currentUser?.id === targetUserId;
   const isLoading = isUserLoading || isFollowInfoLoading;
+
+  const handleTabChange = (tab: 'posts' | 'liked' | 'saved') => {
+    if (activeTab !== tab) {
+      setActiveTab(tab);
+      setPage(1);
+    }
+  };
 
   const profile = useMemo(() => {
     if (!userProfile) return null;
@@ -94,12 +110,12 @@ const ProfilePage: React.FC = () => {
       bio: userProfile.bio || 'No bio available',
       avatarUrl: userProfile.avatarUrl || userProfile.image_url,
       stats: {
-        posts: userPosts ? userPosts.length : 0,
+        posts: userPostsData?.posts ? userPostsData.posts.length : 0,
         followers: followInfo?.followersCount || 0,
         following: followInfo?.followingCount || 0,
       }
     };
-  }, [userProfile, userPosts, followInfo]);
+  }, [userProfile, userPostsData, followInfo]);
 
   if (isLoading || !userProfile || !profile) {
     return (
@@ -194,7 +210,7 @@ const ProfilePage: React.FC = () => {
         <div className="mt-6">
           <div className="flex border-b border-gray-200">
             <button
-              onClick={() => setActiveTab('posts')}
+              onClick={() => handleTabChange('posts')}
               className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'posts' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
             >
@@ -202,7 +218,7 @@ const ProfilePage: React.FC = () => {
               Posts
             </button>
             <button
-              onClick={() => setActiveTab('liked')}
+              onClick={() => handleTabChange('liked')}
               className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'liked' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
             >
@@ -210,7 +226,7 @@ const ProfilePage: React.FC = () => {
               Liked
             </button>
             <button
-              onClick={() => setActiveTab('saved')}
+              onClick={() => handleTabChange('saved')}
               className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'saved' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
             >
@@ -220,80 +236,86 @@ const ProfilePage: React.FC = () => {
           </div>
 
           {/* Grid Content Area */}
-          <div className="mt-6 grid grid-cols-3 gap-1 sm:gap-4 lg:grid-cols-4">
-            {activeTab === 'posts' && isPostsLoading ? (
-              <div className="col-span-3 lg:col-span-4 text-center py-10">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-              </div>
-            ) : activeTab === 'posts' && (!userPosts || userPosts.length === 0) ? (
-              <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
-                No posts to show.
-              </div>
-            ) : activeTab === 'posts' && userPosts ? (
-              userPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
-                >
-                  {post.mediaUrl ? (
-                    <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                  ) : (
-                    <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
-                      {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
-                    <div className="flex items-center gap-4 font-semibold">
-                      <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white" /> {post.likes || 0}</span>
-                    </div>
-                    {isCurrentUser && (
-                      <button 
-                        className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/post/update/${post.id}`);
-                        }}
-                      >
-                        <Edit3 className="w-4 h-4" /> Edit
-                      </button>
+          <InfiniteScroll
+            onLoadMore={() => setPage(p => p + 1)}
+            hasMore={hasMore}
+            isLoading={isFetching}
+          >
+            <div className="mt-6 grid grid-cols-3 gap-1 sm:gap-4 lg:grid-cols-4">
+              {activeTab === 'posts' && isPostsLoading && page === 1 ? (
+                <div className="col-span-3 lg:col-span-4 text-center py-10">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+                </div>
+              ) : activeTab === 'posts' && (!userPosts || userPosts.length === 0) ? (
+                <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
+                  No posts to show.
+                </div>
+              ) : activeTab === 'posts' && userPosts ? (
+                userPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
+                  >
+                    {post.mediaUrl ? (
+                      <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                    ) : (
+                      <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
+                        {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
+                      </div>
                     )}
-                  </div>
-                </div>
-              ))
-            ) : activeTab === 'liked' && isLikedPostsLoading ? (
-              <div className="col-span-3 lg:col-span-4 text-center py-10">
-                <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-              </div>
-            ) : activeTab === 'liked' && (!likedPosts || likedPosts.length === 0) ? (
-              <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
-                No liked posts yet.
-              </div>
-            ) : activeTab === 'liked' && likedPosts ? (
-              likedPosts.map((post) => (
-                <div
-                  key={post.id}
-                  className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
-                >
-                  {post.mediaUrl ? (
-                    <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                  ) : (
-                    <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
-                      {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
-                    <div className="flex items-center gap-4 font-semibold">
-                      <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white text-red-500" /> {post.likes || 0}</span>
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
+                      <div className="flex items-center gap-4 font-semibold">
+                        <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white" /> {post.likes || 0}</span>
+                      </div>
+                      {isCurrentUser && (
+                        <button 
+                          className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/post/update/${post.id}`);
+                          }}
+                        >
+                          <Edit3 className="w-4 h-4" /> Edit
+                        </button>
+                      )}
                     </div>
                   </div>
+                ))
+              ) : activeTab === 'liked' && isLikedPostsLoading && page === 1 ? (
+                <div className="col-span-3 lg:col-span-4 text-center py-10">
+                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
                 </div>
-              ))
-            ) : (
-              <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
-                Feature coming soon.
-              </div>
-            )}
-          </div>
+              ) : activeTab === 'liked' && (!likedPosts || likedPosts.length === 0) ? (
+                <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
+                  No liked posts yet.
+                </div>
+              ) : activeTab === 'liked' && likedPosts ? (
+                likedPosts.map((post) => (
+                  <div
+                    key={post.id}
+                    className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
+                  >
+                    {post.mediaUrl ? (
+                      <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                    ) : (
+                      <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
+                        {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
+                      </div>
+                    )}
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
+                      <div className="flex items-center gap-4 font-semibold">
+                        <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white text-red-500" /> {post.likes || 0}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
+                  Feature coming soon.
+                </div>
+              )}
+            </div>
+          </InfiniteScroll>
         </div>
       </div>
       

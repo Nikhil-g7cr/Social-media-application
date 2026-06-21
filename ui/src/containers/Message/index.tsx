@@ -36,7 +36,7 @@ interface UIMessage {
 interface UIConversation {
   id: string;
   participantName: string;
-  image_url: string;
+  image_url?: string | null;
   lastMessage: string;
   time: string;
   unreadCount: number;
@@ -288,7 +288,7 @@ const MessagesPage: React.FC = () => {
               >
                 <div className="relative flex-shrink-0">
                   <Avatar
-                    url={conv.image_url}
+                    url={conv.image_url || undefined}
                     name={conv.participantName}
                     className="h-12 w-12 rounded-full object-cover"
                   />
@@ -334,7 +334,7 @@ const MessagesPage: React.FC = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <Avatar
-                  url={activeConversation.image_url}
+                  url={activeConversation.image_url || undefined}
                   name={activeConversation.participantName}
                   className="h-10 w-10 rounded-full object-cover"
                 />

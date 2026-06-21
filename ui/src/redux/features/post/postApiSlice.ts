@@ -28,14 +28,19 @@ export interface Post {
     likedBy?: string[];
 }
 
+export interface PaginatedPosts {
+    posts: Post[];
+    hasMore: boolean;
+}
+
 export const postApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getPosts: builder.query<Post[], void>({
-            query: () => ({ url: 'feed' }),
+        getPosts: builder.query<PaginatedPosts, { page: number; limit: number }>({
+            query: ({ page, limit }) => ({ url: `feed?page=${page}&limit=${limit}` }),
             transformResponse: (response: any) => {
-                // response is AppResponse -> data -> posts
                 const rawPosts = response?.data?.posts || [];
-                return rawPosts.map((p: any) => ({
+                const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
                         id: p.User?.ID || p.UserID,
@@ -44,25 +49,38 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
                     },
                     content: p.Content || '',
-                    timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
+                    timestamp: new Date(p.CreatedAt).toLocaleString(),
                     likes: p.Likes?.length || 0,
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 }));
+                return { posts, hasMore };
+            },
+            serializeQueryArgs: ({ endpointName }) => endpointName,
+            merge: (currentCache, newItems, { arg }) => {
+                if (arg.page === 1) {
+                    currentCache.posts = newItems.posts;
+                } else {
+                    const existingIds = new Set(currentCache.posts.map(p => p.id));
+                    const uniqueNewItems = newItems.posts.filter(p => !existingIds.has(p.id));
+                    currentCache.posts.push(...uniqueNewItems);
+                }
+                currentCache.hasMore = newItems.hasMore;
+            },
+            forceRefetch({ currentArg, previousArg }) {
+                return currentArg?.page !== previousArg?.page;
             },
             providesTags: ['Post'],
             async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
-                // Connect to socket and listen for real-time feed updates
                 const { initializeSocket } = await import('../../../utils/socket');
                 const socket = initializeSocket();
                 try {
                     await cacheDataLoaded;
                     const listener = (newPostRaw: any) => {
                         updateCachedData((draft) => {
-                            // Avoid duplicates
-                            if (draft.find((p) => p.id === newPostRaw.ID)) return;
+                            if (draft.posts.find((p) => p.id === newPostRaw.ID)) return;
                             
                             const newPost: Post = {
                                 id: newPostRaw.ID,
@@ -80,7 +98,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                                 likedBy: newPostRaw.Likes?.map((l: any) => l.UserID) || [],
                                 mediaUrl: newPostRaw.MediaURL,
                             };
-                            draft.unshift(newPost); // Add new post to top of feed
+                            draft.posts.unshift(newPost);
                         });
                     };
                     socket.on('newPostInFeed', listener);
@@ -89,11 +107,12 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 await cacheEntryRemoved;
             }
         }),
-        getAllExplorePosts: builder.query<Post[], void>({
-            query: () => ({ url: 'posts' }),
+        getAllExplorePosts: builder.query<PaginatedPosts, { page: number; limit: number }>({
+            query: ({ page, limit }) => ({ url: `posts?page=${page}&limit=${limit}` }),
             transformResponse: (response: any) => {
                 const rawPosts = response?.data?.posts || [];
-                return rawPosts.map((p: any) => ({
+                const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
                         id: p.User?.ID || p.UserID,
@@ -102,21 +121,37 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
                     },
                     content: p.Content || '',
-                    timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
+                    timestamp: new Date(p.CreatedAt).toLocaleString(),
                     likes: p.Likes?.length || 0,
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 }));
+                return { posts, hasMore };
+            },
+            serializeQueryArgs: ({ endpointName }) => endpointName,
+            merge: (currentCache, newItems, { arg }) => {
+                if (arg.page === 1) {
+                    currentCache.posts = newItems.posts;
+                } else {
+                    const existingIds = new Set(currentCache.posts.map(p => p.id));
+                    const uniqueNewItems = newItems.posts.filter(p => !existingIds.has(p.id));
+                    currentCache.posts.push(...uniqueNewItems);
+                }
+                currentCache.hasMore = newItems.hasMore;
+            },
+            forceRefetch({ currentArg, previousArg }) {
+                return currentArg?.page !== previousArg?.page;
             },
             providesTags: ['Post'],
         }),
-        getTrendingPosts: builder.query<Post[], void>({
-            query: () => ({ url: 'posts/trending' }),
+        getTrendingPosts: builder.query<PaginatedPosts, { page: number; limit: number }>({
+            query: ({ page, limit }) => ({ url: `posts/trending?page=${page}&limit=${limit}` }),
             transformResponse: (response: any) => {
                 const rawPosts = response?.data?.posts || [];
-                return rawPosts.map((p: any) => ({
+                const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
                         id: p.User?.ID || p.UserID,
@@ -125,13 +160,28 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
                     },
                     content: p.Content || '',
-                    timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
+                    timestamp: new Date(p.CreatedAt).toLocaleString(),
                     likes: p.Likes?.length || 0,
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 }));
+                return { posts, hasMore };
+            },
+            serializeQueryArgs: ({ endpointName }) => endpointName,
+            merge: (currentCache, newItems, { arg }) => {
+                if (arg.page === 1) {
+                    currentCache.posts = newItems.posts;
+                } else {
+                    const existingIds = new Set(currentCache.posts.map(p => p.id));
+                    const uniqueNewItems = newItems.posts.filter(p => !existingIds.has(p.id));
+                    currentCache.posts.push(...uniqueNewItems);
+                }
+                currentCache.hasMore = newItems.hasMore;
+            },
+            forceRefetch({ currentArg, previousArg }) {
+                return currentArg?.page !== previousArg?.page;
             },
             providesTags: ['Post'],
         }),
@@ -139,11 +189,12 @@ export const postApiSlice = apiSlice.injectEndpoints({
             query: () => ({ url: 'posts/hashtags/trending' }),
             transformResponse: (response: any) => response?.data || [],
         }),
-        getPostsByUserId: builder.query<Post[], string>({
-            query: (userId) => ({ url: `posts/user/${userId}` }),
+        getPostsByUserId: builder.query<PaginatedPosts, { userId: string; page: number; limit: number }>({
+            query: ({ userId, page, limit }) => ({ url: `posts/user/${userId}?page=${page}&limit=${limit}` }),
             transformResponse: (response: any) => {
                 const rawPosts = response?.data?.posts || [];
-                return rawPosts.map((p: any) => ({
+                const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
                         id: p.User?.ID || p.UserID,
@@ -159,14 +210,30 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 }));
+                return { posts, hasMore };
+            },
+            serializeQueryArgs: ({ endpointName, queryArgs }) => `${endpointName}-${queryArgs.userId}`,
+            merge: (currentCache, newItems, { arg }) => {
+                if (arg.page === 1) {
+                    currentCache.posts = newItems.posts;
+                } else {
+                    const existingIds = new Set(currentCache.posts.map(p => p.id));
+                    const uniqueNewItems = newItems.posts.filter(p => !existingIds.has(p.id));
+                    currentCache.posts.push(...uniqueNewItems);
+                }
+                currentCache.hasMore = newItems.hasMore;
+            },
+            forceRefetch({ currentArg, previousArg }) {
+                return currentArg?.page !== previousArg?.page || currentArg?.userId !== previousArg?.userId;
             },
             providesTags: ['Post'],
         }),
-        getLikedPostsByUserId: builder.query<Post[], string>({
-            query: (userId) => ({ url: `posts/liked/user/${userId}` }),
+        getLikedPostsByUserId: builder.query<PaginatedPosts, { userId: string; page: number; limit: number }>({
+            query: ({ userId, page, limit }) => ({ url: `posts/liked/user/${userId}?page=${page}&limit=${limit}` }),
             transformResponse: (response: any) => {
                 const rawPosts = response?.data?.posts || [];
-                return rawPosts.map((p: any) => ({
+                const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
                         id: p.User?.ID || p.UserID,
@@ -178,10 +245,25 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     timestamp: new Date(p.CreatedAt).toLocaleString(),
                     likes: p.Likes?.length || 0,
                     comments: p.Comments?.length || 0,
-                    isLikedByMe: true, // We know they liked it
+                    isLikedByMe: true,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 }));
+                return { posts, hasMore };
+            },
+            serializeQueryArgs: ({ endpointName, queryArgs }) => `${endpointName}-${queryArgs.userId}`,
+            merge: (currentCache, newItems, { arg }) => {
+                if (arg.page === 1) {
+                    currentCache.posts = newItems.posts;
+                } else {
+                    const existingIds = new Set(currentCache.posts.map(p => p.id));
+                    const uniqueNewItems = newItems.posts.filter(p => !existingIds.has(p.id));
+                    currentCache.posts.push(...uniqueNewItems);
+                }
+                currentCache.hasMore = newItems.hasMore;
+            },
+            forceRefetch({ currentArg, previousArg }) {
+                return currentArg?.page !== previousArg?.page || currentArg?.userId !== previousArg?.userId;
             },
             providesTags: ['Post'],
         }),
@@ -201,7 +283,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     timestamp: new Date(p.CreatedAt).toLocaleString(),
                     likes: p.Likes?.length || 0,
                     comments: p.Comments?.length || 0,
-                    isLikedByMe: false, // Could check if currentUser is in p.Likes if needed
+                    isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
                     mediaUrl: p.MediaURL,
                 };
@@ -212,7 +294,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
             query: (initialPost) => ({
                 url: 'posts',
                 method: 'POST',
-                data: initialPost, // Since we use axiosBaseQuery, it's 'data' instead of 'body'
+                data: initialPost,
             }),
             invalidatesTags: ['Post'],
         }),
