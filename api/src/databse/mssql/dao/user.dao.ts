@@ -169,7 +169,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
     try {
       const [updatedRowsCount] = await this._user.update(
         {
-          ...UserInfo,
+          ...(UserInfo as any),
         },
         {
           where: { ID: UserId },

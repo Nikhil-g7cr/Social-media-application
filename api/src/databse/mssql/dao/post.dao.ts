@@ -329,20 +329,30 @@ export class PostSQLDAO implements PostAbstractSQLDao {
   async deletePost(postId: string): Promise<AppResponse> {
     const transaction = await this.sequelize.transaction();
     try {
+      // Manually delete related records to avoid FK constraint violations
+      await this.sequelize.models.Comments.destroy({ where: { PostID: postId }, transaction });
+      await this.sequelize.models.Likes.destroy({ where: { PostID: postId }, transaction });
+      await this.sequelize.models.PostHashtags.destroy({ where: { PostID: postId }, transaction });
+      await this.sequelize.models.PostView.destroy({ where: { Post_id: postId }, transaction });
+
       const deletedRowsCount = await this.postModel.destroy({
         where: { ID: postId },
         transaction,
       });
 
       if (deletedRowsCount === 0) {
-        await transaction.rollback();
+        try { await transaction.rollback(); } catch(e) {}
         return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
       }
 
       await transaction.commit();
       return createResponse(HttpStatus.OK, 'Post deleted successfully', null);
     } catch (error: any) {
-      await transaction.rollback();
+      try {
+        await transaction.rollback();
+      } catch (rollbackError: any) {
+        this.logger.error(`[PostSQLDAO] Rollback skipped in delete: ${rollbackError.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      }
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return {
         ...createResponse(

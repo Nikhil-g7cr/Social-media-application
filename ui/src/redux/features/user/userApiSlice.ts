@@ -10,6 +10,7 @@ export interface User {
     username?: string;
     avatarUrl?: string;
     isFollowing?: boolean;
+    isActive?: boolean;
 }
 
 export interface ProfileFollowInfo {
@@ -23,6 +24,18 @@ export const userApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getUsers: builder.query<User[], void>({
             query: () => ({ url: 'user' }),
+            transformResponse: (response: any) => {
+                const rawUsers = response?.data || response || [];
+                return rawUsers.map((u: any) => ({
+                    id: u.ID || u.id,
+                    username: u.UserName || u.username,
+                    name: u.FullName || u.name,
+                    email: u.EmailAddress || u.Email || u.email || '',
+                    role: u.Role || u.role,
+                    isActive: u.IsActive !== undefined ? u.IsActive : u.isActive,
+                    avatarUrl: u.ProfilePictureUrl || u.avatarUrl || `https://ui-avatars.com/api/?name=${u.FullName || u.name || 'User'}&background=random`,
+                }));
+            },
             providesTags: ['User'],
         }),
         getUserById: builder.query<User, string>({
@@ -41,11 +54,21 @@ export const userApiSlice = apiSlice.injectEndpoints({
             providesTags: (_result, _error, id) => [{ type: 'User', id }],
         }),
         updateUserProfile: builder.mutation<User, Partial<User> & { id: string }>({
-            query: ({ id, ...profile }) => ({
-                url: `user/${id}`,
-                method: 'PATCH',
-                data: profile,
-            }),
+            query: ({ id, ...profile }) => {
+                const payload: any = {};
+                if (profile.name !== undefined) payload.FullName = profile.name;
+                if (profile.username !== undefined) payload.UserName = profile.username;
+                if (profile.bio !== undefined) payload.Bio = profile.bio;
+                if (profile.avatarUrl !== undefined) payload.ProfilePictureUrl = profile.avatarUrl;
+                if (profile.isActive !== undefined) payload.IsActive = profile.isActive;
+                if (profile.role !== undefined) payload.Role = profile.role;
+
+                return {
+                    url: `user/${id}`,
+                    method: 'PATCH',
+                    data: payload,
+                };
+            },
             invalidatesTags: (_result, _error, { id }) => [{ type: 'User', id }],
         }),
         searchUsers: builder.query<User[], string>({

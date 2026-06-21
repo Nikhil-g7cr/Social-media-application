@@ -7,7 +7,7 @@ import SearchBar from "../SearchBar";
 import { Link } from "react-router-dom";
 import PostImage from "../../../shared/shared-components/PostImage";
 import Avatar from "../../../shared/shared-components/Avatar";
-
+import ProfileDropdown from "../../../shared/shared-components/ProfileDropdown";
 const Navbar: React.FC = () => {
   const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
@@ -40,28 +40,7 @@ const Navbar: React.FC = () => {
                   <NotificationDropdown />
                 </div>
                 
-                {user?.role === 'ADMIN' && (
-                  <Link to="/admin" className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md">
-                    Admin
-                  </Link>
-                )}
-                
-                {(user?.role === 'MANAGER' || user?.role === 'ADMIN') && (
-                  <Link to="/manager" className="text-sm font-medium text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded-md">
-                    Manager
-                  </Link>
-                )}
-
-                <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-md">
-                  <span className="text-sm font-medium text-gray-700">
-                    {user?.name || "User"}
-                  </span>
-                  <Avatar
-                    url={user?.image_url}
-                    name={user?.name}
-                    className="h-10 w-10 rounded-full border"
-                  />
-                </div>
+                <ProfileDropdown />
               </>
             ) : (
               <div className="flex items-center space-x-4">
