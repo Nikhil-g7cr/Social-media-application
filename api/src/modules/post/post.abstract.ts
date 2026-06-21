@@ -21,4 +21,7 @@ export abstract class PostAbstractSvc {
 
   abstract getLikedPostsByUserId(userId: string, pagination: PaginationDto): Promise<AppResponse>;
 
+  abstract getTrendingPosts(pagination: PaginationDto): Promise<AppResponse>;
+
+  abstract getTrendingHashtags(): Promise<AppResponse>;
 }

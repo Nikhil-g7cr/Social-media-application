@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { MessageCircle, Heart, Send, MoreHorizontal } from 'lucide-react';
 import { useGetCommentsByPostIdQuery, useCreatePostCommentMutation } from '../../redux/features/post/postApiSlice';
 import { useSelector } from 'react-redux';
@@ -15,7 +15,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
   
   // Use user slice for avatar if possible, or just skip it if not needed directly.
   const authUser = useSelector((state: any) => state.auth?.user);
-  const userAvatar = authUser?.image_url || `https://ui-avatars.com/api/?name=${authUser?.name || 'User'}&background=random`;
+  const userAvatar = useMemo(() => authUser?.image_url || `https://ui-avatars.com/api/?name=${authUser?.name || 'User'}&background=random`, [authUser?.image_url, authUser?.name]);
   
   const onlineUserIds = useSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
@@ -29,7 +29,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
   const displayCount = isOpen && !isLoading && !isFetching ? comments.length : initialCommentCount;
 
   // --- Handlers ---
-  const handleAddComment = async (e: React.FormEvent) => {
+  const handleAddComment = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newComment.trim() || isCreating) return;
 
@@ -39,11 +39,11 @@ const CommentSection: React.FC<CommentSectionProps> = ({ postId, initialCommentC
     } catch (err) {
         console.error('Failed to create comment:', err);
     }
-  };
+  }, [newComment, isCreating, createComment, postId]);
 
-  const toggleLike = (commentId: string) => {
+  const toggleLike = useCallback((commentId: string) => {
     // TODO: implement comment likes if backend supports it
-  };
+  }, []);
 
   return (
     <div className="w-full border-t border-gray-100 mt-2 pt-2">

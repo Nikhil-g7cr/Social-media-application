@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, memo } from 'react';
 import { Settings, MapPin, Calendar, Grid, Heart, Bookmark } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PostImage from '../../shared/shared-components/PostImage';
@@ -13,7 +13,7 @@ import {
 import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery } from '../../redux/features/post/postApiSlice';
 import { Edit3 } from 'lucide-react';
 
-const UsersModal = ({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
+const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
   
   const { data: followers, isLoading: loadingFollowers } = useGetFollowersQuery(userId, { skip: !isOpen || type !== 'followers' });
@@ -63,7 +63,7 @@ const UsersModal = ({ isOpen, onClose, title, userId, type }: { isOpen: boolean,
       </div>
     </div>
   );
-};
+});
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -84,26 +84,29 @@ const ProfilePage: React.FC = () => {
   const isCurrentUser = currentUser?.id === targetUserId;
   const isLoading = isUserLoading || isFollowInfoLoading;
 
-  if (isLoading || !userProfile) {
+  const profile = useMemo(() => {
+    if (!userProfile) return null;
+    return {
+      id: userProfile.id,
+      fullName: userProfile.name || 'Unknown User',
+      userName: userProfile.username ? `@${userProfile.username}` : `@${(userProfile.name || 'user').toLowerCase().replace(/\s+/g, '')}`,
+      bio: userProfile.bio || 'No bio available',
+      avatarUrl: userProfile.avatarUrl || userProfile.image_url || `https://ui-avatars.com/api/?name=${userProfile.name || 'User'}&background=random`,
+      stats: {
+        posts: userPosts ? userPosts.length : 0,
+        followers: followInfo?.followersCount || 0,
+        following: followInfo?.followingCount || 0,
+      }
+    };
+  }, [userProfile, userPosts, followInfo]);
+
+  if (isLoading || !userProfile || !profile) {
     return (
       <div className="flex h-screen items-center justify-center">
         <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
       </div>
     );
   }
-
-  const profile = {
-    id: userProfile.id,
-    fullName: userProfile.name || 'Unknown User',
-    userName: userProfile.username ? `@${userProfile.username}` : `@${(userProfile.name || 'user').toLowerCase().replace(/\s+/g, '')}`,
-    bio: userProfile.bio || 'No bio available',
-    avatarUrl: userProfile.avatarUrl || userProfile.image_url || `https://ui-avatars.com/api/?name=${userProfile.name || 'User'}&background=random`,
-    stats: {
-      posts: userPosts ? userPosts.length : 0,
-      followers: followInfo?.followersCount || 0,
-      following: followInfo?.followingCount || 0,
-    }
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 pb-10 pt-16">

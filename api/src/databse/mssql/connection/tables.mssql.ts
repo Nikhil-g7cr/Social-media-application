@@ -13,6 +13,8 @@ export enum Tables{
     tbl_postMedia = 'tbl_PostMedia',
     tbl_Message_Attachment = 'Message_Attachment',
     tbl_Notification = 'tbl_Notification',
+    tbl_Hashtag = 'tbl_Hashtag',
+    tbl_PostHashtag = 'tbl_PostHashtag',
 }
 
 export class TableGroup{

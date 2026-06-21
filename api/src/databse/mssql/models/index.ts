@@ -9,3 +9,5 @@ export * from './follow.model';
 export * from './comments.model';
 export * from './conversationParticipants.model';   
 export * from './notification.model';
+export * from './hashtag.model';
+export * from './postHashtag.model';

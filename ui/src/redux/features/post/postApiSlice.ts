@@ -112,6 +112,33 @@ export const postApiSlice = apiSlice.injectEndpoints({
             },
             providesTags: ['Post'],
         }),
+        getTrendingPosts: builder.query<Post[], void>({
+            query: () => ({ url: 'posts/trending' }),
+            transformResponse: (response: any) => {
+                const rawPosts = response?.data?.posts || [];
+                return rawPosts.map((p: any) => ({
+                    id: p.ID,
+                    author: {
+                        id: p.User?.ID || p.UserID,
+                        name: p.User?.FullName || 'Unknown',
+                        username: p.User?.UserName || 'unknown',
+                        avatarUrl: p.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${p.User?.FullName || 'User'}&background=random`
+                    },
+                    content: p.Content || '',
+                    timestamp: new Date(p.CreatedAt).toLocaleString(), // Format timestamp
+                    likes: p.Likes?.length || 0,
+                    comments: p.Comments?.length || 0,
+                    isLikedByMe: false,
+                    likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    mediaUrl: p.MediaURL,
+                }));
+            },
+            providesTags: ['Post'],
+        }),
+        getTrendingHashtags: builder.query<{hashtag: string, category: string, postCount: number}[], void>({
+            query: () => ({ url: 'posts/hashtags/trending' }),
+            transformResponse: (response: any) => response?.data || [],
+        }),
         getPostsByUserId: builder.query<Post[], string>({
             query: (userId) => ({ url: `posts/user/${userId}` }),
             transformResponse: (response: any) => {
@@ -268,6 +295,8 @@ export const postApiSlice = apiSlice.injectEndpoints({
 export const {
     useGetPostsQuery,
     useGetAllExplorePostsQuery,
+    useGetTrendingPostsQuery,
+    useGetTrendingHashtagsQuery,
     useGetPostsByUserIdQuery,
     useGetLikedPostsByUserIdQuery,
     useGetPostByIdQuery,

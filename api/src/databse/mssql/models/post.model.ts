@@ -1,9 +1,12 @@
-import { BelongsTo, Column, DataType, Default, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { BelongsTo, BelongsToMany, Column, DataType, Default, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Users } from './user.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
+import { PostView } from './postView.model';
+import { Hashtags } from './hashtag.model';
+import { PostHashtags } from './postHashtag.model';
 // import { PostMedia } from './postMedia.model';
 
 export const enum PostsColumns {
@@ -88,6 +91,12 @@ class Posts extends Model<Posts> {
 
 	@HasMany(() => Likes, { foreignKey: 'PostID' }) // Use whatever exact string your Likes model uses
 	Likes!: Likes[];
+
+	@HasMany(() => PostView, { foreignKey: 'Post_id' })
+	Views!: PostView[];
+
+	@BelongsToMany(() => Hashtags, () => PostHashtags)
+	Hashtags!: Hashtags[];
 
 	// Make sure to import PostMedia at the top of the file!
 	// @HasMany(() => PostMedia, { foreignKey: 'PostID' })

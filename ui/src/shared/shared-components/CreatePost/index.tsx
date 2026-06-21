@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
 import { useAppSelector } from "../../../redux/hooks";
 import { useCreatePostMutation, useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../../redux/features/post/postApiSlice";
@@ -16,23 +16,23 @@ export default function CreatePost() {
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedImage(file);
       setImagePreview(URL.createObjectURL(file));
     }
-  };
+  }, []);
 
-  const removeImage = () => {
+  const removeImage = useCallback(() => {
     setSelectedImage(null);
     setImagePreview(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
-  };
+  }, []);
 
-  const handleCreatePost = async (e: React.FormEvent) => {
+  const handleCreatePost = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newPostContent.trim() && !selectedImage) return;
 
@@ -62,7 +62,7 @@ export default function CreatePost() {
     } finally {
       setIsUploading(false);
     }
-  };
+  }, [newPostContent, selectedImage, getUploadUrl, uploadImageToAzure, createPost, removeImage]);
 
   return (
     <div className="bg-white rounded-2xl border p-5 shadow-sm">

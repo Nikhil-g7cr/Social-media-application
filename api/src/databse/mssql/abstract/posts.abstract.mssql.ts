@@ -21,4 +21,8 @@ export abstract class PostAbstractSQLDao {
   abstract getFeedPosts(followingIds: string[],page: number,limit: number,): Promise<AppResponse>;
 
   abstract getLikedPostsByUserId(userId: string, page: number, limit: number): Promise<AppResponse>;
+
+  abstract getTrendingPosts(page: number, limit: number): Promise<AppResponse>;
+
+  abstract getTrendingHashtags(): Promise<AppResponse>;
 }

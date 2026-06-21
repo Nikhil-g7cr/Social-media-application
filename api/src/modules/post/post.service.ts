@@ -215,6 +215,47 @@ export class PostService implements PostAbstractSvc {
     }
   }
 
+  async getTrendingPosts(pagination: PaginationDto): Promise<AppResponse> {
+    try {
+      this.logger.log(`[PostService] Fetching trending posts`, 200);
+
+      const page = pagination.page || 1;
+      const limit = pagination.limit || 10;
+
+      const response = await this.postDao.getTrendingPosts(page, limit);
+
+      if (response.data && Array.isArray(response.data.posts)) {
+        response.data.posts = await Promise.all(
+          response.data.posts.map(async (post: any) => {
+            if (post.MediaURL) {
+              post.MediaURL = await this.fileService.generateReadUrl(
+                post.MediaURL,
+              );
+            }
+            return post;
+          }),
+        );
+      }
+
+      return response;
+    } catch (error: any) {
+      this.logger.error(
+        `[PostService] Error in getTrendingPosts: ${error.message}`,
+        500,
+      );
+      throw error;
+    }
+  }
+
+  async getTrendingHashtags(): Promise<AppResponse> {
+    try {
+      this.logger.log(`[PostService] Fetching trending hashtags`, 200);
+      return await this.postDao.getTrendingHashtags();
+    } catch (error: any) {
+      this.logger.error(`[PostService] Error in getTrendingHashtags: ${error.message}`, 500);
+      throw error;
+    }
+  }
 }
 
 

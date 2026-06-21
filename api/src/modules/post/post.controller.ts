@@ -50,6 +50,16 @@ export class PostController {
     return await this.postService.getPostsByUserId(userId, pagination);
   }
 
+  @Get('trending')
+  async getTrendingPosts(@Query() pagination: PaginationDto): Promise<AppResponse> {
+    return await this.postService.getTrendingPosts(pagination);
+  }
+
+  @Get('hashtags/trending')
+  async getTrendingHashtags(): Promise<AppResponse> {
+    return await this.postService.getTrendingHashtags();
+  }
+
   @Get(':id')
   async getPostById(@Param('id') id: string): Promise<AppResponse> {
     return await this.postService.getPostById(id);

@@ -14,26 +14,28 @@ import { Link } from "react-router-dom";
 import CommentSection from "../../shared/shared-components/CommentSection";
 import { useAppSelector } from "../../redux/hooks";
 import ExplorePage from "../Explore";
-import { useGetPostsQuery } from "../../redux/features/post/postApiSlice";
+import { useGetPostsQuery, useGetTrendingHashtagsQuery } from "../../redux/features/post/postApiSlice";
 import { useLikePostMutation, useUnlikePostMutation } from "../../redux/features/like/likeApiSlice";
 import CreatePost from "../../shared/shared-components/CreatePost";
 import PostImage from "../../shared/shared-components/PostImage";
+import PostCard from "./PostCard";
 export default function HomePage() {
   const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
   
   // RTK Query hooks
   const { data: posts = [], isLoading: isPostsLoading } = useGetPostsQuery(undefined, { skip: !isAuthenticated });
+  const { data: trendingHashtags = [], isLoading: isTrendingLoading } = useGetTrendingHashtagsQuery(undefined, { skip: !isAuthenticated });
   const [likePost] = useLikePostMutation();
   const [unlikePost] = useUnlikePostMutation();
   
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
-  const handleLogout = () => {
+  const handleLogout = React.useCallback(() => {
     sessionStorage.removeItem("accessToken");
     window.location.href = "/login";
-  };
+  }, []);
 
-  const toggleLike = async (postId: string, isLikedByMe: boolean | undefined) => {
+  const toggleLike = React.useCallback(async (postId: string, isLikedByMe: boolean | undefined) => {
     try {
       if (isLikedByMe) {
         await unlikePost(postId).unwrap();
@@ -43,7 +45,7 @@ export default function HomePage() {
     } catch (error) {
       console.error("Error toggling like", error);
     }
-  };
+  }, [likePost, unlikePost]);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -123,76 +125,13 @@ export default function HomePage() {
                   </div>
                 ) : (
                   posts.map((post: any) => (
-                    <div
+                    <PostCard
                       key={post.id}
-                      className="bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition"
-                    >
-                      <div className="flex justify-between">
-                        <div className="flex gap-3">
-                          <div className="relative">
-                            <PostImage
-                              mediaUrl={post.author.avatarUrl}
-                              className="h-10 w-10 rounded-full object-cover"
-                            />
-                            {onlineUserIds.includes(post.author.id) && (
-                              <span className="absolute bottom-0 right-0 block h-2.5 w-2.5 rounded-full bg-green-500 ring-2 ring-white"></span>
-                            )}
-                          </div>
-
-                          <div>
-                            <h3 className="font-semibold">{post.author.name}</h3>
-
-                            <p className="text-sm text-gray-500">
-                              {post.author.username} • {post.timestamp}
-                            </p>
-                          </div>
-                        </div>
-
-                        <button>
-                          <MoreHorizontal className="h-5 w-5 text-gray-400" />
-                        </button>
-                      </div>
-
-                      <p className="mt-4 text-gray-800 whitespace-pre-wrap">
-                        {post.content}
-                      </p>
-
-                      {post.mediaUrl && (
-                        <div 
-                          className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
-                          onDoubleClick={() => toggleLike(post.id, post.likedBy?.includes(user?.id) || post.isLikedByMe)}
-                        >
-                          <PostImage 
-                            mediaUrl={post.mediaUrl} 
-                            className="w-full max-h-[500px] object-contain cursor-pointer" 
-                          />
-                        </div>
-                      )}
-
-                      <div className="flex justify-between pt-4 mt-4 border-t">
-                        <button
-                          onClick={() => toggleLike(post.id, post.likedBy?.includes(user?.id) || post.isLikedByMe)}
-                          className={`flex items-center gap-2 p-2 rounded-full transition-colors duration-200 ${
-                            (post.likedBy?.includes(user?.id) || post.isLikedByMe) ? "text-red-500" : "text-gray-500"
-                          }`}
-                        >
-                          <Heart
-                            className={`h-5 w-5 ${
-                              (post.likedBy?.includes(user?.id) || post.isLikedByMe) ? "fill-current text-red-500" : ""
-                            }`}
-                          />
-                          <span>{post.likes}</span>
-                        </button>
-
-                        <div className="flex items-center gap-2 p-2 rounded-full text-gray-500">
-                          <CommentSection postId={post.id} initialCommentCount={post.comments} />
-                        </div>
-
-                        <button className="flex items-center gap-2 p-2 rounded-full text-gray-500">
-                          <Share2 className="h-5 w-5" />
-                        </button>
-                      </div>
-                    </div>
+                      post={post}
+                      user={user}
+                      onlineUserIds={onlineUserIds}
+                      toggleLike={toggleLike}
+                    />
                   ))
                 )}
               </div>
@@ -203,25 +142,27 @@ export default function HomePage() {
                   <h2 className="font-bold mb-4">Trending For You</h2>
 
                   <div className="space-y-4">
-                    <div>
-                      <p className="text-xs text-gray-500">Technology • Trending</p>
-                      <p className="font-semibold">#ReactJS</p>
-                      <p className="text-xs text-gray-500">12.5K posts</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500">
-                        Programming • Trending
-                      </p>
-                      <p className="font-semibold">#NestJS</p>
-                      <p className="text-xs text-gray-500">8.2K posts</p>
-                    </div>
-
-                    <div>
-                      <p className="text-xs text-gray-500">Web Development</p>
-                      <p className="font-semibold">#TypeScript</p>
-                      <p className="text-xs text-gray-500">15K posts</p>
-                    </div>
+                    {isTrendingLoading ? (
+                      <div className="animate-pulse flex space-x-4">
+                        <div className="flex-1 space-y-4 py-1">
+                          <div className="h-2 bg-gray-200 rounded w-3/4"></div>
+                          <div className="h-2 bg-gray-200 rounded w-1/2"></div>
+                          <div className="h-2 bg-gray-200 rounded w-5/6"></div>
+                        </div>
+                      </div>
+                    ) : trendingHashtags.length > 0 ? (
+                      trendingHashtags.map((item, index) => (
+                        <div key={index}>
+                          <p className="text-xs text-gray-500">{item.category || 'Trending'}</p>
+                          <p className="font-semibold">{item.hashtag}</p>
+                          <p className="text-xs text-gray-500">
+                            {item.postCount} {item.postCount === 1 ? 'post' : 'posts'}
+                          </p>
+                        </div>
+                      ))
+                    ) : (
+                      <p className="text-sm text-gray-500">No trending topics right now.</p>
+                    )}
                   </div>
                 </div>
               </div>
