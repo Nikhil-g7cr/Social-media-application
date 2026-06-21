@@ -40,6 +40,18 @@ const Navbar: React.FC = () => {
                   <NotificationDropdown />
                 </div>
                 
+                {user?.role === 'ADMIN' && (
+                  <Link to="/admin" className="text-sm font-medium text-blue-600 hover:bg-blue-50 px-3 py-2 rounded-md">
+                    Admin
+                  </Link>
+                )}
+                
+                {(user?.role === 'MANAGER' || user?.role === 'ADMIN') && (
+                  <Link to="/manager" className="text-sm font-medium text-indigo-600 hover:bg-indigo-50 px-3 py-2 rounded-md">
+                    Manager
+                  </Link>
+                )}
+
                 <div className="flex items-center space-x-2 cursor-pointer hover:bg-gray-50 px-2 py-1 rounded-md">
                   <span className="text-sm font-medium text-gray-700">
                     {user?.name || "User"}

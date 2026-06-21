@@ -14,6 +14,7 @@ import { ConversationModule } from '../conversation/conversation.module';
 import { MessageModule } from '../message/message.module';
 import { FeedModule } from '../feed/feed.module';
 import { NotificationModule } from '../notification/notification.module';
+import { ReportModule } from '../report/report.module';
 
 @Module({
   imports: [
@@ -29,7 +30,8 @@ import { NotificationModule } from '../notification/notification.module';
     ConversationModule,
     MessageModule,
     FeedModule,
-    NotificationModule
+    NotificationModule,
+    ReportModule
   ],
   controllers: [AppController],
   providers: [AppService],

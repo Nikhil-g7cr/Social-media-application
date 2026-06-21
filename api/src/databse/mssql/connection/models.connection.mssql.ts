@@ -12,6 +12,7 @@ import {
   Notification,
   Hashtags,
   PostHashtags,
+  Reports,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import { MsSqlConstants } from './constant.mssql';
@@ -31,6 +32,7 @@ const msSqlDBModelsProvider = [
     { provide: MsSqlConstants.NOTIFICATION, useValue: Notification },
     { provide: 'HASHTAG_MODEL', useValue: Hashtags },
     { provide: 'POST_HASHTAG_MODEL', useValue: PostHashtags },
+    { provide: MsSqlConstants.REPORT, useValue: Reports },
 
   ],
   models: any = msSqlDBModelsProvider.map((providers) => providers.useValue);

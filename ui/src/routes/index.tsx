@@ -15,6 +15,8 @@ import ActivityPage from "../containers/activity";
 import YourActivityPage from "../containers/your-activity";
 import Navbar from "../components/layout/Navbar";
 import PrivateRoute from "./ProtectedRoutes";
+import AdminDashboard from "../containers/Admin";
+import ManagerDashboard from "../containers/Manager";
 
 // Create Reusable Role Arrays for cleaner code
 
@@ -67,6 +69,16 @@ const Approutes = () => {
         <Route path="/your-activity" element={
           <PrivateRoute>
             <YourActivityPage/>
+          </PrivateRoute>
+        }/>
+        <Route path="/admin" element={
+          <PrivateRoute allowedRoles={['ADMIN']}>
+            <AdminDashboard/>
+          </PrivateRoute>
+        }/>
+        <Route path="/manager" element={
+          <PrivateRoute allowedRoles={['MANAGER', 'ADMIN']}>
+            <ManagerDashboard/>
           </PrivateRoute>
         }/>
 
