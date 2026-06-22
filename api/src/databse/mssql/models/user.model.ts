@@ -15,7 +15,7 @@ import { Comments } from './comments.model';
 import { Likes } from './like.model';
 import { UserRoles } from 'src/core/enums/user.enums';
 import { Follow } from './follow.model';
-// import { RefreshToken } from './refreshToken.model';
+import { RefreshToken } from './refreshToken.model';
 
 export const enum UserColumns {
   ID = 'ID',
@@ -28,6 +28,8 @@ export const enum UserColumns {
   Gender = 'Gender',
   Role = 'Role',
   IsActive = 'IsActive',
+  IsDeleted = 'IsDeleted',
+  DeletedAt = 'DeletedAt',
   CreatedBy = 'CreatedBy',
   CreatedAt = 'CreatedAt',
   ModifiedBy = 'ModifiedBy',
@@ -126,6 +128,19 @@ class Users extends Model<Users> {
   [UserColumns.IsActive]!: boolean;
 
   @Column({
+    type: SQLDataType.BIT,
+    allowNull: false,
+    defaultValue: false,
+  })
+  [UserColumns.IsDeleted]!: boolean;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+  })
+  [UserColumns.DeletedAt]?: Date | null;
+
+  @Column({
     type: SQLDataType.UNIQUEIDENTIFIER,
     allowNull: true,
   })
@@ -180,8 +195,8 @@ class Users extends Model<Users> {
   Following!: Follow[];
   
   // Import RefreshToken at the top of the file
-  // @HasMany(() => RefreshToken, { foreignKey: 'UserID' })
-  // RefreshTokens!: RefreshToken[];
+  @HasMany(() => RefreshToken, { foreignKey: 'UserID' })
+  RefreshTokens!: RefreshToken[];
 }
 
 export { Users };

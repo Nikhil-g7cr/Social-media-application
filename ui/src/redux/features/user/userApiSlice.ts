@@ -11,6 +11,8 @@ export interface User {
     avatarUrl?: string;
     isFollowing?: boolean;
     isActive?: boolean;
+    isDeleted?: boolean;
+    deletedAt?: string | null;
 }
 
 export interface ProfileFollowInfo {
@@ -22,8 +24,11 @@ export interface ProfileFollowInfo {
 
 export const userApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
-        getUsers: builder.query<User[], void>({
-            query: () => ({ url: 'user' }),
+        getUsers: builder.query<User[], { showDeleted?: boolean } | void>({
+            query: (args) => {
+                const showDeleted = args && 'showDeleted' in args ? args.showDeleted : false;
+                return { url: showDeleted ? 'user?showDeleted=true' : 'user' };
+            },
             transformResponse: (response: any) => {
                 const rawUsers = response?.data || response || [];
                 return rawUsers.map((u: any) => ({
@@ -33,6 +38,8 @@ export const userApiSlice = apiSlice.injectEndpoints({
                     email: u.EmailAddress || u.Email || u.email || '',
                     role: u.Role || u.role,
                     isActive: u.IsActive !== undefined ? u.IsActive : u.isActive,
+                    isDeleted: u.IsDeleted ?? u.isDeleted ?? false,
+                    deletedAt: u.DeletedAt || u.deletedAt || null,
                     avatarUrl: u.ProfilePictureUrl || u.avatarUrl || `https://ui-avatars.com/api/?name=${u.FullName || u.name || 'User'}&background=random`,
                 }));
             },
@@ -49,6 +56,8 @@ export const userApiSlice = apiSlice.injectEndpoints({
                     email: u.Email || u.email || '',
                     avatarUrl: u.ProfilePictureUrl || u.avatarUrl || `https://ui-avatars.com/api/?name=${u.FullName || u.name || 'User'}&background=random`,
                     bio: u.Bio || u.bio,
+                    isDeleted: u.IsDeleted ?? false,
+                    deletedAt: u.DeletedAt || null,
                 };
             },
             providesTags: (_result, _error, id) => [{ type: 'User', id }],
@@ -102,6 +111,35 @@ export const userApiSlice = apiSlice.injectEndpoints({
             },
             invalidatesTags: (_result, _error, { id }) => [{ type: 'User', id }],
         }),
+        softDeleteUser: builder.mutation<{ success: boolean }, string>({
+            query: (id) => ({
+                url: `user/${id}/soft-delete`,
+                method: 'PATCH',
+            }),
+            invalidatesTags: ['User'],
+        }),
+        restoreUser: builder.mutation<{ success: boolean }, string>({
+            query: (id) => ({
+                url: `user/${id}/restore`,
+                method: 'PATCH',
+            }),
+            invalidatesTags: ['User'],
+        }),
+        hardDeleteUser: builder.mutation<{ success: boolean }, string>({
+            query: (id) => ({
+                url: `user/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['User'],
+        }),
+        /** @deprecated Use hardDeleteUser. Kept for backward compatibility. */
+        deleteUser: builder.mutation<{ success: boolean }, string>({
+            query: (id) => ({
+                url: `user/${id}`,
+                method: 'DELETE',
+            }),
+            invalidatesTags: ['User'],
+        }),
         searchUsers: builder.query<User[], string>({
             query: (searchQuery) => ({
                 url: `user/search?q=${searchQuery}`,
@@ -123,7 +161,6 @@ export const userApiSlice = apiSlice.injectEndpoints({
                 url: `follow/profile/${userId}`,
             }),
             transformResponse: (response: any) => response.data || response,
-            // Assuming Profile gets its own tag type or reuse 'User'
             providesTags: (_result, _error, userId) => [{ type: 'Profile', id: userId }],
         }),
         followUser: builder.mutation<{ success: boolean }, string>({
@@ -244,6 +281,10 @@ export const {
     useGetUsersQuery,
     useGetUserByIdQuery,
     useUpdateUserProfileMutation,
+    useSoftDeleteUserMutation,
+    useRestoreUserMutation,
+    useHardDeleteUserMutation,
+    useDeleteUserMutation,
     useSearchUsersQuery,
     useGetProfileFollowInfoQuery,
     useFollowUserMutation,

@@ -1,3 +1,4 @@
+
 export class MsSqlConstants {
 	static readonly SEQUELIZE_PROVIDER = 'SEQUELIZE_PROVIDER';
 	static readonly SEQUELIZE_CONNECTION = 'SEQUELIZE_CONNECTION';
@@ -15,4 +16,5 @@ export class MsSqlConstants {
 	static readonly MESSAGE_ATTACHMENT = 'MESSAGE_ATTACHMENT';
 	static readonly NOTIFICATION = 'NOTIFICATION';
 	static readonly REPORT = 'REPORT';
+	static readonly REFRESH_TOKEN = 'REFRESH_TOKEN';
 }

@@ -62,6 +62,14 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
         );
       }
 
+      // Block soft-deleted users from logging in
+      if ((user as any).IsDeleted) {
+        return createResponse(
+          HttpStatus.UNAUTHORIZED,
+          'This account has been deactivated. Please contact an administrator.',
+        );
+      }
+
       return createResponse(
         HttpStatus.OK,
         'User fetched successfully',

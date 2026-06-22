@@ -13,6 +13,7 @@ import {
   Hashtags,
   PostHashtags,
   Reports,
+  RefreshToken,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import { MsSqlConstants } from './constant.mssql';
@@ -33,6 +34,7 @@ const msSqlDBModelsProvider = [
     { provide: 'HASHTAG_MODEL', useValue: Hashtags },
     { provide: 'POST_HASHTAG_MODEL', useValue: PostHashtags },
     { provide: MsSqlConstants.REPORT, useValue: Reports },
+    { provide: MsSqlConstants.REFRESH_TOKEN, useValue: RefreshToken },
 
   ],
   models: any = msSqlDBModelsProvider.map((providers) => providers.useValue);
