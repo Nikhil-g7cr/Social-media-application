@@ -184,25 +184,28 @@ export class UserSQLDao implements UserAbsSQLDAO {
   ): Promise<AppResponse> {
     const transaction = await this.sequelize.transaction();
     try {
-      const [updatedRowsCount] = await this._user.update(
-        {
-          ...(UserInfo as any),
-        },
-        {
-          where: { ID: UserId },
-          transaction, // <-- Attach transaction here
-        },
-      );
-
-      // If no rows were updated, it means the user ID doesn't exist
-      if (updatedRowsCount === 0) {
-        await transaction.rollback(); // Rollback since nothing was updated
+      // First, check if user exists to prevent false 404s when submitting unchanged data
+      const userExists = await this._user.findOne({ where: { ID: UserId }, transaction, attributes: ['ID'] });
+      if (!userExists) {
+        await transaction.rollback();
         return createResponse(
           404,
           messageFactory(messages.W12, ['User']),
           null,
         );
       }
+
+      console.log('UpdateUserDto Payload received by DAO:', UserInfo);
+
+      const [updatedRowsCount] = await this._user.update(
+        {
+          ...(UserInfo as any),
+        },
+        {
+          where: { ID: UserId },
+          transaction, 
+        },
+      );
 
       await transaction.commit();
       return createResponse(200, messageFactory(messages.S5), {

@@ -2,6 +2,7 @@ import { BelongsTo, Column, ForeignKey, Model, PrimaryKey, Table } from 'sequeli
 import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Message } from './message.model';
+import { Users } from './user.model';
 
 @Table({ tableName: Tables.tbl_Message_Attachment, timestamps: false })
 export class MessageAttachment extends Model<MessageAttachment> { // ✅ Type-safe generic to bypass Sequelize overload errors
@@ -25,6 +26,31 @@ export class MessageAttachment extends Model<MessageAttachment> { // ✅ Type-sa
   @Column({ type: SQLDataType.DATETIME, allowNull: false })
   CreatedAt!: Date;
 
+  @Column({ type: `${SQLDataType.VARCHAR}(255)`, allowNull: true })
+  OriginalFileName?: string;
+
+  @Column({ type: `${SQLDataType.VARCHAR}(100)`, allowNull: true })
+  MimeType?: string;
+
+  @Column({ type: `${SQLDataType.VARCHAR}(20)`, allowNull: true })
+  FileExtension?: string;
+
+  @Column({ type: SQLDataType.INT, allowNull: true })
+  ImageWidth?: number;
+
+  @Column({ type: SQLDataType.INT, allowNull: true })
+  ImageHeight?: number;
+
+  @Column({ type: SQLDataType.INT, allowNull: true })
+  VideoDuration?: number;
+
+  @Column({ type: `${SQLDataType.VARCHAR}(2048)`, allowNull: true })
+  ThumbnailURL?: string;
+
+  @ForeignKey(() => Users)
+  @Column({ type: `${SQLDataType.VARCHAR}(36)`, allowNull: false })
+  UploadedBy!: string;
+
   // ==========================================
   // Relationships
   // ==========================================
@@ -36,4 +62,12 @@ export class MessageAttachment extends Model<MessageAttachment> { // ✅ Type-sa
     onDelete: 'CASCADE',
   })
   message!: Message;
+
+  @BelongsTo(() => Users, {
+    foreignKey: 'UploadedBy',
+    targetKey: 'ID',
+    as: 'Uploader',
+    onDelete: 'NO ACTION',
+  })
+  uploader!: Users;
 }

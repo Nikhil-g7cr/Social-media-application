@@ -86,7 +86,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('sendMessage')
   async handleMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() payload: { conversationId: string; text: string },
+    @MessageBody() payload: { conversationId: string; text: string; attachments?: any[] },
   ) {
     // Extract senderId from JWT — never trust the client
     const senderId = this.extractUserIdFromSocket(client);
@@ -100,6 +100,7 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       conversationId: payload.conversationId,
       senderId,
       text: payload.text,
+      attachments: payload.attachments,
     });
 
     // Broadcast a normalized shape to all clients in the room

@@ -1,11 +1,26 @@
 import { apiSlice } from '../../apiSlice';
 
+export interface ChatAttachment {
+    id: string;
+    fileUrl: string;
+    fileType: string;
+    fileSizeBytes: number;
+    originalFileName: string;
+    mimeType: string;
+    fileExtension: string;
+    imageWidth?: number;
+    imageHeight?: number;
+    videoDuration?: number;
+    thumbnailUrl?: string;
+}
+
 export interface ChatMessage {
     id: string;
     conversationId: string;
     senderId: string;
     content: string;
     createdAt: string;
+    attachments?: ChatAttachment[];
 }
 
 export interface ConversationParticipant {

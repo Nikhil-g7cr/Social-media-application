@@ -1,4 +1,4 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
+import { Injectable, OnModuleInit, Logger, BadRequestException } from '@nestjs/common';
 import {
   BlobServiceClient,
   StorageSharedKeyCredential,
@@ -8,6 +8,7 @@ import {
 
 import { AppConfig } from 'src/config/AppConfig';
 import { v4 as uuidv4 } from 'uuid';
+import { UploadUrlDto } from './dto/create-azure.dto';
 
 @Injectable()
 export class FileService implements OnModuleInit {
@@ -58,10 +59,26 @@ export class FileService implements OnModuleInit {
     }
   }
 
-  async generateUploadUrl(fileName: string) {
-    const extension = fileName.split('.').pop();
+  async generateUploadUrl(dto: UploadUrlDto) {
+    const { fileName, fileSize, mimeType, folder } = dto;
 
-    const blobName = `posts/${uuidv4()}.${extension}`;
+    if (fileSize && mimeType) {
+      const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
+      const MAX_DOCUMENT_SIZE = 50 * 1024 * 1024;
+      const MAX_VIDEO_SIZE = 100 * 1024 * 1024;
+
+      if (mimeType.startsWith('image/') && fileSize > MAX_IMAGE_SIZE) {
+        throw new BadRequestException('Image size exceeds 20MB limit');
+      } else if (mimeType.startsWith('video/') && fileSize > MAX_VIDEO_SIZE) {
+        throw new BadRequestException('Video size exceeds 100MB limit');
+      } else if (!mimeType.startsWith('image/') && !mimeType.startsWith('video/') && fileSize > MAX_DOCUMENT_SIZE) {
+        throw new BadRequestException('Document size exceeds 50MB limit');
+      }
+    }
+
+    const extension = fileName.split('.').pop();
+    const folderName = folder || 'posts';
+    const blobName = `${folderName}/${uuidv4()}.${extension}`;
 
     const containerClient = this.blobServiceClient.getContainerClient(
       this.containerName,

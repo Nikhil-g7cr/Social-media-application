@@ -11,7 +11,7 @@ export class FileController {
     @Body()
     dto: UploadUrlDto,
   ) {
-    return this.fileService.generateUploadUrl(dto.fileName);
+    return this.fileService.generateUploadUrl(dto);
   }
 
   @Delete()

@@ -80,13 +80,13 @@ const UpdateProfilePage = () => {
 
       const payload: any = {
         id: currentUser.id,
-        FullName: values.FullName,
-        UserName: values.UserName,
-        ProfilePictureUrl: profilePictureUrl,
+        name: values.FullName,
+        username: values.UserName,
+        avatarUrl: profilePictureUrl,
       };
 
       if (values.Bio && values.Bio.trim().length > 0) {
-        payload.Bio = values.Bio;
+        payload.bio = values.Bio;
       }
 
       await updateProfile(payload).unwrap();

@@ -1,4 +1,4 @@
-import { IsString } from 'class-validator';
+import { IsString, IsOptional, IsNumber } from 'class-validator';
 
 export class UploadUrlDto {
     @IsString()
@@ -6,4 +6,16 @@ export class UploadUrlDto {
 
     @IsString()
     contentType!: string;
+
+    @IsOptional()
+    @IsString()
+    folder?: string;
+
+    @IsOptional()
+    @IsNumber()
+    fileSize?: number;
+
+    @IsOptional()
+    @IsString()
+    mimeType?: string;
 }

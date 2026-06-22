@@ -6,11 +6,13 @@ import {
   Model,
   PrimaryKey,
   Table,
+  HasMany,
 } from 'sequelize-typescript';
 import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 import { Conversation } from './conversation.model';
+import { MessageAttachment } from './messageAttachment.model';
 
 @Table({ tableName: Tables.tbl_Message, timestamps: false })
 export class Message extends Model<Message> {
@@ -61,4 +63,11 @@ export class Message extends Model<Message> {
     onDelete: 'NO ACTION',
   })
   sender!: Users;
+
+  @HasMany(() => MessageAttachment, {
+    foreignKey: 'Message_id',
+    sourceKey: 'ID',
+    as: 'attachments',
+  })
+  attachments!: MessageAttachment[];
 }
