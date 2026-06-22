@@ -136,6 +136,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             {field.type !== "checkbox" && (
               <label htmlFor={field.name} className="mb-2 block font-medium">
                 {field.label}
+                {field.required && <span className="text-red-500 ml-1">*</span>}
               </label>
             )}
 

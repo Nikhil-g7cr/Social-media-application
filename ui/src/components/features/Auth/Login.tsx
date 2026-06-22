@@ -48,11 +48,13 @@ export const LoginPage = () => {
     } catch (error: any) {
       console.error("Login Error:", error);
 
+      const errorMsg = Array.isArray(error?.data?.description) 
+        ? error.data.description.join(', ') 
+        : error?.data?.message || "Invalid credentials. Please try again.";
+
       notification.error({
         message: "Login Failed",
-        description:
-          error?.data?.message ||
-          "Invalid credentials. Please try again.",
+        description: errorMsg,
         placement: "topRight",
       });
     }

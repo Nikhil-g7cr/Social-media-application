@@ -4,30 +4,35 @@ export const signupFields = [
     label: "Full Name",
     type: "text",
     placeholder: "Enter your full name",
+    required: true,
   },
   {
     name: "UserName",
     label: "Username",
     type: "text",
     placeholder: "Choose a username",
+    required: true,
   },
   {
     name: "EmailAddress",
     label: "Email Address",
     type: "email",
     placeholder: "Enter your email",
+    required: true,
   },
   {
     name: "Password",
     label: "Password",
     type: "password",
     placeholder: "Enter your password",
+    required: true,
   },
   {
     name: "ConfirmPassword",
     label: "Confirm Password",
     type: "password",
     placeholder: "Confirm your password",
+    required: true,
   },
   {
     name: "Bio",
@@ -44,5 +49,6 @@ export const signupFields = [
       { label: "Female", value: "Female" },
       { label: "Other", value: "Other" },
     ],
+    required: true,
   },
 ];

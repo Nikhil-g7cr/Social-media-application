@@ -7,7 +7,8 @@ export const loginFields: FieldConfig[] = [
       type: "email",
       placeholder: "Enter your email",
       accept: undefined,
-      rows: 0
+      rows: 0,
+      required: true,
   },
   {
       name: "password",
@@ -15,6 +16,7 @@ export const loginFields: FieldConfig[] = [
       type: "password",
       placeholder: "Enter your password",
       accept: undefined,
-      rows: 0
+      rows: 0,
+      required: true,
   },
 ];

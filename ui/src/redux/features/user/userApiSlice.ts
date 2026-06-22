@@ -69,6 +69,37 @@ export const userApiSlice = apiSlice.injectEndpoints({
                     data: payload,
                 };
             },
+            async onQueryStarted({ id, ...profile }, { dispatch, queryFulfilled }) {
+                const patchResult1 = dispatch(
+                    userApiSlice.util.updateQueryData('getUsers', undefined, (draft) => {
+                        const user = draft.find(u => u.id === id);
+                        if (user) {
+                            if (profile.name !== undefined) user.name = profile.name;
+                            if (profile.username !== undefined) user.username = profile.username;
+                            if (profile.bio !== undefined) user.bio = profile.bio;
+                            if (profile.avatarUrl !== undefined) user.avatarUrl = profile.avatarUrl;
+                            if (profile.isActive !== undefined) user.isActive = profile.isActive;
+                            if (profile.role !== undefined) user.role = profile.role;
+                        }
+                    })
+                );
+                const patchResult2 = dispatch(
+                    userApiSlice.util.updateQueryData('getUserById', id, (draft) => {
+                        if (draft) {
+                            if (profile.name !== undefined) draft.name = profile.name;
+                            if (profile.username !== undefined) draft.username = profile.username;
+                            if (profile.bio !== undefined) draft.bio = profile.bio;
+                            if (profile.avatarUrl !== undefined) draft.avatarUrl = profile.avatarUrl;
+                        }
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResult1.undo();
+                    patchResult2.undo();
+                }
+            },
             invalidatesTags: (_result, _error, { id }) => [{ type: 'User', id }],
         }),
         searchUsers: builder.query<User[], string>({

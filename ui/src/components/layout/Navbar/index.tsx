@@ -18,10 +18,8 @@ const Navbar: React.FC = () => {
           {/* Logo */}
           <Link to="/">
             <div className="flex items-center space-x-3">
-              <div className="h-10 w-10 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold">
-                S
-              </div>
-              <h1 className="text-xl font-bold">SocialApp</h1>
+              <img src="/logo1.png" alt="Brand Logo" className="h-10 w-10 object-contain" />
+              <img src="/name.png" alt="Brand Name" className="hidden md:block md:h-8 object-contain" />
             </div>
           </Link>
 
@@ -39,7 +37,7 @@ const Navbar: React.FC = () => {
                 <div className="relative p-2 rounded-full hover:bg-gray-100">
                   <NotificationDropdown />
                 </div>
-                
+
                 <ProfileDropdown />
               </>
             ) : (

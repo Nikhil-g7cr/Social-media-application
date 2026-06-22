@@ -5,10 +5,11 @@ import DataTable from '../../components/shared/DataTable';
 import { useGetUsersQuery, useUpdateUserProfileMutation } from '../../redux/features/user/userApiSlice';
 import { useGetAllExplorePostsQuery, useDeletePostMutation } from '../../redux/features/post/postApiSlice';
 import { useGetReportsQuery, useResolveReportMutation } from '../../redux/features/report/reportApiSlice';
-import { FiUsers, FiFileText, FiMessageSquare, FiAlertOctagon } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiMessageSquare, FiAlertOctagon, FiMenu, FiX } from 'react-icons/fi';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('users');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const user = useAppSelector((state: any) => state.auth.user);
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers.onlineUserIds);
 
@@ -76,7 +77,7 @@ const AdminDashboard = () => {
             ) : isErrorUsers ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading users data. Please try again later.</div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
                 <DataTable
                   columns={userColumns}
                   data={usersData}
@@ -112,7 +113,7 @@ const AdminDashboard = () => {
             ) : isErrorPosts ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading posts data. Please try again later.</div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
                 <DataTable
                   columns={postColumns}
                   data={postsData?.posts || []}
@@ -140,7 +141,7 @@ const AdminDashboard = () => {
             ) : isErrorReports ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading reports data. Please try again later.</div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
                 <DataTable
                   columns={reportColumns}
                   data={reportsData}
@@ -196,9 +197,23 @@ const AdminDashboard = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 flex">
+      {/* Mobile Sidebar Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-20 lg:hidden pt-16"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Sidebar with Glassmorphism */}
-      <aside className="w-72 bg-white/80 backdrop-blur-xl border-r border-gray-200/60 fixed h-full pt-20 z-10 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
-        <div className="px-8 pb-6 mb-2 border-b border-gray-100">
+      <aside className={`w-72 bg-white/80 backdrop-blur-xl border-r border-gray-200/60 fixed h-full pt-16 lg:pt-20 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="px-8 pb-6 mb-2 border-b border-gray-100 relative mt-4 lg:mt-0">
+          <button 
+            className="lg:hidden absolute top-0 right-4 p-2 text-gray-400 hover:text-gray-600 focus:outline-none"
+            onClick={() => setIsSidebarOpen(false)}
+          >
+            <FiX className="w-5 h-5" />
+          </button>
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-500/30 mb-4">
             <span className="text-xl font-bold">A</span>
           </div>
@@ -212,7 +227,10 @@ const AdminDashboard = () => {
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => {
+                  setActiveTab(item.id);
+                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                }}
                 className={`w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 group ${
                   isActive 
                     ? 'bg-gradient-to-r from-indigo-50 to-purple-50 text-indigo-700 shadow-sm border border-indigo-100/50' 
@@ -231,13 +249,22 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 ml-72 pt-20 p-10 min-h-screen relative overflow-hidden">
+      <main className="flex-1 lg:ml-72 pt-20 p-4 lg:p-10 min-h-screen relative overflow-hidden w-full max-w-[100vw]">
         {/* Decorative background blobs */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-100/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none"></div>
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-100/40 rounded-full mix-blend-multiply filter blur-[80px] opacity-70 translate-x-1/3 -translate-y-1/4 z-0 pointer-events-none"></div>
         
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="bg-white/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 p-8 min-h-[calc(100vh-8rem)]">
+          <div className="mb-4 lg:hidden">
+            <button 
+              className="p-2.5 rounded-xl bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none flex items-center gap-2"
+              onClick={() => setIsSidebarOpen(true)}
+            >
+              <FiMenu className="w-5 h-5" />
+              <span className="font-semibold text-sm">Menu</span>
+            </button>
+          </div>
+          <div className="bg-white/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 p-4 lg:p-8 min-h-[calc(100vh-8rem)]">
             {renderContent()}
           </div>
         </div>

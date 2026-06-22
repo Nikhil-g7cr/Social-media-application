@@ -1,17 +1,17 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AzureController } from './azure.controller';
-import { AzureService } from './azure.service';
+import { FileController } from './azure.controller';
+import { FileService } from './azure.service';
 
-describe('AzureController', () => {
-  let controller: AzureController;
+describe('FileController', () => {
+  let controller: FileController;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      controllers: [AzureController],
-      providers: [AzureService],
+      controllers: [FileController],
+      providers: [FileService],
     }).compile();
 
-    controller = module.get<AzureController>(AzureController);
+    controller = module.get<FileController>(FileController);
   });
 
   it('should be defined', () => {

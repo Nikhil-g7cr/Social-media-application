@@ -1,4 +1,4 @@
-import { Controller, Get, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { MessageService } from './message.service';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 
@@ -8,7 +8,7 @@ export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @Get('conversation/:id')
-  getConversationHistory(@Param('id') conversationId: string) {
-    return this.messageService.getConversationHistory(conversationId);
+  getConversationHistory(@Req() req: any, @Param('id') conversationId: string) {
+    return this.messageService.getConversationHistory(conversationId, req.user.sub);
   }
 }

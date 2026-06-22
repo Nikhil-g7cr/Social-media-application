@@ -6,6 +6,7 @@ import {
   IsStrongPassword,
   MaxLength,
   MinLength,
+  Matches,
 } from 'class-validator';
 
 export class UsersDTO {
@@ -14,19 +15,22 @@ export class UsersDTO {
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  @MinLength(1)
+  @MinLength(3)
+  @Matches(/^[A-Za-z]+$/, { message: 'Full name must only contain alphabets and no spaces' })
   FullName!: string;
 
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
-  @MinLength(1)
+  @MinLength(3)
+  @Matches(/^[A-Za-z0-9]+$/, { message: 'Username must only contain alphanumeric characters and no spaces' })
   UserName!: string;
 
   @IsEmail()
   @IsNotEmpty()
   @MaxLength(100)
   @MinLength(7)
+  @Matches(/^[a-zA-Z0-9]/, { message: 'Email must start with a letter or number' })
   EmailAddress!: string;
 
   @IsStrongPassword({
@@ -36,6 +40,7 @@ export class UsersDTO {
     minNumbers: 1,
     minSymbols: 1,
   })
+  @Matches(/^\S*$/, { message: 'Password must not contain spaces' })
   @IsNotEmpty()
   Password!: string;
 

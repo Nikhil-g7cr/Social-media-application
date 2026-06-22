@@ -34,8 +34,8 @@ export class NotificationSQLDao implements NotificationAbsSQLDAO {
     return await this.notificationModel.findOne({
       where: { ID: id },
       include: [
-        { model: Users, as: 'Actor', attributes: ['ID', 'UserName', 'ProfilePictureUrl'] },
-        { model: Posts, as: 'Post', attributes: ['ID', 'Content'] },
+        { model: Users, as: 'Actor', attributes: ['ID', 'UserName', 'ProfilePictureUrl'], required: false },
+        { model: Posts, as: 'Post', attributes: ['ID', 'Content'], required: false },
       ],
     });
   }
@@ -44,8 +44,8 @@ export class NotificationSQLDao implements NotificationAbsSQLDAO {
     return await this.notificationModel.findAll({
       where: { UserID: userId },
       include: [
-        { model: Users, as: 'Actor', attributes: ['ID', 'UserName', 'ProfilePictureUrl'] },
-        { model: Posts, as: 'Post', attributes: ['ID', 'Content'] },
+        { model: Users, as: 'Actor', attributes: ['ID', 'UserName', 'ProfilePictureUrl'], required: false },
+        { model: Posts, as: 'Post', attributes: ['ID', 'Content'], required: false },
       ],
       order: [['CreatedAt', 'DESC']],
       limit,

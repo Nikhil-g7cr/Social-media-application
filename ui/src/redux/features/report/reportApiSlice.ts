@@ -42,6 +42,21 @@ export const reportApiSlice = apiSlice.injectEndpoints({
                 method: 'PATCH',
                 data: { status },
             }),
+            async onQueryStarted({ id, status }, { dispatch, queryFulfilled }) {
+                const patchResult = dispatch(
+                    reportApiSlice.util.updateQueryData('getReports', undefined, (draft) => {
+                        const report = draft.find(r => r.id === id);
+                        if (report) {
+                            report.status = status;
+                        }
+                    })
+                );
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patchResult.undo();
+                }
+            },
             invalidatesTags: ['Report'],
         }),
     }),

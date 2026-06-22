@@ -90,6 +90,17 @@ export const chatApiSlice = apiSlice.injectEndpoints({
                 await cacheEntryRemoved;
             }
         }),
+        clearChatHistory: builder.mutation<{ success: boolean }, string>({
+            query: (conversationId) => ({
+                url: `conversation/${conversationId}/clear`,
+                method: 'PATCH',
+            }),
+            transformResponse: (response: any) => response.data || response,
+            invalidatesTags: (result, error, conversationId) => [
+                'Conversation',
+                { type: 'Chat', id: `Conv_${conversationId}` }
+            ],
+        }),
     }),
 });
 
@@ -97,4 +108,5 @@ export const {
     useGetConversationsQuery,
     useStartConversationMutation,
     useGetMessagesByConversationIdQuery,
+    useClearChatHistoryMutation,
 } = chatApiSlice;

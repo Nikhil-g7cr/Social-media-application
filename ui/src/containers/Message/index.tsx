@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   Image as ImageIcon,
   Smile,
+  Trash2,
 } from "lucide-react";
 import { initializeSocket } from "../../utils/socket";
 import { useLocation } from "react-router-dom";
@@ -16,6 +17,7 @@ import {
   useGetConversationsQuery,
   useGetMessagesByConversationIdQuery,
   useStartConversationMutation,
+  useClearChatHistoryMutation,
   type Conversation as RTKConversation,
   type ChatMessage,
 } from "../../redux/features/chat/chatApiSlice";
@@ -91,6 +93,7 @@ const MessagesPage: React.FC = () => {
     skip: !activeConversation,
   });
   const [startConversation] = useStartConversationMutation();
+  const [clearChatHistory] = useClearChatHistoryMutation();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // Track a newly created conversation so we can auto-open it after refetch
@@ -206,8 +209,18 @@ const MessagesPage: React.FC = () => {
     });
 
     setTimeout(scrollToBottom, 100);
+  };
 
-
+  const handleClearChat = async () => {
+    if (!activeConversation) return;
+    if (window.confirm("Are you sure you want to clear this chat history from your screen? This action cannot be undone.")) {
+      try {
+        await clearChatHistory(activeConversation.id).unwrap();
+        setMessages([]); // Immediately clear local state messages
+      } catch (e) {
+        console.error("Failed to clear chat history", e);
+      }
+    }
   };
 
   if (isConversationsLoading) {
@@ -348,6 +361,13 @@ const MessagesPage: React.FC = () => {
                 </div>
               </div>
               <div className="flex items-center gap-2 text-gray-500">
+                <button 
+                  className="p-2 hover:bg-gray-100 rounded-full transition" 
+                  onClick={handleClearChat} 
+                  title="Clear Chat History"
+                >
+                  <Trash2 className="h-5 w-5 text-red-500" />
+                </button>
                 <button className="p-2 hover:bg-gray-100 rounded-full transition">
                   <Phone className="h-5 w-5" />
                 </button>

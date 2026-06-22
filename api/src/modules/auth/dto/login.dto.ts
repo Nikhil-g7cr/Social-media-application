@@ -4,6 +4,7 @@ import {
   IsNotEmpty,
   IsString,
   MinLength,
+  Matches,
 } from "class-validator";
 
 export class LoginDto {
@@ -20,6 +21,7 @@ export class LoginDto {
       message: "Please provide a valid email address.",
     },
   )
+  @Matches(/^[a-zA-Z0-9]/, { message: 'Email must start with a letter or number' })
   EmailAddress!: string;
 
   @ApiProperty({
@@ -35,5 +37,6 @@ export class LoginDto {
   @MinLength(8, {
     message: "Password must be at least 8 characters long.",
   })
+  @Matches(/^\S*$/, { message: 'Password must not contain spaces' })
   Password!: string;
 }

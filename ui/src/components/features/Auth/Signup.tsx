@@ -84,12 +84,13 @@ const SignupPage = () => {
     } catch (error: any) {
       console.error("Signup Error:", error);
 
+      const errorMsg = Array.isArray(error?.data?.description)
+        ? error.data.description.join(', ')
+        : error?.data?.message || error?.message || "Something went wrong while creating your account.";
+
       notification.error({
         message: "Signup Failed",
-        description:
-          error?.data?.message ||
-          error?.message ||
-          "Something went wrong while creating your account.",
+        description: errorMsg,
         placement: "topRight",
       });
     } finally {

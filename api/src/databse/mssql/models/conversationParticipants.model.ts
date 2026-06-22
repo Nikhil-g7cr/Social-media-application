@@ -19,6 +19,7 @@ export const enum CPColumns {
   UserID = 'UserID',
   Role = 'Role',
   JoinedAt = 'JoinedAt',
+  HistoryClearedAt = 'HistoryClearedAt',
 }
 
 export const enum CPAlias {
@@ -71,6 +72,12 @@ export class CP extends Model<CP> {
     allowNull: false,
   })
   [CPColumns.JoinedAt]!: Date;
+
+  @Column({
+    type: DataType.DATE,
+    allowNull: true,
+  })
+  [CPColumns.HistoryClearedAt]!: Date | null;
 
   @BelongsTo(() => Users, {
     foreignKey: CPColumns.UserID,

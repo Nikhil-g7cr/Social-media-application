@@ -16,10 +16,11 @@ export class ConversationService {
   async findAllForUser(userId: string) {
     const userCps = await CP.findAll({
       where: { UserID: userId },
-      attributes: ['ConversationID'],
+      attributes: ['ConversationID', 'HistoryClearedAt'],
     });
 
     const conversationIds = userCps.map((cp) => cp.ConversationID);
+    const cpMap = new Map(userCps.map(cp => [cp.ConversationID, cp.HistoryClearedAt]));
 
     // Guard: return empty array if user has no conversations
     if (conversationIds.length === 0) {
@@ -50,7 +51,12 @@ export class ConversationService {
       });
 
       const p = otherParticipantCp?.User as any;
-      const lm = conv.messages && conv.messages.length > 0 ? conv.messages[0] as any : null;
+      let lm = conv.messages && conv.messages.length > 0 ? conv.messages[0] as any : null;
+      
+      const historyClearedAt = cpMap.get(conv.ID);
+      if (lm && historyClearedAt && new Date(lm.CreatedAt).getTime() <= new Date(historyClearedAt).getTime()) {
+        lm = null;
+      }
 
       result.push({
         id: conv.ID,
@@ -133,6 +139,19 @@ export class ConversationService {
     } as any);
 
     return { conversationId: newConvId };
+  }
+
+  async clearHistory(conversationId: string, userId: string) {
+    const cp = await CP.findOne({
+      where: { ConversationID: conversationId, UserID: userId },
+    });
+    if (!cp) {
+      throw new ForbiddenException('You are not a participant of this conversation');
+    }
+
+    cp.HistoryClearedAt = new Date();
+    await cp.save();
+    return { success: true };
   }
 }
 
