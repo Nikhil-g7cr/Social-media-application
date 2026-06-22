@@ -3,6 +3,7 @@ import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { AtPayload } from '../user/models/users.model';
 import { UserRoles } from 'src/core/enums/user.enums';
 import { Reports } from 'src/databse/mssql/models';
+import { Users } from 'src/databse/mssql/models/user.model';
 import { MsSqlConstants } from 'src/databse/mssql/connection/constant.mssql';
 import * as crypto from 'crypto';
 
@@ -37,7 +38,10 @@ export class ReportService {
       }
 
       const reports = await this.reportModel.findAll({
-        include: ['Reporter', 'Resolver']
+        include: [
+          { model: Users, as: 'Reporter' },
+          { model: Users, as: 'Resolver' }
+        ]
       });
 
       return createResponse(HttpStatus.OK, 'Reports fetched successfully', reports);

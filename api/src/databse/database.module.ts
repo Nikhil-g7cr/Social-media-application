@@ -14,6 +14,8 @@ import { CommentsAbstractSQLDAO } from "./mssql/abstract/comment.abstract.mssql"
 import { CommentSQLDAO } from "./mssql/dao/comment.dao";
 import { FollowAbstractSQLDao } from "./mssql/abstract/follow.abstract.mssql";
 import {  FollowSQLDao } from "./mssql/dao/follow.dao";
+import { AdminAnalyticsAbsSQLDAO } from "./mssql/abstract/admin-analytics.abstract.mssql";
+import { AdminAnalyticsSQLDAO } from "./mssql/dao/admin-analytics.dao";
 
 @Module({
     providers:[
@@ -44,6 +46,10 @@ import {  FollowSQLDao } from "./mssql/dao/follow.dao";
         {
             provide: FollowAbstractSQLDao,
             useClass:FollowSQLDao
+        },
+        {
+            provide: AdminAnalyticsAbsSQLDAO,
+            useClass: AdminAnalyticsSQLDAO
         }
     ],
     exports:[
@@ -73,6 +79,10 @@ import {  FollowSQLDao } from "./mssql/dao/follow.dao";
         {
             provide: FollowAbstractSQLDao,
             useClass:FollowSQLDao
+        },
+        {
+            provide: AdminAnalyticsAbsSQLDAO,
+            useClass: AdminAnalyticsSQLDAO
         }
     ]
 })

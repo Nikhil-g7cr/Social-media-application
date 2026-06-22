@@ -23,9 +23,11 @@ import {
   FiRefreshCw,
   FiEye,
   FiEyeOff,
+  FiBarChart2,
 } from 'react-icons/fi';
 import ConfirmationModal from '../../components/shared/ConfirmationModal';
 import { message } from 'antd';
+import AdminAnalytics from './AdminAnalytics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -40,7 +42,7 @@ const CLOSED_MODAL: ModalState = { isOpen: false, userId: null, userName: '' };
 // ─── Admin Dashboard ──────────────────────────────────────────────────────────
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('users');
+  const [activeTab, setActiveTab] = useState('analytics');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [showDeletedUsers, setShowDeletedUsers] = useState(false);
 
@@ -416,6 +418,13 @@ const AdminDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
+      case 'analytics':
+        return (
+          <div className="animate-fade-in-up -m-4 lg:-m-8">
+            <AdminAnalytics />
+          </div>
+        );
+
       case 'users':
         return (
           <div className="animate-fade-in-up">
@@ -581,6 +590,7 @@ const AdminDashboard = () => {
   };
 
   const navItems = [
+    { id: 'analytics', label: 'Dashboard', icon: FiBarChart2 },
     { id: 'users', label: 'Manage Users', icon: FiUsers },
     { id: 'posts', label: 'Manage Posts', icon: FiFileText },
     { id: 'comments', label: 'Manage Comments', icon: FiMessageSquare },
