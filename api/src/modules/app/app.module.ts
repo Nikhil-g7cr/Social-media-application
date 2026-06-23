@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UserModule } from '../user/user.module';
@@ -19,6 +20,7 @@ import { AdminAnalyticsModule } from '../admin-analytics/admin-analytics.module'
 
 @Module({
   imports: [
+    EventEmitterModule.forRoot(),
     UserModule,
     CoreModule,
     AuthModule,

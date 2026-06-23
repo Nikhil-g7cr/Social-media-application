@@ -6,10 +6,10 @@ import { DatabaseModule } from 'src/databse/database.module';
 import { LikeAbstractSvc } from './like.abstract';
 import { LikeAbstractSQLDAO } from 'src/databse/mssql/abstract/like.abstract.mssql';
 import { PostModule } from '../post/post.module';
-import { NotificationModule } from '../notification/notification.module';
+import { FileModule } from '../azure/azure.module';
 
 @Module({
-  imports: [DatabaseModule, PostModule, NotificationModule],
+  imports: [DatabaseModule, PostModule, FileModule],
   controllers: [LikeController],
   providers: [
     { provide: LikeAbstractSvc, useClass: LikeService },

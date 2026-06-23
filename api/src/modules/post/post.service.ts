@@ -9,10 +9,8 @@ import { PostAbstractSvc } from './post.abstract';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { FileService } from '../azure/azure.service';
+import { ServiceBusService } from '../azure/service-bus.service';
 import { PaginationDto } from 'src/core/dto/pagination.dto';
-import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
-
-import { ChatGateway } from '../chat/chat.gateway';
 
 @Injectable()
 export class PostService implements PostAbstractSvc {
@@ -21,8 +19,7 @@ export class PostService implements PostAbstractSvc {
     private readonly appConfig: AppConfig,
     private readonly postDao: PostAbstractSQLDao,
     private readonly fileService: FileService,
-    private readonly followDao: FollowSQLDao,
-    private readonly chatGateway: ChatGateway
+    private readonly serviceBus: ServiceBusService
   ) {}
 
   async createPost(
@@ -33,28 +30,22 @@ export class PostService implements PostAbstractSvc {
 
     const response = await this.postDao.createPost(createPostDto, userId);
     
-    // Broadcast the new post to followers in real-time
     if ((response.code === 201 || response.code === 200) && response.data) {
       try {
-        const followers = await this.followDao.getFollowers(userId);
         const postData = response.data;
         
-        // Sign the media URL before broadcasting so it loads immediately in the feed
+        // Sign the media URL before emitting so it's ready
         if (postData.MediaURL) {
           postData.MediaURL = await this.fileService.generateReadUrl(postData.MediaURL);
         }
         
-        // Emit to the author's own room so they see it instantly
-        this.chatGateway.server.to(`user_${userId}`).emit('newPostInFeed', postData);
-        
-        // Emit to all followers
-        followers.forEach((f: any) => {
-          if (f.FollowerID) {
-            this.chatGateway.server.to(`user_${f.FollowerID}`).emit('newPostInFeed', postData);
-          }
+        // Emit domain event for decoupling via Service Bus wrapper
+        await this.serviceBus.publishEvent('ContentEvents', 'post.created', {
+          postData,
+          userId
         });
       } catch (err) {
-        this.logger.error(`[PostService] Failed to broadcast post: ${err}`, 500);
+        this.logger.error(`[PostService] Failed to emit post.created event: ${err}`, 500);
       }
     }
 

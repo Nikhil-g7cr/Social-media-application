@@ -5,9 +5,10 @@ import { DatabaseModule } from 'src/databse/database.module';
 import { FileModule } from '../azure/azure.module';
 import { CoreModule } from 'src/core/core.module';
 import { FollowModule } from '../follow/follow.module';
+import { ChatModule } from '../chat/chat.module';
 
 @Module({
-  imports: [DatabaseModule, FileModule, CoreModule, FollowModule],
+  imports: [DatabaseModule, FileModule, CoreModule, FollowModule, ChatModule],
   controllers: [FeedController],
   providers: [FeedService],
 })

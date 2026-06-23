@@ -1,4 +1,5 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
+import { OnEvent } from '@nestjs/event-emitter';
 import { NotificationAbsSQLDAO } from 'src/databse/mssql/abstract/notification.abstract.mssql';
 import { ChatGateway } from '../chat/chat.gateway';
 
@@ -24,6 +25,44 @@ export class NotificationService {
     this.chatGateway.server.to(`user_${payload.userId}`).emit('newNotification', notification);
     
     return notification;
+  }
+
+  @OnEvent('like.added')
+  async handleLikeAdded(payload: { userId: string; actorUserId: string; postId: string }) {
+    await this.createNotification({
+      userId: payload.userId,
+      actorUserId: payload.actorUserId,
+      type: 'LIKE',
+      postId: payload.postId,
+    });
+  }
+
+  @OnEvent('comment.added')
+  async handleCommentAdded(payload: { userId: string; actorUserId: string; postId: string }) {
+    await this.createNotification({
+      userId: payload.userId,
+      actorUserId: payload.actorUserId,
+      type: 'COMMENT',
+      postId: payload.postId,
+    });
+  }
+
+  @OnEvent('follow.requested')
+  async handleFollowRequested(payload: { userId: string; actorUserId: string }) {
+    await this.createNotification({
+      userId: payload.userId,
+      actorUserId: payload.actorUserId,
+      type: 'FOLLOW_REQUEST',
+    });
+  }
+
+  @OnEvent('follow.accepted')
+  async handleFollowAccepted(payload: { userId: string; actorUserId: string }) {
+    await this.createNotification({
+      userId: payload.userId,
+      actorUserId: payload.actorUserId,
+      type: 'FOLLOW_ACCEPTED',
+    });
   }
 
   async getUserNotifications(userId: string) {

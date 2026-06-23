@@ -4,14 +4,14 @@ import { CommentSQLDAO } from 'src/databse/mssql/dao/comment.dao'; // Adjust pat
 import { CommentAbstractSvc } from './comment.abstract';
 import { CommentsAbstractSQLDAO } from 'src/databse/mssql/abstract/comment.abstract.mssql';
 import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
-import { NotificationService } from '../notification/notification.service';
+import { ServiceBusService } from '../azure/service-bus.service';
 
 @Injectable()
 export class CommentService implements CommentAbstractSvc{
   constructor(
     private readonly commentDao: CommentsAbstractSQLDAO,
     private readonly postDao: PostAbstractSQLDao,
-    private readonly notificationService: NotificationService,
+    private readonly serviceBus: ServiceBusService,
   ) {}
 
   async getUserComments(userId: string): Promise<AppResponse> {
@@ -30,10 +30,9 @@ export class CommentService implements CommentAbstractSvc{
         if (postRes.code === HttpStatus.OK && postRes.data) {
             const postAuthorId = postRes.data.UserID;
             if (postAuthorId !== userId) {
-                await this.notificationService.createNotification({
+                await this.serviceBus.publishEvent('ContentEvents', 'comment.added', {
                     userId: postAuthorId,
                     actorUserId: userId,
-                    type: 'COMMENT',
                     postId: postId,
                 });
             }

@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { AppResponse } from 'src/shared/appresponse.shared';
 import { LikeAbstractSQLDAO } from 'src/databse/mssql/abstract/like.abstract.mssql';
 import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
-import { NotificationService } from '../notification/notification.service';
+import { ServiceBusService } from '../azure/service-bus.service';
 import { HttpStatus } from '@nestjs/common';
 import { LikeAbstractSvc } from './like.abstract';
 
@@ -11,7 +11,7 @@ export class LikeService implements LikeAbstractSvc {
   constructor(
     private readonly likeDao: LikeAbstractSQLDAO,
     private readonly postDao: PostAbstractSQLDao,
-    private readonly notificationService: NotificationService,
+    private readonly serviceBus: ServiceBusService,
   ) {}
 
   async getUserLikes(userId: string): Promise<AppResponse> {
@@ -28,11 +28,10 @@ export class LikeService implements LikeAbstractSvc {
       if (postRes.code === HttpStatus.OK && postRes.data) {
         const postOwnerId = postRes.data.UserID;
         if (postOwnerId && postOwnerId !== userId) {
-          await this.notificationService.createNotification({
+          await this.serviceBus.publishEvent('ContentEvents', 'like.added', {
             userId: postOwnerId,
             actorUserId: userId,
-            type: 'LIKE',
-            postId: postId
+            postId: postId,
           });
         }
       }

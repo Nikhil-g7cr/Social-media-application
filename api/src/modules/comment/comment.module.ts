@@ -6,10 +6,10 @@ import { CommentSQLDAO } from 'src/databse/mssql/dao/comment.dao';
 import { CommentAbstractSvc } from './comment.abstract';
 import { DatabaseModule } from 'src/databse/database.module';
 import { PostModule } from '../post/post.module';
-import { NotificationModule } from '../notification/notification.module';
+import { FileModule } from '../azure/azure.module';
 
 @Module({
-  imports: [DatabaseModule, PostModule, NotificationModule],
+  imports: [DatabaseModule, PostModule, FileModule],
   controllers: [CommentController],
   providers: [
     {

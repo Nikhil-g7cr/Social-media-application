@@ -7,8 +7,7 @@ import {
 import { UserAbsSQLDAO } from 'src/databse/mssql/abstract/user.abstract.mssql';
 import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
 import { UserSQLDao } from 'src/databse/mssql/dao/user.dao';
-import { NotificationService } from '../notification/notification.service';
-
+import { ServiceBusService } from '../azure/service-bus.service';
 
 
 @Injectable()
@@ -16,7 +15,7 @@ export class FollowService {
     constructor(
         private readonly followDao: FollowSQLDao,
         @Inject(UserAbsSQLDAO)private readonly userDao: UserSQLDao,
-        private readonly notificationService: NotificationService,
+        private readonly serviceBus: ServiceBusService,
     ) {}
 
     async followUser(
@@ -56,11 +55,10 @@ export class FollowService {
             Status: 'PENDING',
         });
 
-        // Notify the followed user
-        await this.notificationService.createNotification({
+        // Notify the followed user via event
+        await this.serviceBus.publishEvent('SocialEvents', 'follow.requested', {
             userId: followingId,
             actorUserId: followerId,
-            type: 'FOLLOW_REQUEST'
         });
 
         return followRecord;
@@ -138,11 +136,10 @@ export class FollowService {
 
         await this.followDao.updateStatus(followerId, followingId, 'ACCEPTED');
 
-        // Notify the user who sent the request
-        await this.notificationService.createNotification({
+        // Notify the user who sent the request via event
+        await this.serviceBus.publishEvent('SocialEvents', 'follow.accepted', {
             userId: followerId,
             actorUserId: followingId,
-            type: 'FOLLOW_ACCEPTED'
         });
 
         return { success: true, message: 'Follow request accepted' };
