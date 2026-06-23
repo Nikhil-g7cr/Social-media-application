@@ -1,12 +1,12 @@
 import React, { useState, useMemo, memo } from 'react';
-import { Settings, MapPin, Calendar, Grid, Heart, Bookmark } from 'lucide-react';
+import { Settings, Grid, Heart, Bookmark } from 'lucide-react';
 import { useParams, useNavigate } from 'react-router-dom';
 import PostImage from '../../shared/shared-components/PostImage';
 import Avatar from '../../shared/shared-components/Avatar';
 import FollowButton from '../../components/features/Social/FollowButton';
 import { useAppSelector } from '../../redux/hooks';
-import { 
-  useGetUserByIdQuery, 
+import {
+  useGetUserByIdQuery,
   useGetProfileFollowInfoQuery,
   useGetFollowersQuery,
   useGetFollowingQuery
@@ -18,12 +18,12 @@ import ErrorDisplay from '../../components/errors/ErrorDisplay';
 
 const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
-  
+
   const { data: followers, isLoading: loadingFollowers } = useGetFollowersQuery(userId, { skip: !isOpen || type !== 'followers' });
   const { data: following, isLoading: loadingFollowing } = useGetFollowingQuery(userId, { skip: !isOpen || type !== 'following' });
-  
+
   if (!isOpen) return null;
-  
+
   const users = type === 'followers' ? followers : following;
   const isLoading = type === 'followers' ? loadingFollowers : loadingFollowing;
 
@@ -41,15 +41,15 @@ const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boo
             </div>
           ) : users && users.length > 0 ? (
             users.map(u => (
-              <div 
-                key={u.id} 
+              <div
+                key={u.id}
                 className="flex items-center gap-3 p-3 hover:bg-gray-50 cursor-pointer rounded-md transition"
                 onClick={() => {
                   onClose();
                   navigate(`/profile/${u.id}`);
                 }}
               >
-                <Avatar url={u.avatarUrl || u.image_url} name={u.name} className="w-12 h-12 rounded-full object-cover" />
+                <Avatar url={u.avatarUrl} name={u.name} className="w-12 h-12 rounded-full object-cover" />
                 <div className="flex-1">
                   <div className="font-semibold text-gray-900">{u.name}</div>
                   <div className="text-sm text-gray-500">@{u.username || u.name.toLowerCase().replace(/\s+/g, '')}</div>
@@ -73,12 +73,12 @@ const ProfilePage: React.FC = () => {
   const { userId } = useParams<{ userId: string }>();
   const currentUser = useAppSelector((state: any) => state.auth.user);
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
-  
+
   const targetUserId = userId || (currentUser?.id);
 
   const { data: userProfile, isLoading: isUserLoading, isError: isUserError, error: userError, refetch: refetchUser } = useGetUserByIdQuery(targetUserId, { skip: !targetUserId });
   const { data: followInfo, isLoading: isFollowInfoLoading, isError: isFollowInfoError, error: followInfoError, refetch: refetchFollowInfo } = useGetProfileFollowInfoQuery(targetUserId, { skip: !targetUserId });
-  
+
   const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'saved'>('posts');
   const [page, setPage] = useState(1);
 
@@ -90,7 +90,7 @@ const ProfilePage: React.FC = () => {
   const hasMore = activeTab === 'posts' ? (userPostsData?.hasMore || false) : (likedPostsData?.hasMore || false);
   const isFetching = activeTab === 'posts' ? isPostsFetching : isLikedPostsFetching;
 
-  const [modalState, setModalState] = useState<{isOpen: boolean, type: 'followers' | 'following'}>({ isOpen: false, type: 'followers' });
+  const [modalState, setModalState] = useState<{ isOpen: boolean, type: 'followers' | 'following' }>({ isOpen: false, type: 'followers' });
 
   const isCurrentUser = currentUser?.id === targetUserId;
   const isLoading = isUserLoading || isFollowInfoLoading;
@@ -109,7 +109,7 @@ const ProfilePage: React.FC = () => {
       fullName: userProfile.name || 'Unknown User',
       userName: userProfile.username ? `@${userProfile.username}` : `@${(userProfile.name || 'user').toLowerCase().replace(/\s+/g, '')}`,
       bio: userProfile.bio || 'No bio available',
-      avatarUrl: userProfile.avatarUrl || userProfile.image_url,
+      avatarUrl: userProfile.avatarUrl,
       stats: {
         posts: userPostsData?.posts ? userPostsData.posts.length : 0,
         followers: followInfo?.followersCount || 0,
@@ -137,7 +137,7 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 pb-10 pt-16">
       <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
-        
+
         {/* Profile Header Info */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mt-8">
           <div className="flex items-center gap-5">
@@ -158,13 +158,13 @@ const ProfilePage: React.FC = () => {
           <div className="mt-4 flex gap-3 sm:mb-2 sm:mt-0">
             {isCurrentUser && (
               <>
-                <button 
+                <button
                   onClick={() => navigate('/your-activity')}
                   className="flex-1 rounded-md bg-gray-100 text-gray-700 px-4 py-2 text-sm font-semibold shadow-sm hover:bg-gray-200 sm:flex-none transition"
                 >
                   Your Activity
                 </button>
-                <button 
+                <button
                   onClick={() => navigate('/profile/update')}
                   className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:flex-none transition"
                 >
@@ -199,14 +199,14 @@ const ProfilePage: React.FC = () => {
             <span className="font-bold text-gray-900">{likedPosts?.length || 0}</span>
             <span className="text-sm text-gray-500">Liked</span>
           </div>
-          <div 
+          <div
             className="flex flex-col items-center sm:flex-row sm:gap-2 cursor-pointer hover:underline"
             onClick={() => setModalState({ isOpen: true, type: 'followers' })}
           >
             <span className="font-bold text-gray-900">{profile.stats.followers.toLocaleString()}</span>
             <span className="text-sm text-gray-500">Followers</span>
           </div>
-          <div 
+          <div
             className="flex flex-col items-center sm:flex-row sm:gap-2 cursor-pointer hover:underline"
             onClick={() => setModalState({ isOpen: true, type: 'following' })}
           >
@@ -281,7 +281,7 @@ const ProfilePage: React.FC = () => {
                         <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white" /> {post.likes || 0}</span>
                       </div>
                       {isCurrentUser && (
-                        <button 
+                        <button
                           className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -335,11 +335,11 @@ const ProfilePage: React.FC = () => {
           </InfiniteScroll>
         </div>
       </div>
-      
+
       {targetUserId && (
-        <UsersModal 
-          isOpen={modalState.isOpen} 
-          onClose={() => setModalState({ ...modalState, isOpen: false })} 
+        <UsersModal
+          isOpen={modalState.isOpen}
+          onClose={() => setModalState({ ...modalState, isOpen: false })}
           title={modalState.type === 'followers' ? 'Followers' : 'Following'}
           userId={targetUserId}
           type={modalState.type}

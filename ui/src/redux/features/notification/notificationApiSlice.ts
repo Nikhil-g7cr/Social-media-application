@@ -11,7 +11,7 @@ export interface Notification {
     Actor?: {
         ID: string;
         UserName: string;
-        ProfilePictureUrl?: string;
+        avatarUrl?: string;
     };
     Post?: {
         ID: string;
@@ -23,6 +23,16 @@ export const notificationApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getNotifications: builder.query<Notification[], void>({
             query: () => ({ url: 'notifications' }),
+            transformResponse: (response: any) => {
+                const notifications = response?.data || response || [];
+                return notifications.map((n: any) => ({
+                    ...n,
+                    Actor: n.Actor ? {
+                        ...n.Actor,
+                        avatarUrl: n.Actor.ProfilePictureUrl || n.Actor.avatarUrl
+                    } : undefined
+                }));
+            },
             providesTags: ['Notification'],
             async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
                 const { initializeSocket } = await import('../../../utils/socket');

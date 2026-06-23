@@ -3,10 +3,8 @@ import API from "../../../config/axiosConfig";
 
 interface User {
     id?: string;
-    name: string;
     email: string;
     role?: string|undefined;
-    image_url?: string;
 }
 
 interface AuthState {
@@ -42,10 +40,8 @@ const storedRefreshToken = sessionStorage.getItem('refreshToken');
 const rawDecodedUser = storedToken ? parseJwt(storedToken) : null;
 const decodedUser = rawDecodedUser ? {
     id: rawDecodedUser.id || (rawDecodedUser as any).sub,
-    name: rawDecodedUser.name,
     email: rawDecodedUser.email,
     role: rawDecodedUser.role || (rawDecodedUser as any).roles?.[0],
-    image_url: rawDecodedUser.image_url,
 } : null;
 
 const initialState: AuthState = {
@@ -88,10 +84,8 @@ const authSlice = createSlice({
                 // Set the user purely from the JWT data
                 state.user = {
                     id: decoded.id || (decoded as any).sub,
-                    name: decoded.name,
                     email: decoded.email,
                     role: decoded.role,
-                    image_url: decoded.image_url,
                 };
             } else if (action.payload.user) {
                 // Fallback if token decoding fails

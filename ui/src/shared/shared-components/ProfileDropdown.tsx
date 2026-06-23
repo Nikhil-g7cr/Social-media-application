@@ -3,12 +3,14 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import type { RootState } from '../../redux/store';
 import { logout } from '../../redux/features/auth/AuthSlice';
+import { useGetUserByIdQuery } from '../../redux/features/user/userApiSlice';
 import Avatar from './Avatar';
 import { Settings, Shield, LogOut, ChevronDown } from 'lucide-react';
 
 const ProfileDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { user } = useSelector((state: RootState) => state.auth);
+  const { data: userProfile } = useGetUserByIdQuery(user?.id as string, { skip: !user?.id });
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -40,8 +42,8 @@ const ProfileDropdown: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
       >
         <Avatar
-          url={user?.image_url}
-          name={user?.name}
+          url={userProfile?.avatarUrl}
+          name={userProfile?.name}
           className="h-10 w-10 rounded-full border border-gray-200 object-cover shadow-sm"
         />
         <ChevronDown className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
@@ -52,7 +54,7 @@ const ProfileDropdown: React.FC = () => {
           
           {/* User Info Header */}
           <div className="px-4 py-4 border-b border-gray-100 bg-gray-50/50">
-            <p className="text-sm font-bold text-gray-900 truncate">{user?.name || "User Name"}</p>
+            <p className="text-sm font-bold text-gray-900 truncate">{userProfile?.name || "User Name"}</p>
             <p className="text-xs text-gray-500 truncate mt-0.5">{user?.email || "email"}</p>
           </div>
 
@@ -86,7 +88,7 @@ const ProfileDropdown: React.FC = () => {
               onClick={() => setIsOpen(false)}
               className="flex items-center px-4 py-2.5 text-sm font-medium text-gray-700 hover:bg-gray-50 hover:text-gray-900 transition-colors"
             >
-              <Avatar url={user?.image_url} name={user?.name} className="w-4 h-4 mr-3 rounded-full" />
+              <Avatar url={userProfile?.avatarUrl} name={userProfile?.name} className="w-4 h-4 mr-3 rounded-full" />
               My Profile
             </Link>
 

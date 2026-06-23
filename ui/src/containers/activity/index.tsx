@@ -39,7 +39,7 @@ const ActivityPage: React.FC = () => {
     type: n.NotificationType,
     actorId: n.ActorUserID,
     actorName: n.Actor?.UserName || 'Someone',
-    actorAvatar: n.Actor?.ProfilePictureUrl,
+    actorAvatar: n.Actor?.avatarUrl,
     content: n.NotificationType === 'LIKE' ? 'liked your post.' : n.NotificationType === 'FOLLOW' ? 'started following you.' : n.NotificationType === 'FOLLOW_REQUEST' ? 'sent you a follow request.' : n.NotificationType === 'FOLLOW_ACCEPTED' ? 'accepted your follow request.' : n.NotificationType === 'MESSAGE' ? 'sent you a message.' : 'system notification.',
     time: formatDistanceToNow(new Date(n.CreatedAt), { addSuffix: true }),
     isRead: n.IsRead,
@@ -146,7 +146,7 @@ const ActivityPage: React.FC = () => {
                     >
                       <div className="flex items-center gap-4">
                         <Avatar
-                          url={request.avatarUrl || request.image_url}
+                          url={request.avatarUrl}
                           name={request.name}
                           className="w-12 h-12 rounded-full object-cover border border-gray-200"
                         />

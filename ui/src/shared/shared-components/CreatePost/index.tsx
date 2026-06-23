@@ -1,12 +1,14 @@
 import React, { useState, useRef, useCallback } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
 import { useAppSelector } from "../../../redux/hooks";
+import { useGetUserByIdQuery } from "../../../redux/features/user/userApiSlice";
 import { useCreatePostMutation, useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../../redux/features/post/postApiSlice";
 import PostImage from "../PostImage";
 import Avatar from "../Avatar";
 
 export default function CreatePost() {
   const { user } = useAppSelector((state: any) => state.auth);
+  const { data: userProfile } = useGetUserByIdQuery(user?.id as string, { skip: !user?.id });
   const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
   const [getUploadUrl] = useGetUploadUrlMutation();
   const [uploadImageToAzure] = useUploadImageToAzureMutation();
@@ -69,8 +71,8 @@ export default function CreatePost() {
     <div className="bg-white rounded-2xl border p-5 shadow-sm">
       <div className="flex gap-4">
         <Avatar
-          url={user?.image_url}
-          name={user?.name}
+          url={userProfile?.avatarUrl}
+          name={userProfile?.name}
           className="h-10 w-10 rounded-full object-cover"
         />
 

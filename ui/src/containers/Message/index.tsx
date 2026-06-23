@@ -46,7 +46,7 @@ interface UIMessage {
 interface UIConversation {
   id: string;
   participantName: string;
-  image_url?: string | null;
+  avatarUrl?: string | null;
   lastMessage: string;
   time: string;
   unreadCount: number;
@@ -131,7 +131,7 @@ const MessagesPage: React.FC = () => {
       const formattedConversations = apiConversations.map((conv: RTKConversation) => ({
         id: conv.id,
         participantName: conv.participant?.name || "Unknown User",
-        image_url: conv.participant?.avatarUrl,
+        avatarUrl: conv.participant?.avatarUrl,
         lastMessage: conv.latestMessage?.content || "No messages yet",
         time: conv.latestMessage?.createdAt
           ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
@@ -372,7 +372,7 @@ const MessagesPage: React.FC = () => {
                         className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
                       >
                         <Avatar
-                          url={u.image_url}
+                          url={u.avatarUrl}
                           name={u.name}
                           className="w-8 h-8 rounded-full object-cover border border-gray-200"
                         />
@@ -406,7 +406,7 @@ const MessagesPage: React.FC = () => {
               >
                 <div className="relative flex-shrink-0">
                   <Avatar
-                    url={conv.image_url || undefined}
+                    url={conv.avatarUrl || undefined}
                     name={conv.participantName}
                     className="h-12 w-12 rounded-full object-cover"
                   />
@@ -452,7 +452,7 @@ const MessagesPage: React.FC = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <Avatar
-                  url={activeConversation.image_url || undefined}
+                  url={activeConversation.avatarUrl || undefined}
                   name={activeConversation.participantName}
                   className="h-10 w-10 rounded-full object-cover"
                 />

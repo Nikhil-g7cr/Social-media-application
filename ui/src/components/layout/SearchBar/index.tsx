@@ -62,7 +62,7 @@ const SearchBar: React.FC = () => {
                 <li key={user.id} className="px-4 py-3 hover:bg-gray-50 flex items-center justify-between group transition-colors">
                   <div className="flex items-center gap-3 overflow-hidden">
                     <Avatar
-                      url={user.avatarUrl || user.image_url}
+                      url={user.avatarUrl}
                       name={user.name}
                       className="w-10 h-10 rounded-full object-cover border border-gray-200"
                     />

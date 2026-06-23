@@ -109,7 +109,7 @@ export const userApiSlice = apiSlice.injectEndpoints({
                     patchResult2.undo();
                 }
             },
-            invalidatesTags: (_result, _error, { id }) => [{ type: 'User', id }],
+            invalidatesTags: (_result, _error, { id }) => [{ type: 'User', id }, 'User', 'Profile', 'Post', 'Comment', 'Notification', 'Conversation', 'Chat'],
         }),
         softDeleteUser: builder.mutation<{ success: boolean }, string>({
             query: (id) => ({
