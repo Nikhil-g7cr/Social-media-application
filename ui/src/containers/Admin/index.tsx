@@ -618,7 +618,7 @@ const AdminDashboard = () => {
         navItems={navItems}
       />
       {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 ease-in-out bg-gray-50 min-h-screen relative overflow-x-hidden pt-16 ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
+      <main className={`flex-1 transition-all duration-300 ease-in-out bg-gray-50 min-h-screen relative overflow-x-hidden ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
         <div className="w-full max-w-[1600px] mx-auto p-6 lg:p-8">
           <div className="mb-6 lg:hidden">
             <button

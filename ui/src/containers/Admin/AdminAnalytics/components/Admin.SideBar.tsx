@@ -24,7 +24,7 @@ const AdminSidebar: React.FC<AdminSidebarProps> = ({
 }) => {
   return (
     <aside
-      className={`w-64 bg-white border-r border-gray-200 fixed top-0 h-full z-30 transition-transform duration-300 ease-in-out flex flex-col overflow-y-auto ${
+      className={`w-64 bg-white border-r border-gray-200 fixed h-full z-30 transition-transform duration-300 ease-in-out flex flex-col overflow-y-auto ${
         isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
       }`}
     >
