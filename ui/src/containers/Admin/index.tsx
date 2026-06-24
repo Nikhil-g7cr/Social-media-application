@@ -421,7 +421,7 @@ const AdminDashboard = () => {
       case 'analytics':
         return (
           <div className="animate-fade-in-up -m-4 lg:-m-8">
-            <AdminAnalytics />
+            <AdminAnalytics onNavigateToReports={() => setActiveTab('reports')} />
           </div>
         );
 

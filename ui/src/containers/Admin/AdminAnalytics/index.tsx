@@ -1,5 +1,6 @@
-import { Spin, Alert, Typography, Button } from 'antd';
-import { RefreshCw, Users, FileText, MessageSquare, HardDrive, MessageCircle, Heart, UserMinus } from 'lucide-react';
+import React from 'react';
+import { Spin, Alert, Button } from 'antd';
+import { RefreshCw, Users, FileText, MessageSquare, HardDrive, MessageCircle, Heart, UserMinus, AlertTriangle } from 'lucide-react';
 import { 
     useGetDashboardSummaryQuery, 
     useGetGrowthAnalyticsQuery, 
@@ -13,11 +14,14 @@ import GrowthCharts from './components/GrowthCharts';
 import ReportsOverview from './components/ReportsOverview';
 import TopUsers from './components/TopUsers';
 import ActivityFeed from './components/ActivityFeed';
+import EngagementChart from './components/EngagementChart';
 
+interface AdminAnalyticsProps {
+    /** Called when the user clicks "View All Reports →" inside the analytics panel */
+    onNavigateToReports?: () => void;
+}
 
-const { Title } = Typography;
-
-const AdminAnalytics = () => {
+const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) => {
     const { data: summary, isLoading: loadingSummary, isFetching: fetchingSummary, error: summaryError, refetch: refetchSummary } = useGetDashboardSummaryQuery(undefined, { pollingInterval: 60000 });
     const { data: growth, refetch: refetchGrowth } = useGetGrowthAnalyticsQuery(undefined, { pollingInterval: 60000 });
     const { data: contentDist, refetch: refetchContentDist } = useGetContentDistributionQuery(undefined, { pollingInterval: 60000 });
@@ -53,8 +57,11 @@ const AdminAnalytics = () => {
         );
     }
 
+    const totalMediaUploads = contentDist?.mediaCounts?.reduce((acc: number, curr: any) => acc + (Number(curr.count) || 0), 0) || 0;
+
     return (
         <div className="p-6 bg-gray-50 min-h-screen">
+            {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 m-0">Platform Overview</h1>
@@ -71,7 +78,7 @@ const AdminAnalytics = () => {
                 </Button>
             </div>
 
-            {/* Top Statistics Cards */}
+            {/* ── Row 1: Users KPI cards ─────────────────────────────────────── */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <StatisticsCards
                     title="Total Users"
@@ -93,6 +100,19 @@ const AdminAnalytics = () => {
                     icon={<UserMinus className="text-red-500" size={24} />}
                     color="bg-red-50"
                 />
+                {/* Pending Reports — Moderation Queue KPI (plan requirement) */}
+                <StatisticsCards
+                    title="Pending Reports"
+                    value={summary?.pendingReports || 0}
+                    icon={<AlertTriangle className="text-amber-500" size={24} />}
+                    trend={summary?.pendingReports > 0 ? 'Needs attention' : 'All clear'}
+                    trendUp={false}
+                    color="bg-amber-50"
+                />
+            </div>
+
+            {/* ── Row 2: Content Volume KPI cards ───────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <StatisticsCards
                     title="Total Posts"
                     value={summary?.totalPosts || 0}
@@ -101,9 +121,6 @@ const AdminAnalytics = () => {
                     trendUp={true}
                     color="bg-indigo-50"
                 />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                 <StatisticsCards
                     title="Total Comments"
                     value={summary?.totalComments || 0}
@@ -117,83 +134,103 @@ const AdminAnalytics = () => {
                     color="bg-pink-50"
                 />
                 <StatisticsCards
-                    title="Total Conversations"
-                    value={summary?.totalConversations || 0}
-                    icon={<MessageCircle className="text-yellow-500" size={24} />}
-                    color="bg-yellow-50"
-                />
-                <StatisticsCards
                     title="Total Messages"
                     value={summary?.totalMessages || 0}
-                    icon={<MessageSquare className="text-teal-500" size={24} />}
+                    icon={<MessageCircle className="text-teal-500" size={24} />}
                     color="bg-teal-50"
                 />
             </div>
 
+            {/* ── Row 3: Growth chart + Moderation status ────────────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                {/* Growth Charts spanning 2 columns */}
+                {/* Growth Line Chart — spanning 2 cols */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Growth & Engagement</h2>
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4">User & Post Growth (Last 30 Days)</h2>
                     <GrowthCharts growthData={growth} />
                 </div>
 
-                {/* Reports Overview spanning 1 column */}
+                {/* Moderation Status */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h2 className="text-lg font-semibold text-gray-800 mb-4">Moderation Status</h2>
                     <ReportsOverview
                         total={summary?.totalReports || 0}
                         pending={summary?.pendingReports || 0}
                         resolved={summary?.resolvedReports || 0}
+                        onViewAllReports={onNavigateToReports}
                     />
                 </div>
             </div>
 
+            {/* ── Row 4: Engagement Doughnut Chart + Top Users ──────────────── */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                {/* Top Users */}
+                {/* Top Users Table — spanning 2 cols */}
                 <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h2 className="text-lg font-semibold text-gray-800 mb-4">Most Active Users</h2>
                     <TopUsers users={topUsers} />
                 </div>
 
-                {/* Activity Feed */}
+                {/* Engagement Doughnut Chart — plan requirement */}
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-1">Engagement Breakdown</h2>
+                    <p className="text-xs text-gray-400 mb-4">Split between Posts, Comments & Likes</p>
+                    <EngagementChart
+                        totalPosts={summary?.totalPosts || 0}
+                        totalComments={summary?.totalComments || 0}
+                        totalLikes={summary?.totalLikes || 0}
+                    />
+                </div>
+            </div>
+
+            {/* ── Row 5: Content Distribution (chart) + Activity Feed ─────── */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                {/* Activity Feed */}
+                <div className="lg:col-span-2 bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h2 className="text-lg font-semibold text-gray-800 mb-4">Live Activity Feed</h2>
                     <ActivityFeed activity={activity} />
                 </div>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                {/* Content Distribution (just a simple stat card for now, or pie chart) */}
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Content Distribution</h2>
-                    <div className="flex justify-around items-center h-48">
-                        <div className="text-center">
-                            <div className="text-3xl font-bold text-blue-600">{contentDist?.textPostsCount || 0}</div>
-                            <div className="text-sm text-gray-500 uppercase tracking-wider mt-1">Text Posts</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-3xl font-bold text-indigo-600">
-                                {contentDist?.mediaCounts?.reduce((acc: number, curr: any) => acc + (curr.count || 0), 0) || 0}
+                {/* Content Distribution + Storage */}
+                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex flex-col gap-6">
+                    <div>
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4">Content Distribution</h2>
+                        <div className="space-y-3">
+                            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <FileText className="text-blue-500" size={16} />
+                                    <span className="text-sm text-gray-700 font-medium">Text Posts</span>
+                                </div>
+                                <span className="text-lg font-bold text-blue-600">{contentDist?.textPostsCount || 0}</span>
                             </div>
-                            <div className="text-sm text-gray-500 uppercase tracking-wider mt-1">Media Uploads</div>
+                            <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
+                                <div className="flex items-center gap-2">
+                                    <HardDrive className="text-indigo-500" size={16} />
+                                    <span className="text-sm text-gray-700 font-medium">Media Uploads</span>
+                                </div>
+                                <span className="text-lg font-bold text-indigo-600">{totalMediaUploads}</span>
+                            </div>
+                            {contentDist?.mediaCounts && contentDist.mediaCounts.map((m: any, i: number) => (
+                                <div key={i} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                                    <span className="text-sm text-gray-700 font-medium capitalize">{m.MediaType?.toLowerCase() || 'Unknown'}</span>
+                                    <span className="text-sm font-bold text-purple-600">{m.count || 0}</span>
+                                </div>
+                            ))}
                         </div>
                     </div>
-                </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="text-lg font-semibold text-gray-800 mb-4">Storage Overview</h2>
-                    <div className="flex items-center gap-6 h-48">
-                        <div className="p-4 bg-blue-50 rounded-full">
-                            <HardDrive size={48} className="text-blue-500" />
-                        </div>
-                        <div>
-                            <div className="text-3xl font-bold text-gray-800">{summary?.totalMediaUploaded || 0}</div>
-                            <div className="text-sm text-gray-500 mt-1">Total Files in Azure Blob Storage</div>
+                    <div className="pt-4 border-t border-gray-100">
+                        <h3 className="text-sm font-semibold text-gray-600 mb-3">Azure Storage</h3>
+                        <div className="flex items-center gap-4">
+                            <div className="p-3 bg-blue-50 rounded-full">
+                                <HardDrive size={28} className="text-blue-500" />
+                            </div>
+                            <div>
+                                <div className="text-2xl font-bold text-gray-800">{summary?.totalMediaUploaded || 0}</div>
+                                <div className="text-xs text-gray-500 mt-0.5">Total Files in Azure Blob</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-
         </div>
     );
 };

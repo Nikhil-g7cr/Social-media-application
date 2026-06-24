@@ -29,11 +29,15 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activity }) => {
         
         if (activity.recentPosts) {
             activity.recentPosts.forEach((post: any) => {
+                const authorName = post.AuthorFullName || post.AuthorUserName;
+                const authorHandle = post.AuthorUserName ? `@${post.AuthorUserName}` : 'Unknown user';
                 items.push({
                     id: `post-${post.ID}`,
                     type: 'POST_CREATED',
                     title: 'New Post Created',
-                    description: `A new post was created.`,
+                    description: authorName
+                        ? `${authorName} (${authorHandle}) created a ${(post.Type || 'new').toLowerCase()} post.`
+                        : `${authorHandle} created a new post.`,
                     date: new Date(post.CreatedAt),
                     icon: <FileText size={18} className="text-indigo-500" />,
                     bgColor: 'bg-indigo-50'

@@ -158,14 +158,26 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
       const recentUsers = await this._user.findAll({
         order: [['CreatedAt', 'DESC']],
         limit: 5,
-        attributes: ['ID', 'UserName', 'CreatedAt']
+        attributes: ['ID', 'UserName', 'FullName', 'ProfilePictureUrl', 'CreatedAt']
       });
 
-      const recentPosts = await this._post.findAll({
-        order: [['CreatedAt', 'DESC']],
-        limit: 5,
-        attributes: ['ID', 'UserID', 'CreatedAt']
-      });
+      // Include the post author's UserName and FullName via a JOIN
+      let recentPosts: any[] = [];
+      try {
+        recentPosts = await this.sequelize.query(`
+          SELECT TOP 5
+            P.ID,
+            P.UserID,
+            P.Type,
+            P.CreatedAt,
+            U.UserName AS AuthorUserName,
+            U.FullName AS AuthorFullName,
+            U.ProfilePictureUrl AS AuthorProfilePictureUrl
+          FROM [Post] P
+          INNER JOIN [Users] U ON P.UserID = U.ID
+          ORDER BY P.CreatedAt DESC
+        `, { type: 'SELECT' });
+      } catch (e) { console.error('recentPosts join error', e); }
 
       return createResponse(200, 'Recent activity retrieved', { recentUsers, recentPosts });
     } catch (error: any) {

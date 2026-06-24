@@ -6,11 +6,14 @@ interface ReportsOverviewProps {
     total: number;
     pending: number;
     resolved: number;
+    onViewAllReports?: () => void;
 }
 
-const ReportsOverview: React.FC<ReportsOverviewProps> = ({ total, pending, resolved }) => {
+const ReportsOverview: React.FC<ReportsOverviewProps> = ({ total, pending, resolved, onViewAllReports }) => {
     const resolvedPercentage = total > 0 ? Math.round((resolved / total) * 100) : 0;
     const pendingPercentage = total > 0 ? Math.round((pending / total) * 100) : 0;
+    const dismissed = total - pending - resolved;
+    const dismissedPercentage = total > 0 ? Math.round((dismissed / total) * 100) : 0;
 
     return (
         <div className="space-y-6">
@@ -44,8 +47,23 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({ total, pending, resol
                 <Progress percent={resolvedPercentage} showInfo={false} strokeColor="#22c55e" trailColor="#bbf7d0" />
             </div>
 
+            {dismissed > 0 && (
+                <div>
+                    <div className="flex justify-between text-sm mb-1">
+                        <span className="flex items-center text-gray-500 font-medium">
+                            Dismissed
+                        </span>
+                        <span className="text-gray-600">{dismissed} ({dismissedPercentage}%)</span>
+                    </div>
+                    <Progress percent={dismissedPercentage} showInfo={false} strokeColor="#9ca3af" trailColor="#f3f4f6" />
+                </div>
+            )}
+
             <div className="mt-6 pt-4 border-t border-gray-100">
-                <button className="w-full text-center text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors py-2">
+                <button
+                    onClick={onViewAllReports}
+                    className="w-full text-center text-sm text-blue-600 font-medium hover:text-blue-700 transition-colors py-2 hover:bg-blue-50 rounded-lg"
+                >
                     View All Reports →
                 </button>
             </div>
