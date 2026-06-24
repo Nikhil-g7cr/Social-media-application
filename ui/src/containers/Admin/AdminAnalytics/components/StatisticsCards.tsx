@@ -14,7 +14,9 @@ interface StatisticsCardsProps {
 const StatisticsCards: React.FC<StatisticsCardsProps> = ({ title, value, icon, trend, trendUp, color, onClick }) => {
     return (
         <div 
-            className="bg-white p-5 rounded-lg shadow-sm border border-gray-200 transition-all hover:shadow-md cursor-pointer"
+            className={`bg-white p-5 rounded-lg shadow-sm border border-gray-200 transition-all hover:shadow-md ${
+                onClick ? 'cursor-pointer' : ''
+            }`}
             onClick={onClick}
         >
             <div className="flex justify-between items-start">

@@ -15,12 +15,15 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activity }) => {
         
         if (activity.recentUsers) {
             activity.recentUsers.forEach((user: any) => {
+                const date = new Date(user.CreatedAt);
+                if (Number.isNaN(date.getTime())) return;
+
                 items.push({
                     id: `user-${user.ID}`,
                     type: 'USER_REGISTERED',
                     title: 'New User Registered',
                     description: `@${user.UserName} joined the platform.`,
-                    date: new Date(user.CreatedAt),
+                    date,
                     icon: <UserPlus size={18} className="text-blue-500" />,
                     bgColor: 'bg-blue-50'
                 });
@@ -29,6 +32,9 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activity }) => {
         
         if (activity.recentPosts) {
             activity.recentPosts.forEach((post: any) => {
+                const date = new Date(post.CreatedAt);
+                if (Number.isNaN(date.getTime())) return;
+
                 const authorName = post.AuthorFullName || post.AuthorUserName;
                 const authorHandle = post.AuthorUserName ? `@${post.AuthorUserName}` : 'Unknown user';
                 items.push({
@@ -38,7 +44,7 @@ const ActivityFeed: React.FC<ActivityFeedProps> = ({ activity }) => {
                     description: authorName
                         ? `${authorName} (${authorHandle}) created a ${(post.Type || 'new').toLowerCase()} post.`
                         : `${authorHandle} created a new post.`,
-                    date: new Date(post.CreatedAt),
+                    date,
                     icon: <FileText size={18} className="text-indigo-500" />,
                     bgColor: 'bg-indigo-50'
                 });

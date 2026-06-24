@@ -5,6 +5,11 @@ interface GrowthChartsProps {
     growthData: any;
 }
 
+const toNumber = (value: unknown): number => {
+    const nextValue = Number(value);
+    return Number.isFinite(nextValue) ? nextValue : 0;
+};
+
 const GrowthCharts: React.FC<GrowthChartsProps> = ({ growthData }) => {
     // If we have separate arrays for userGrowth and postGrowth, we should merge them by Date for a single chart
     // or just display two lines if dates match, or separate charts.
@@ -18,16 +23,22 @@ const GrowthCharts: React.FC<GrowthChartsProps> = ({ growthData }) => {
         
         if (growthData.userGrowth) {
             growthData.userGrowth.forEach((item: any) => {
-                const date = new Date(item.Date).toLocaleDateString();
-                map.set(date, { date, Users: item.count });
+                const date = new Date(item.Date);
+                if (Number.isNaN(date.getTime())) return;
+
+                const dateKey = date.toISOString().slice(0, 10);
+                map.set(dateKey, { date: dateKey, Users: toNumber(item.count) });
             });
         }
         
         if (growthData.postGrowth) {
             growthData.postGrowth.forEach((item: any) => {
-                const date = new Date(item.Date).toLocaleDateString();
-                const existing = map.get(date) || { date };
-                map.set(date, { ...existing, Posts: item.count });
+                const date = new Date(item.Date);
+                if (Number.isNaN(date.getTime())) return;
+
+                const dateKey = date.toISOString().slice(0, 10);
+                const existing = map.get(dateKey) || { date: dateKey };
+                map.set(dateKey, { ...existing, Posts: toNumber(item.count) });
             });
         }
         

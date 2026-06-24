@@ -9,7 +9,6 @@ import {
     useGetRecentActivityQuery,
     useGetPendingFileRequestsQuery
 } from '../../../redux/features/adminAnalytics/adminAnalyticsApiSlice';
-import { useNavigate } from 'react-router-dom';
 
 import StatisticsCards from './components/StatisticsCards';
 import GrowthCharts from './components/GrowthCharts';
@@ -25,11 +24,18 @@ interface AdminAnalyticsProps {
     onNavigateToFileRequests?: () => void;
 }
 
+const toNumber = (value: unknown): number => {
+    const nextValue = Number(value);
+    return Number.isFinite(nextValue) ? nextValue : 0;
+};
+
+const toArray = <T,>(value: T[] | undefined | null): T[] => Array.isArray(value) ? value : [];
+
 const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, onNavigateToFileRequests }) => {
     const { data: summary, isLoading: loadingSummary, isFetching: fetchingSummary, error: summaryError, refetch: refetchSummary } = useGetDashboardSummaryQuery(undefined, { pollingInterval: 60000 });
     const { data: growth, refetch: refetchGrowth } = useGetGrowthAnalyticsQuery(undefined, { pollingInterval: 60000 });
     const { data: contentDist, refetch: refetchContentDist } = useGetContentDistributionQuery(undefined, { pollingInterval: 60000 });
-    const { data: topUsers = [], refetch: refetchTopUsers } = useGetTopUsersQuery(undefined, { pollingInterval: 60000 });
+    const { data: topUsersData = [], refetch: refetchTopUsers } = useGetTopUsersQuery(undefined, { pollingInterval: 60000 });
     const { data: activity, refetch: refetchActivity } = useGetRecentActivityQuery(undefined, { pollingInterval: 60000 });
     const { data: fileRequestsData, refetch: refetchFileRequests } = useGetPendingFileRequestsQuery(undefined, { pollingInterval: 60000 });
 
@@ -63,7 +69,26 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
         );
     }
 
-    const totalMediaUploads = contentDist?.mediaCounts?.reduce((acc: number, curr: any) => acc + (Number(curr.count) || 0), 0) || 0;
+    const dashboardSummary = {
+        totalUsers: toNumber(summary?.totalUsers),
+        activeUsers: toNumber(summary?.activeUsers),
+        deletedUsers: toNumber(summary?.deletedUsers),
+        newUsersToday: toNumber(summary?.newUsersToday),
+        totalPosts: toNumber(summary?.totalPosts),
+        newPostsToday: toNumber(summary?.newPostsToday),
+        totalComments: toNumber(summary?.totalComments),
+        totalLikes: toNumber(summary?.totalLikes),
+        totalMessages: toNumber(summary?.totalMessages),
+        totalReports: toNumber(summary?.totalReports),
+        pendingReports: toNumber(summary?.pendingReports),
+        resolvedReports: toNumber(summary?.resolvedReports),
+        totalMediaUploaded: toNumber(summary?.totalMediaUploaded),
+    };
+    const mediaCounts = toArray<any>(contentDist?.mediaCounts);
+    const topUsers = toArray<any>(topUsersData);
+    const fileRequestCount = toNumber(fileRequestsData?.count);
+    const textPostsCount = toNumber(contentDist?.textPostsCount);
+    const totalMediaUploads = mediaCounts.reduce((acc: number, curr: any) => acc + toNumber(curr.count), 0);
 
     return (
         <div className="w-full h-full">
@@ -88,30 +113,30 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <StatisticsCards
                     title="Total Users"
-                    value={summary?.totalUsers || 0}
+                    value={dashboardSummary.totalUsers}
                     icon={<Users className="text-blue-500" size={24} />}
-                    trend={`+${summary?.newUsersToday || 0} today`}
+                    trend={`+${dashboardSummary.newUsersToday} today`}
                     trendUp={true}
                     color="bg-blue-50"
                 />
                 <StatisticsCards
                     title="Active Users"
-                    value={summary?.activeUsers || 0}
+                    value={dashboardSummary.activeUsers}
                     icon={<Users className="text-green-500" size={24} />}
                     color="bg-green-50"
                 />
                 <StatisticsCards
                     title="Deleted Users"
-                    value={summary?.deletedUsers || 0}
+                    value={dashboardSummary.deletedUsers}
                     icon={<UserMinus className="text-red-500" size={24} />}
                     color="bg-red-50"
                 />
                 {/* Pending Reports — Moderation Queue KPI (plan requirement) */}
                 <StatisticsCards
                     title="Pending Reports"
-                    value={summary?.pendingReports || 0}
+                    value={dashboardSummary.pendingReports}
                     icon={<AlertTriangle className="text-amber-500" size={24} />}
-                    trend={summary?.pendingReports > 0 ? 'Needs attention' : 'All clear'}
+                    trend={dashboardSummary.pendingReports > 0 ? 'Needs attention' : 'All clear'}
                     trendUp={false}
                     color="bg-amber-50"
                 />
@@ -121,9 +146,9 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <StatisticsCards
                     title="Pending File Requests"
-                    value={fileRequestsData?.count || 0}
+                    value={fileRequestCount}
                     icon={<HardDrive className="text-orange-500" size={24} />}
-                    trend={fileRequestsData?.count > 0 ? 'Review needed' : 'All clear'}
+                    trend={fileRequestCount > 0 ? 'Review needed' : 'All clear'}
                     trendUp={false}
                     color="bg-orange-50"
                     onClick={onNavigateToFileRequests}
@@ -134,27 +159,27 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <StatisticsCards
                     title="Total Posts"
-                    value={summary?.totalPosts || 0}
+                    value={dashboardSummary.totalPosts}
                     icon={<FileText className="text-indigo-500" size={24} />}
-                    trend={`+${summary?.newPostsToday || 0} today`}
+                    trend={`+${dashboardSummary.newPostsToday} today`}
                     trendUp={true}
                     color="bg-indigo-50"
                 />
                 <StatisticsCards
                     title="Total Comments"
-                    value={summary?.totalComments || 0}
+                    value={dashboardSummary.totalComments}
                     icon={<MessageSquare className="text-purple-500" size={24} />}
                     color="bg-purple-50"
                 />
                 <StatisticsCards
                     title="Total Likes"
-                    value={summary?.totalLikes || 0}
+                    value={dashboardSummary.totalLikes}
                     icon={<Heart className="text-pink-500" size={24} />}
                     color="bg-pink-50"
                 />
                 <StatisticsCards
                     title="Total Messages"
-                    value={summary?.totalMessages || 0}
+                    value={dashboardSummary.totalMessages}
                     icon={<MessageCircle className="text-teal-500" size={24} />}
                     color="bg-teal-50"
                 />
@@ -172,9 +197,9 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
                     <h2 className="text-lg font-semibold text-gray-800 mb-4">Moderation Status</h2>
                     <ReportsOverview
-                        total={summary?.totalReports || 0}
-                        pending={summary?.pendingReports || 0}
-                        resolved={summary?.resolvedReports || 0}
+                        total={dashboardSummary.totalReports}
+                        pending={dashboardSummary.pendingReports}
+                        resolved={dashboardSummary.resolvedReports}
                         onViewAllReports={onNavigateToReports}
                     />
                 </div>
@@ -193,9 +218,9 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
                     <h2 className="text-lg font-semibold text-gray-800 mb-1">Engagement Breakdown</h2>
                     <p className="text-xs text-gray-400 mb-4">Split between Posts, Comments & Likes</p>
                     <EngagementChart
-                        totalPosts={summary?.totalPosts || 0}
-                        totalComments={summary?.totalComments || 0}
-                        totalLikes={summary?.totalLikes || 0}
+                        totalPosts={dashboardSummary.totalPosts}
+                        totalComments={dashboardSummary.totalComments}
+                        totalLikes={dashboardSummary.totalLikes}
                     />
                 </div>
             </div>
@@ -218,7 +243,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
                                     <FileText className="text-blue-500" size={16} />
                                     <span className="text-sm text-gray-700 font-medium">Text Posts</span>
                                 </div>
-                                <span className="text-lg font-bold text-blue-600">{contentDist?.textPostsCount || 0}</span>
+                                    <span className="text-lg font-bold text-blue-600">{textPostsCount}</span>
                             </div>
                             <div className="flex items-center justify-between p-3 bg-indigo-50 rounded-lg">
                                 <div className="flex items-center gap-2">
@@ -227,10 +252,10 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
                                 </div>
                                 <span className="text-lg font-bold text-indigo-600">{totalMediaUploads}</span>
                             </div>
-                            {contentDist?.mediaCounts && contentDist.mediaCounts.map((m: any, i: number) => (
+                            {mediaCounts.map((m: any, i: number) => (
                                 <div key={i} className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
                                     <span className="text-sm text-gray-700 font-medium capitalize">{m.MediaType?.toLowerCase() || 'Unknown'}</span>
-                                    <span className="text-sm font-bold text-purple-600">{m.count || 0}</span>
+                                    <span className="text-sm font-bold text-purple-600">{toNumber(m.count)}</span>
                                 </div>
                             ))}
                         </div>
@@ -243,7 +268,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
                                 <HardDrive size={28} className="text-blue-500" />
                             </div>
                             <div>
-                                <div className="text-2xl font-bold text-gray-800">{summary?.totalMediaUploaded || 0}</div>
+                                <div className="text-2xl font-bold text-gray-800">{dashboardSummary.totalMediaUploaded}</div>
                                 <div className="text-xs text-gray-500 mt-0.5">Total Files in Azure Blob</div>
                             </div>
                         </div>

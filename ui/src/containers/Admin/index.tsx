@@ -16,8 +16,6 @@ import {
   FiFileText,
   FiMessageSquare,
   FiAlertOctagon,
-  FiMenu,
-  FiX,
   FiTrash2,
   FiSlash,
   FiRefreshCw,
@@ -28,10 +26,10 @@ import {
 import ConfirmationModal from '../../components/shared/ConfirmationModal';
 import { message } from 'antd';
 import AdminAnalytics from './AdminAnalytics';
-import AdminSidebar from './AdminAnalytics/components/Admin.SideBar';
 import GalleryPage from '../Gallery';
 import FileRequestsPage from '../FileRequests';
 import { FiImage, FiFolder } from 'react-icons/fi';
+import { PanelShell } from '../../components/layout/Panel';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ModalState {
@@ -146,9 +144,8 @@ const AdminDashboard = () => {
         <div className="flex items-center space-x-3">
           <div className="relative">
             <div
-              className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${
-                !row.isDeleted && onlineUserIds.includes(row.id) ? 'bg-green-500' : 'bg-gray-400'
-              }`}
+              className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${!row.isDeleted && onlineUserIds.includes(row.id) ? 'bg-green-500' : 'bg-gray-400'
+                }`}
               title={!row.isDeleted && onlineUserIds.includes(row.id) ? 'Online' : 'Offline'}
             />
             <img
@@ -182,13 +179,12 @@ const AdminDashboard = () => {
       label: 'Role',
       render: (val: string) => (
         <span
-          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${
-            val === 'ADMIN'
+          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${val === 'ADMIN'
               ? 'bg-purple-100 text-purple-700 border border-purple-200'
               : val === 'MANAGER'
-              ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
-              : 'bg-gray-100 text-gray-700 border border-gray-200'
-          }`}
+                ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                : 'bg-gray-100 text-gray-700 border border-gray-200'
+            }`}
         >
           {val || 'USER'}
         </span>
@@ -199,11 +195,10 @@ const AdminDashboard = () => {
       label: 'Activity',
       render: (val: boolean, row: any) => (
         <span
-          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold flex items-center w-max space-x-1 ${
-            val !== false
+          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold flex items-center w-max space-x-1 ${val !== false
               ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
               : 'bg-rose-100 text-rose-700 border border-rose-200'
-          } ${row.isDeleted ? 'opacity-50' : ''}`}
+            } ${row.isDeleted ? 'opacity-50' : ''}`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${val !== false ? 'bg-emerald-500' : 'bg-rose-500'}`} />
           <span>{val !== false ? 'Active' : 'Suspended'}</span>
@@ -253,16 +248,16 @@ const AdminDashboard = () => {
       label: 'Date',
       render: (val: string) => <span className="text-gray-500 text-sm">{val}</span>,
     },
-    {
-      key: 'likes',
-      label: 'Engagement',
-      render: (val: number, row: any) => (
-        <div className="flex space-x-3 text-xs text-gray-500">
-          <span>👍 {val}</span>
-          <span>💬 {row.comments}</span>
-        </div>
-      ),
-    },
+    // {
+    //   key: 'likes',
+    //   label: 'Engagement',
+    //   render: (val: number, row: any) => (
+    //     <div className="flex space-x-3 text-xs text-gray-500">
+    //       <span>👍 {val}</span>
+    //       <span>💬 {row.comments}</span>
+    //     </div>
+    //   ),
+    // },
   ];
 
   const reportColumns = [
@@ -294,13 +289,12 @@ const AdminDashboard = () => {
       label: 'Status',
       render: (val: string) => (
         <span
-          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${
-            val === 'PENDING'
+          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${val === 'PENDING'
               ? 'bg-amber-100 text-amber-700 border border-amber-200'
               : val === 'RESOLVED'
-              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-              : 'bg-gray-100 text-gray-700 border border-gray-200'
-          }`}
+                ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
+                : 'bg-gray-100 text-gray-700 border border-gray-200'
+            }`}
         >
           {val}
         </span>
@@ -366,11 +360,10 @@ const AdminDashboard = () => {
         <button
           id={`toggle-suspend-${row.id}`}
           onClick={() => handleToggleSuspend(row.id, row.isActive)}
-          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
-            row.isActive !== false
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${row.isActive !== false
               ? 'bg-red-50 text-red-600 hover:bg-red-100'
               : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-          }`}
+            }`}
         >
           {row.isActive !== false ? 'Suspend' : 'Activate'}
         </button>
@@ -402,16 +395,16 @@ const AdminDashboard = () => {
 
         {/* Hard Delete (not for self or other admins) */}
         {!isSelf && !isAdmin && (
-            <button
-              id={`hard-delete-user-${row.id}`}
-              onClick={() => setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
-              disabled={isHardDeleting}
-              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-              title="Permanently delete this user (irreversible)"
-            >
-              <FiTrash2 className="w-3.5 h-3.5" />
-              Hard Delete
-            </button>
+          <button
+            id={`hard-delete-user-${row.id}`}
+            onClick={() => setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
+            disabled={isHardDeleting}
+            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+            title="Permanently delete this user (irreversible)"
+          >
+            <FiTrash2 className="w-3.5 h-3.5" />
+            Hard Delete
+          </button>
         )}
       </div>
     );
@@ -419,13 +412,13 @@ const AdminDashboard = () => {
 
   // ── Tab Content ────────────────────────────────────────────────────────────
 
-    const renderContent = () => {
+  const renderContent = () => {
     switch (activeTab) {
       case 'analytics':
         return (
           <div className="animate-fade-in-up">
-            <AdminAnalytics 
-              onNavigateToReports={() => setActiveTab('reports')} 
+            <AdminAnalytics
+              onNavigateToReports={() => setActiveTab('reports')}
               onNavigateToFileRequests={() => setActiveTab('file-requests')}
             />
           </div>
@@ -443,11 +436,10 @@ const AdminDashboard = () => {
               <button
                 id="toggle-show-deleted"
                 onClick={() => setShowDeletedUsers((prev) => !prev)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
-                  showDeletedUsers
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${showDeletedUsers
                     ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
                     : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                }`}
+                  }`}
               >
                 {showDeletedUsers ? (
                   <>
@@ -622,40 +614,18 @@ const AdminDashboard = () => {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-20 lg:hidden pt-16"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar Component */}
-      <AdminSidebar
+    <>
+      <PanelShell
         isSidebarOpen={isSidebarOpen}
         setIsSidebarOpen={setIsSidebarOpen}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         navItems={navItems}
-      />
-      {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 ease-in-out bg-gray-50 min-h-screen relative overflow-x-hidden ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
-        <div className="w-full max-w-[1600px] mx-auto p-6 lg:p-8">
-          <div className="mb-6 lg:hidden">
-            <button
-              className="p-2 rounded-md bg-white border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none flex items-center justify-center transition-colors"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              title="Toggle Sidebar"
-            >
-              <FiMenu className="w-5 h-5" />
-            </button>
-          </div>
-          <div className="w-full">
-            {renderContent()}
-          </div>
-        </div>
-      </main>
+        title="Admin Console"
+        badge="A"
+      >
+        {renderContent()}
+      </PanelShell>
 
       {/* ── Soft Delete Confirmation Modal ───────────────────────────────────── */}
       <ConfirmationModal
@@ -708,7 +678,7 @@ const AdminDashboard = () => {
         icon="error"
         isLoading={isHardDeleting}
       />
-    </div>
+    </>
   );
 };
 

@@ -5,13 +5,14 @@ import DataTable from '../../components/shared/DataTable';
 import { useGetUsersQuery, useUpdateUserProfileMutation } from '../../redux/features/user/userApiSlice';
 import { useGetAllExplorePostsQuery, useDeletePostMutation } from '../../redux/features/post/postApiSlice';
 import { useGetReportsQuery, useResolveReportMutation } from '../../redux/features/report/reportApiSlice';
-import { FiUsers, FiFileText, FiMessageSquare, FiAlertOctagon, FiMenu, FiX, FiImage, FiFolder } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiMessageSquare, FiAlertOctagon, FiImage, FiFolder } from 'react-icons/fi';
 import GalleryPage from '../Gallery';
 import FileRequestsPage from '../FileRequests';
+import { PanelShell } from '../../components/layout/Panel';
 
 const ManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState('posts');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const user = useAppSelector((state: any) => state.auth.user);
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers.onlineUserIds);
 
@@ -49,7 +50,7 @@ const ManagerDashboard = () => {
     { key: 'author', label: 'Author', render: (val: any) => <div className="flex flex-col"><span className="font-medium text-gray-800">{val?.name}</span><span className="text-xs text-gray-500">@{val?.username}</span></div> },
     { key: 'content', label: 'Content', render: (val: string) => <span className="truncate max-w-[200px] block text-gray-600" title={val}>{val}</span> },
     { key: 'timestamp', label: 'Date', render: (val: string) => <span className="text-gray-500 text-sm">{val}</span> },
-    { key: 'likes', label: 'Engagement', render: (val: number, row: any) => <div className="flex space-x-3 text-xs text-gray-500"><span>👍 {val}</span><span>💬 {row.comments}</span></div> },
+    // { key: 'likes', label: 'Engagement', render: (val: number, row: any) => <div className="flex space-x-3 text-xs text-gray-500"><span>👍 {val}</span><span>💬 {row.comments}</span></div> },
   ];
 
   const reportColumns = [
@@ -198,80 +199,17 @@ const ManagerDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
-      {/* Mobile Sidebar Overlay */}
-      {isSidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-20 lg:hidden pt-16"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* Sidebar with Glassmorphism */}
-      <aside className={`w-72 bg-white/80 backdrop-blur-xl border-r border-gray-200/60 fixed h-full pt-16 lg:pt-20 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-transform duration-300 ease-in-out lg:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-        <div className="px-8 pb-6 mb-2 border-b border-gray-100 relative mt-4 lg:mt-0">
-          <button 
-            className="lg:hidden absolute top-0 right-4 p-2 text-gray-400 hover:text-gray-600 focus:outline-none"
-            onClick={() => setIsSidebarOpen(false)}
-          >
-            <FiX className="w-5 h-5" />
-          </button>
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 text-white shadow-lg shadow-blue-500/30 mb-4">
-            <span className="text-xl font-bold">M</span>
-          </div>
-          <h2 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-900 to-gray-600">Manager Control</h2>
-          <p className="text-xs text-gray-500 mt-1 font-medium">Platform Moderation</p>
-        </div>
-        <nav className="mt-6 px-4 space-y-2">
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activeTab === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  setActiveTab(item.id);
-                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-300 group ${
-                  isActive 
-                    ? 'bg-gradient-to-r from-blue-50 to-cyan-50 text-blue-700 shadow-sm border border-blue-100/50' 
-                    : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
-                }`}
-              >
-                <Icon className={`w-5 h-5 mr-3 transition-colors duration-300 ${isActive ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'}`} />
-                {item.label}
-                {isActive && (
-                  <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.8)]" />
-                )}
-              </button>
-            );
-          })}
-        </nav>
-      </aside>
-
-      {/* Main Content */}
-      <main className="flex-1 lg:ml-72 pt-20 p-4 lg:p-10 min-h-screen relative overflow-hidden w-full max-w-[100vw]">
-        {/* Decorative background blobs */}
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-cyan-100/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 translate-x-1/3 -translate-y-1/2 z-0 pointer-events-none"></div>
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-blue-100/40 rounded-full mix-blend-multiply filter blur-[80px] opacity-70 -translate-x-1/4 translate-y-1/4 z-0 pointer-events-none"></div>
-        
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="mb-4 lg:hidden">
-            <button 
-              className="p-2.5 rounded-xl bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none flex items-center gap-2"
-              onClick={() => setIsSidebarOpen(true)}
-            >
-              <FiMenu className="w-5 h-5" />
-              <span className="font-semibold text-sm">Menu</span>
-            </button>
-          </div>
-          <div className="bg-white/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 p-4 lg:p-8 min-h-[calc(100vh-8rem)]">
-            {renderContent()}
-          </div>
-        </div>
-      </main>
-    </div>
+    <PanelShell
+      isSidebarOpen={isSidebarOpen}
+      setIsSidebarOpen={setIsSidebarOpen}
+      activeTab={activeTab}
+      setActiveTab={setActiveTab}
+      navItems={navItems}
+      title="Manager Control"
+      badge="M"
+    >
+      {renderContent()}
+    </PanelShell>
   );
 };
 
