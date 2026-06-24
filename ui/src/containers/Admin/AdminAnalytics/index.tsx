@@ -60,7 +60,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) 
     const totalMediaUploads = contentDist?.mediaCounts?.reduce((acc: number, curr: any) => acc + (Number(curr.count) || 0), 0) || 0;
 
     return (
-        <div className="p-6 bg-gray-50 min-h-screen">
+        <div className="w-full h-full">
             {/* Header */}
             <div className="flex justify-between items-center mb-6">
                 <div>

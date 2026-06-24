@@ -43,7 +43,7 @@ const CLOSED_MODAL: ModalState = { isOpen: false, userId: null, userName: '' };
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('analytics');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [showDeletedUsers, setShowDeletedUsers] = useState(false);
 
   // Modal states — each action gets its own independent modal
@@ -420,7 +420,7 @@ const AdminDashboard = () => {
     switch (activeTab) {
       case 'analytics':
         return (
-          <div className="animate-fade-in-up -m-4 lg:-m-8">
+          <div className="animate-fade-in-up">
             <AdminAnalytics onNavigateToReports={() => setActiveTab('reports')} />
           </div>
         );
@@ -611,11 +611,11 @@ const AdminDashboard = () => {
 
       {/* Sidebar */}
       <aside
-        className={`w-72 bg-white/80 backdrop-blur-xl border-r border-gray-200/60 fixed h-full pt-16 lg:pt-20 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+        className={`w-72 bg-white/80 backdrop-blur-xl border-r border-gray-200/60 fixed top-0 h-full pt-8 z-30 shadow-[4px_0_24px_rgba(0,0,0,0.02)] transition-transform duration-300 ease-in-out flex flex-col overflow-y-auto ${
           isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
-        <div className="px-8 pb-6 mb-2 border-b border-gray-100 relative mt-4 lg:mt-0">
+        <div className="px-8 pb-6 mb-2 border-b border-gray-100 relative shrink-0">
           <button
             className="lg:hidden absolute top-0 right-4 p-2 text-gray-400 hover:text-gray-600 focus:outline-none"
             onClick={() => setIsSidebarOpen(false)}
@@ -630,7 +630,7 @@ const AdminDashboard = () => {
           </h2>
           <p className="text-xs text-gray-500 mt-1 font-medium">System Management</p>
         </div>
-        <nav className="mt-6 px-4 space-y-2">
+        <nav className="mt-2 px-4 space-y-2 flex-1 pb-8">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -664,19 +664,20 @@ const AdminDashboard = () => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 lg:ml-72 pt-20 p-4 lg:p-10 min-h-screen relative overflow-hidden w-full max-w-[100vw]">
+      <main className={`flex-1 transition-all duration-300 ease-in-out pt-20 p-4 lg:p-10 min-h-screen relative overflow-hidden w-full max-w-[100vw] ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
         {/* Decorative background blobs */}
         <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-100/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none" />
         <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-100/40 rounded-full mix-blend-multiply filter blur-[80px] opacity-70 translate-x-1/3 -translate-y-1/4 z-0 pointer-events-none" />
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="mb-4 lg:hidden">
+          <div className="mb-4">
             <button
-              className="p-2.5 rounded-xl bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none flex items-center gap-2"
-              onClick={() => setIsSidebarOpen(true)}
+              className="p-2.5 rounded-xl bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none flex items-center gap-2 transition-colors"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              title="Toggle Sidebar"
             >
               <FiMenu className="w-5 h-5" />
-              <span className="font-semibold text-sm">Menu</span>
+              <span className="font-semibold text-sm lg:hidden">Menu</span>
             </button>
           </div>
           <div className="bg-white/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 p-4 lg:p-8 min-h-[calc(100vh-8rem)]">
