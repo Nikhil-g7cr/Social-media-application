@@ -6,6 +6,7 @@ import {
   Headers,
   Post,
   Req,
+  Ip,
   UseGuards,
 } from "@nestjs/common";
 import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
@@ -32,8 +33,10 @@ export class AuthController {
   })
   async signup(
     @Body() userData: UsersDTO,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
   ) {
-    return await this.authService.signup(userData);
+    return await this.authService.signup(userData, ip, userAgent);
   }
 
   // =====================================================
@@ -46,8 +49,10 @@ export class AuthController {
   })
   async login(
     @Body() loginData: LoginDto,
+    @Ip() ip: string,
+    @Headers('user-agent') userAgent: string,
   ) {
-    return await this.authService.login(loginData);
+    return await this.authService.login(loginData, ip, userAgent);
   }
 
   // =====================================================

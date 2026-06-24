@@ -6,10 +6,10 @@ import { JwtPayload } from "./models/jwt-payload.model";
 export abstract class AbstractAuthSvc {
 
     // User registration
-    abstract signup(userData: UsersDTO): Promise<AppResponse>;
+    abstract signup(userData: UsersDTO, ipAddress?: string, userAgent?: string): Promise<AppResponse>;
 
     // User login
-    abstract login(loginData: LoginDto): Promise<AppResponse>;
+    abstract login(loginData: LoginDto, ipAddress?: string, userAgent?: string): Promise<AppResponse>;
 
     // Generate new access token using refresh token
     abstract refreshToken(refreshToken: string): Promise<AppResponse>;

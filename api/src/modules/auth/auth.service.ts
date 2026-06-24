@@ -28,7 +28,7 @@ export class AuthService implements AbstractAuthSvc {
   // SIGNUP
   // =====================================================
 
-  async signup(userData: UsersDTO): Promise<AppResponse> {
+  async signup(userData: UsersDTO, ipAddress?: string, userAgent?: string): Promise<AppResponse> {
     try {
       // Check if email already exists
       const existingUser = await this.authDao.fetchUserByEmail(
@@ -51,6 +51,50 @@ export class AuthService implements AbstractAuthSvc {
         Password: hashedPassword,
       });
 
+      if (response.code === HttpStatus.CREATED && response.data) {
+        const user: any = response.data;
+        const payload: JwtPayload = {
+          sub: user.ID,
+          email: user.EmailAddress,
+          roles: [user.Role || 'USER'],
+          name: user.FullName,
+          image_url: user.ProfilePictureUrl,
+        };
+
+        const accessToken = await this.jwtService.signAsync(payload, {
+          secret: this.appConfig.get("jwt").appAXTSecret,
+          expiresIn: this.appConfig.get("jwt").web.axt.expiresIn,
+        });
+
+        const refreshToken = await this.jwtService.signAsync(payload, {
+          secret: this.appConfig.get("jwt").appRFTSecret,
+          expiresIn: this.appConfig.get("jwt").web.rft.expiresIn,
+        });
+
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        await this.authDao.createSession({
+          ID: require('crypto').randomUUID(),
+          UserID: user.ID,
+          SessionToken: accessToken,
+          RefreshToken: refreshToken,
+          IpAddress: ipAddress,
+          UserAgent: userAgent,
+          ExpiresAt: expiresAt,
+          IsRevoked: false,
+        });
+
+        return createResponse(
+          HttpStatus.CREATED,
+          "User created and logged in successfully.",
+          {
+            accessToken,
+            refreshToken,
+          },
+        );
+      }
+
       return response;
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
@@ -69,7 +113,7 @@ export class AuthService implements AbstractAuthSvc {
   // LOGIN
   // =====================================================
 
-  async login(loginData: LoginDto): Promise<AppResponse> {
+  async login(loginData: LoginDto, ipAddress?: string, userAgent?: string): Promise<AppResponse> {
     try {
       // Find user
       const userRes = await this.authDao.fetchUserByEmail(
@@ -120,6 +164,21 @@ export class AuthService implements AbstractAuthSvc {
 
       // Remove password before returning
       delete user.PasswordHash;
+
+      // Create Session
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 7);
+
+      await this.authDao.createSession({
+        ID: require('crypto').randomUUID(),
+        UserID: user.ID,
+        SessionToken: accessToken,
+        RefreshToken: refreshToken,
+        IpAddress: ipAddress,
+        UserAgent: userAgent,
+        ExpiresAt: expiresAt,
+        IsRevoked: false,
+      });
 
       return createResponse(
         HttpStatus.OK,

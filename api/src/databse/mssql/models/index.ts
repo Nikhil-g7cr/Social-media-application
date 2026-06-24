@@ -2,6 +2,7 @@ export * from './conversation.model';
 export * from './message.model';
 export * from './messageAttachment.model'
 export * from './refreshToken.model';
+export * from './session.model';
 export * from './post.model';
 export * from './postView.model';
 export * from './user.model';

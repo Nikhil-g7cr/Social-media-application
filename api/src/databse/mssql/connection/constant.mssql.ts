@@ -17,5 +17,6 @@ export class MsSqlConstants {
 	static readonly NOTIFICATION = 'NOTIFICATION';
 	static readonly REPORT = 'REPORT';
 	static readonly REFRESH_TOKEN = 'REFRESH_TOKEN';
+	static readonly SESSION = 'SESSION';
 	static readonly FILE_DELETE_REQUEST = 'FILE_DELETE_REQUEST';
 }

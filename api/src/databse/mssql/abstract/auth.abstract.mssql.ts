@@ -5,4 +5,5 @@ export abstract class AuthAbstractSQLDao {
   abstract fetchUserById(userID: string): Promise<AppResponse>;
   abstract fetchUserByEmail(email: string): Promise<AppResponse>;
   abstract createUser(userData: UsersDTO): Promise<AppResponse>;
+  abstract createSession(sessionData: any): Promise<void>;
 }

@@ -15,6 +15,7 @@ import {
   Reports,
   RefreshToken,
   FileDeleteRequest,
+  Session,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import { MsSqlConstants } from './constant.mssql';
@@ -36,6 +37,7 @@ const msSqlDBModelsProvider = [
     { provide: 'POST_HASHTAG_MODEL', useValue: PostHashtags },
     { provide: MsSqlConstants.REPORT, useValue: Reports },
     { provide: MsSqlConstants.REFRESH_TOKEN, useValue: RefreshToken },
+    { provide: MsSqlConstants.SESSION, useValue: Session },
     { provide: MsSqlConstants.FILE_DELETE_REQUEST, useValue: FileDeleteRequest },
 
   ],

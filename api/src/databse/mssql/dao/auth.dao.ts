@@ -3,7 +3,7 @@ import AppLogger from 'src/core/logger/app-logger';
 import { AppConfig } from 'src/config/AppConfig';
 import { AuthAbstractSQLDao } from '../abstract/auth.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import { Users, UserColumns } from '../models';
+import { Users, UserColumns, Session } from '../models';
 import { UsersDTO } from 'src/modules/user/dto/users.dto';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { messageFactory, messages } from 'src/shared/message.shared';
@@ -14,6 +14,8 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
   constructor(
     @Inject(MsSqlConstants.USER)
     private readonly userModel: typeof Users,
+    @Inject(MsSqlConstants.SESSION)
+    private readonly sessionModel: typeof Session,
     readonly logger: AppLogger,
     private readonly appConfig: AppConfig,
   ) {}
@@ -108,6 +110,14 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
         HttpStatus.INTERNAL_SERVER_ERROR,
         messageFactory(messages.E2),
       );
+    }
+  }
+
+  async createSession(sessionData: any): Promise<void> {
+    try {
+      await this.sessionModel.create(sessionData);
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

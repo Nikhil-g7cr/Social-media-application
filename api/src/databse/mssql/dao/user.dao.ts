@@ -2,7 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { Sequelize } from 'sequelize-typescript';
 import { Op } from 'sequelize';
-import { Users, Posts, Comments, Likes, Follow, Message, Notification, Reports, CP, PostView, MessageAttachment, PostHashtags, RefreshToken, Conversation } from '../models';
+import { Users, Posts, Comments, Likes, Follow, Message, Notification, Reports, CP, PostView, MessageAttachment, PostHashtags, RefreshToken, Conversation, Session } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import AppLogger from 'src/core/logger/app-logger';
 import { UsersDTO } from 'src/modules/user/dto/users.dto';
@@ -30,6 +30,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
     @Inject(MsSqlConstants.POST_MEDIA) private _postMedia: typeof PostMedia,
     @Inject('POST_HASHTAG_MODEL') private _postHashtag: typeof PostHashtags,
     @Inject(MsSqlConstants.REFRESH_TOKEN) private _refreshToken: typeof RefreshToken,
+    @Inject(MsSqlConstants.SESSION) private _session: typeof Session,
     @Inject(MsSqlConstants.CONVERSATION) private _conversation: typeof Conversation,
     readonly logger: AppLogger,
   ) { }
@@ -234,8 +235,8 @@ export class UserSQLDao implements UserAbsSQLDAO {
         return createResponse(400, 'User is already soft-deleted.', null);
       }
 
-      // Invalidate refresh tokens
-      await this._refreshToken.destroy({ where: { UserID: UserId }, transaction });
+      // Invalidate sessions
+      await this._session.destroy({ where: { UserID: UserId }, transaction });
 
       const [updatedCount] = await this._user.update(
         { IsDeleted: true, DeletedAt: new Date() } as any,
@@ -293,7 +294,8 @@ export class UserSQLDao implements UserAbsSQLDAO {
   async hardDeleteUser(UserId: string): Promise<AppResponse> {
     const transaction = await this.sequelize.transaction();
     try {
-      // 0. Delete Refresh Tokens
+      // 0. Delete Sessions and Refresh Tokens
+      await this._session.destroy({ where: { UserID: UserId }, transaction });
       await this._refreshToken.destroy({ where: { UserID: UserId }, transaction });
 
       // 1. Delete Notifications where user is recipient or actor
