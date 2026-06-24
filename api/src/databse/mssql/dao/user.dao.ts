@@ -239,7 +239,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
       await this._session.destroy({ where: { UserID: UserId }, transaction });
 
       const [updatedCount] = await this._user.update(
-        { IsDeleted: true, DeletedAt: new Date() } as any,
+        { IsDeleted: true, DeletedAt: Sequelize.literal('GETDATE()') } as any,
         { where: { ID: UserId }, transaction },
       );
 
@@ -252,7 +252,12 @@ export class UserSQLDao implements UserAbsSQLDAO {
       this.logger.log(`User ${UserId} soft-deleted.`, 200);
       return createResponse(200, 'User soft-deleted successfully.', null);
     } catch (error: any) {
-      await transaction.rollback();
+      console.log('SOFT DELETE ERROR:', error);
+      try {
+        await transaction.rollback();
+      } catch (e) {
+        console.log('Rollback failed:', e);
+      }
       this.logger.error(error.stack, 500);
       return { ...createResponse(500, messageFactory(messages.E2)), description: error.message };
     }

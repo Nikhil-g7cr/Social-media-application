@@ -621,7 +621,7 @@ const AdminDashboard = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         navItems={navItems}
-        title="Admin Console"
+        title="Admin Control"
         badge="A"
       >
         {renderContent()}
