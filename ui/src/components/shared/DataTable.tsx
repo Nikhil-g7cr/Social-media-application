@@ -19,11 +19,11 @@ const DataTable: React.FC<DataTableProps> = ({ columns, data, actions }) => {
         <thead className="ltr:text-left rtl:text-right">
           <tr>
             {columns.map((col) => (
-              <th key={col.key} className="whitespace-nowrap px-4 py-3 font-semibold text-gray-900 text-left bg-gray-50">
+              <th key={col.key} className="whitespace-nowrap px-4 py-3 font-semibold text-xs uppercase tracking-wider text-gray-500 text-left bg-white border-b border-gray-200">
                 {col.label}
               </th>
             ))}
-            {actions && <th className="px-4 py-3 font-semibold text-gray-900 text-right bg-gray-50">Actions</th>}
+            {actions && <th className="px-4 py-3 font-semibold text-xs uppercase tracking-wider text-gray-500 text-right bg-white border-b border-gray-200">Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-200">
@@ -37,12 +37,12 @@ const DataTable: React.FC<DataTableProps> = ({ columns, data, actions }) => {
             data.map((row, i) => (
               <tr key={row.ID || i} className="hover:bg-gray-50">
                 {columns.map((col) => (
-                  <td key={col.key} className="whitespace-nowrap px-4 py-3 text-gray-700">
+                  <td key={col.key} className="whitespace-nowrap px-4 py-2.5 text-sm text-gray-700">
                     {col.render ? col.render(row[col.key], row) : row[col.key]}
                   </td>
                 ))}
                 {actions && (
-                  <td className="whitespace-nowrap px-4 py-3 text-right">
+                  <td className="whitespace-nowrap px-4 py-2.5 text-right">
                     {actions(row)}
                   </td>
                 )}

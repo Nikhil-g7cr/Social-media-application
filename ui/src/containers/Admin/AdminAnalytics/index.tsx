@@ -62,7 +62,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) 
     return (
         <div className="w-full h-full">
             {/* Header */}
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex justify-between items-center mb-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-800 m-0">Platform Overview</h1>
                     <p className="text-gray-500 mt-1">Comprehensive view of your application's health and metrics.</p>
@@ -79,7 +79,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) 
             </div>
 
             {/* ── Row 1: Users KPI cards ─────────────────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <StatisticsCards
                     title="Total Users"
                     value={summary?.totalUsers || 0}
@@ -112,7 +112,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) 
             </div>
 
             {/* ── Row 2: Content Volume KPI cards ───────────────────────────── */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                 <StatisticsCards
                     title="Total Posts"
                     value={summary?.totalPosts || 0}

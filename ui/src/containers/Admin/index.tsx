@@ -328,13 +328,13 @@ const AdminDashboard = () => {
             id={`restore-user-${row.id}`}
             onClick={() => handleRestoreUser(row.id, row.name)}
             disabled={isRestoring}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed border border-emerald-200"
+            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
             title="Restore user account"
           >
             {isRestoring ? (
-              <div className="w-3 h-3 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              <div className="w-3.5 h-3.5 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
             ) : (
-              <FiRefreshCw className="w-3 h-3" />
+              <FiRefreshCw className="w-3.5 h-3.5" />
             )}
             Restore
           </button>
@@ -345,10 +345,10 @@ const AdminDashboard = () => {
               id={`hard-delete-user-${row.id}`}
               onClick={() => setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
               disabled={isHardDeleting}
-              className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed border border-rose-200"
+              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
               title="Permanently delete this user"
             >
-              <FiTrash2 className="w-3 h-3" />
+              <FiTrash2 className="w-3.5 h-3.5" />
               Hard Delete
             </button>
           )}
@@ -363,10 +363,10 @@ const AdminDashboard = () => {
         <button
           id={`toggle-suspend-${row.id}`}
           onClick={() => handleToggleSuspend(row.id, row.isActive)}
-          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
+          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${
             row.isActive !== false
-              ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-sm'
-              : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm'
+              ? 'bg-red-50 text-red-600 hover:bg-red-100'
+              : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
           }`}
         >
           {row.isActive !== false ? 'Suspend' : 'Activate'}
@@ -377,7 +377,7 @@ const AdminDashboard = () => {
           <button
             id={`role-switch-${row.id}`}
             onClick={() => handleRoleSwitch(row.id, row.role)}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-50 text-indigo-600 hover:bg-indigo-100 hover:shadow-sm transition-all duration-200"
+            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
           >
             {row.role === 'MANAGER' ? 'Demote' : 'Make Manager'}
           </button>
@@ -389,26 +389,26 @@ const AdminDashboard = () => {
             id={`soft-delete-user-${row.id}`}
             onClick={() => setSoftDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
             disabled={isSoftDeleting}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed border border-amber-200"
+            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
             title="Soft-delete this user (reversible)"
           >
-            <FiSlash className="w-3 h-3" />
+            <FiSlash className="w-3.5 h-3.5" />
             Soft Delete
           </button>
         )}
 
         {/* Hard Delete (not for self or other admins) */}
         {!isSelf && !isAdmin && (
-          <button
-            id={`hard-delete-user-${row.id}`}
-            onClick={() => setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
-            disabled={isHardDeleting}
-            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-700 hover:bg-rose-100 hover:shadow-sm transition-all duration-200 flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed border border-rose-200"
-            title="Permanently delete this user (irreversible)"
-          >
-            <FiTrash2 className="w-3 h-3" />
-            Hard Delete
-          </button>
+            <button
+              id={`hard-delete-user-${row.id}`}
+              onClick={() => setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
+              disabled={isHardDeleting}
+              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
+              title="Permanently delete this user (irreversible)"
+            >
+              <FiTrash2 className="w-3.5 h-3.5" />
+              Hard Delete
+            </button>
         )}
       </div>
     );
@@ -430,17 +430,17 @@ const AdminDashboard = () => {
           <div className="animate-fade-in-up">
             {/* Header row */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-              <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600">
+              <h2 className="text-xl font-semibold text-gray-900 tracking-tight">
                 Manage Users
               </h2>
               {/* Show Deleted toggle */}
               <button
                 id="toggle-show-deleted"
                 onClick={() => setShowDeletedUsers((prev) => !prev)}
-                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border ${
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
                   showDeletedUsers
-                    ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
-                    : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                    ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                 }`}
               >
                 {showDeletedUsers ? (
@@ -477,7 +477,7 @@ const AdminDashboard = () => {
                 Error loading users data. Please try again later.
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <DataTable
                   columns={userColumns}
                   data={usersData}
@@ -491,7 +491,7 @@ const AdminDashboard = () => {
       case 'posts':
         return (
           <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 tracking-tight mb-6">
               Manage Posts
             </h2>
             {isLoadingPosts ? (
@@ -503,7 +503,7 @@ const AdminDashboard = () => {
                 Error loading posts data. Please try again later.
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <DataTable
                   columns={postColumns}
                   data={postsData?.posts || []}
@@ -526,7 +526,7 @@ const AdminDashboard = () => {
       case 'reports':
         return (
           <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 tracking-tight mb-6">
               User Reports
             </h2>
             {isLoadingReports ? (
@@ -538,7 +538,7 @@ const AdminDashboard = () => {
                 Error loading reports data. Please try again later.
               </div>
             ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
+              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
                 <DataTable
                   columns={reportColumns}
                   data={reportsData}
@@ -573,7 +573,7 @@ const AdminDashboard = () => {
       case 'comments':
         return (
           <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 mb-6">
+            <h2 className="text-xl font-semibold text-gray-900 tracking-tight mb-6">
               Manage Comments
             </h2>
             <div className="p-12 flex flex-col items-center justify-center text-gray-500 bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-gray-300">
@@ -618,23 +618,18 @@ const AdminDashboard = () => {
         navItems={navItems}
       />
       {/* Main Content */}
-      <main className={`flex-1 transition-all duration-300 ease-in-out pt-20 p-4 lg:p-10 min-h-screen relative overflow-hidden w-full max-w-[100vw] ${isSidebarOpen ? 'lg:ml-72' : 'ml-0'}`}>
-        {/* Decorative background blobs */}
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-indigo-100/40 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 -translate-x-1/2 -translate-y-1/2 z-0 pointer-events-none" />
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-purple-100/40 rounded-full mix-blend-multiply filter blur-[80px] opacity-70 translate-x-1/3 -translate-y-1/4 z-0 pointer-events-none" />
-
-        <div className="max-w-7xl mx-auto relative z-10">
-          <div className="mb-4">
+      <main className={`flex-1 transition-all duration-300 ease-in-out bg-gray-50 min-h-screen relative overflow-x-hidden pt-16 ${isSidebarOpen ? 'lg:ml-64' : 'ml-0'}`}>
+        <div className="w-full max-w-[1600px] mx-auto p-6 lg:p-8">
+          <div className="mb-6 lg:hidden">
             <button
-              className="p-2.5 rounded-xl bg-white/80 backdrop-blur-md border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none flex items-center gap-2 transition-colors"
+              className="p-2 rounded-md bg-white border border-gray-200 text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none flex items-center justify-center transition-colors"
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               title="Toggle Sidebar"
             >
               <FiMenu className="w-5 h-5" />
-              <span className="font-semibold text-sm lg:hidden">Menu</span>
             </button>
           </div>
-          <div className="bg-white/60 backdrop-blur-2xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/80 p-4 lg:p-8 min-h-[calc(100vh-8rem)]">
+          <div className="w-full">
             {renderContent()}
           </div>
         </div>
