@@ -26,30 +26,30 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
   async getDashboardSummary(): Promise<AppResponse> {
     try {
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
 
-      const [
-        totalUsers, activeUsers, deletedUsers, newUsersToday,
-        totalPosts, newPostsToday, totalComments, totalLikes,
-        totalConversations, totalMessages,
-        totalReports, pendingReports, resolvedReports,
-        totalMediaUploaded
-      ] = await Promise.all([
-        this._user.count(),
-        this._user.count({ where: { IsDeleted: false } }),
-        this._user.count({ where: { IsDeleted: true } }),
-        this._user.count({ where: { CreatedAt: { [Op.gte]: today } } }),
-        this._post.count(),
-        this._post.count({ where: { CreatedAt: { [Op.gte]: today } } }),
-        this._comment.count(),
-        this._like.count(),
-        this._conversation.count(),
-        this._message.count(),
-        this._report.count(),
-        this._report.count({ where: { Status: 'PENDING' } }),
-        this._report.count({ where: { Status: 'RESOLVED' } }),
-        this._postMedia.count()
-      ]);
+      let totalUsers = 0, activeUsers = 0, deletedUsers = 0, newUsersToday = 0;
+      let totalPosts = 0, newPostsToday = 0, totalComments = 0, totalLikes = 0;
+      let totalConversations = 0, totalMessages = 0, totalReports = 0, pendingReports = 0, resolvedReports = 0, totalMediaUploaded = 0;
+
+      try { totalUsers = await this._user.count(); } catch (e) { console.error('totalUsers error', e); }
+      try { activeUsers = await this._user.count({ where: { IsDeleted: false } }); } catch (e) { console.error('activeUsers error', e); }
+      try { deletedUsers = await this._user.count({ where: { IsDeleted: true } }); } catch (e) { console.error('deletedUsers error', e); }
+      try { newUsersToday = await this._user.count({ where: { CreatedAt: { [Op.gte]: todayStr } } }); } catch (e) { console.error('newUsersToday error', e); }
+      
+      try { totalPosts = await this._post.count(); } catch (e) { console.error('totalPosts error', e); }
+      try { newPostsToday = await this._post.count({ where: { CreatedAt: { [Op.gte]: todayStr } } }); } catch (e) { console.error('newPostsToday error', e); }
+      
+      try { totalComments = await this._comment.count(); } catch (e) { console.error('totalComments error', e); }
+      try { totalLikes = await this._like.count(); } catch (e) { console.error('totalLikes error', e); }
+      try { totalConversations = await this._conversation.count(); } catch (e) { console.error('totalConversations error', e); }
+      try { totalMessages = await this._message.count(); } catch (e) { console.error('totalMessages error', e); }
+      
+      try { totalReports = await this._report.count(); } catch (e) { console.error('totalReports error', e); }
+      try { pendingReports = await this._report.count({ where: { Status: 'PENDING' } }); } catch (e) { console.error('pendingReports error', e); }
+      try { resolvedReports = await this._report.count({ where: { Status: 'RESOLVED' } }); } catch (e) { console.error('resolvedReports error', e); }
+      try { totalMediaUploaded = await this._postMedia.count(); } catch (e) { console.error('totalMediaUploaded error', e); }
+
 
       const summary = {
         totalUsers,
@@ -81,22 +81,30 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
       // We will do a basic last 30 days query.
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      const thirtyDaysAgoStr = thirtyDaysAgo.toISOString().split('T')[0];
 
-      const userGrowth = await this.sequelize.query(`
-        SELECT CAST(CreatedAt AS DATE) as Date, COUNT(ID) as count
-        FROM Users
-        WHERE CreatedAt >= :date
-        GROUP BY CAST(CreatedAt AS DATE)
-        ORDER BY CAST(CreatedAt AS DATE) ASC
-      `, { replacements: { date: thirtyDaysAgo }, type: 'SELECT' });
+      let userGrowth: any[] = [];
+      let postGrowth: any[] = [];
 
-      const postGrowth = await this.sequelize.query(`
-        SELECT CAST(CreatedAt AS DATE) as Date, COUNT(ID) as count
-        FROM [Post]
-        WHERE CreatedAt >= :date
-        GROUP BY CAST(CreatedAt AS DATE)
-        ORDER BY CAST(CreatedAt AS DATE) ASC
-      `, { replacements: { date: thirtyDaysAgo }, type: 'SELECT' });
+      try {
+        userGrowth = await this.sequelize.query(`
+          SELECT CAST(CreatedAt AS DATE) as Date, COUNT(ID) as count
+          FROM Users
+          WHERE CreatedAt >= :date
+          GROUP BY CAST(CreatedAt AS DATE)
+          ORDER BY CAST(CreatedAt AS DATE) ASC
+        `, { replacements: { date: thirtyDaysAgoStr }, type: 'SELECT' });
+      } catch (e) { console.error('userGrowth error', e); }
+
+      try {
+        postGrowth = await this.sequelize.query(`
+          SELECT CAST(CreatedAt AS DATE) as Date, COUNT(ID) as count
+          FROM [Post]
+          WHERE CreatedAt >= :date
+          GROUP BY CAST(CreatedAt AS DATE)
+          ORDER BY CAST(CreatedAt AS DATE) ASC
+        `, { replacements: { date: thirtyDaysAgoStr }, type: 'SELECT' });
+      } catch (e) { console.error('postGrowth error', e); }
 
       return createResponse(200, 'Growth analytics retrieved', { userGrowth, postGrowth });
     } catch (error: any) {

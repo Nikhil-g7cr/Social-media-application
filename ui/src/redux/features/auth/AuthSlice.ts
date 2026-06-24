@@ -85,7 +85,7 @@ const authSlice = createSlice({
                 state.user = {
                     id: decoded.id || (decoded as any).sub,
                     email: decoded.email,
-                    role: decoded.role,
+                    role: decoded.role || (decoded as any).roles?.[0],
                 };
             } else if (action.payload.user) {
                 // Fallback if token decoding fails

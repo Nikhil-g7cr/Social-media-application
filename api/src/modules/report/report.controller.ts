@@ -11,7 +11,11 @@ import { AtPayload } from '../user/models/users.model';
 import { AppResponse } from 'src/shared/appresponse.shared';
 import { ReportService } from './report.service';
 
+import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { UseGuards } from '@nestjs/common';
+
 @Controller('report')
+@UseGuards(JwtAuthGuard)
 export class ReportController {
   constructor(private readonly reportService: ReportService) { }
 
