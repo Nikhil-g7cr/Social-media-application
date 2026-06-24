@@ -13,3 +13,4 @@ export * from './notification.model';
 export * from './hashtag.model';
 export * from './postHashtag.model';
 export * from './report.model';
+export * from './fileDeleteRequest.model';

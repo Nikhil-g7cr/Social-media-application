@@ -143,4 +143,29 @@ export class FileService implements OnModuleInit {
 
     return `${blobClient.url}?${sasToken}`;
   }
+
+  async listFiles() {
+    const containerClient = this.blobServiceClient.getContainerClient(
+      this.containerName,
+    );
+
+    const files: {
+      name: string;
+      url: string;
+      contentType: string | undefined;
+      size: number | undefined;
+      createdOn: Date | undefined;
+    }[] = [];
+    for await (const blob of containerClient.listBlobsFlat()) {
+      files.push({
+        name: blob.name,
+        url: await this.generateReadUrl(blob.name),
+        contentType: blob.properties.contentType,
+        size: blob.properties.contentLength,
+        createdOn: blob.properties.createdOn,
+      });
+    }
+
+    return files;
+  }
 }

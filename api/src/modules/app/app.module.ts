@@ -17,6 +17,7 @@ import { FeedModule } from '../feed/feed.module';
 import { NotificationModule } from '../notification/notification.module';
 import { ReportModule } from '../report/report.module';
 import { AdminAnalyticsModule } from '../admin-analytics/admin-analytics.module';
+import { GalleryModule } from '../gallery/gallery.module';
 
 @Module({
   imports: [
@@ -35,7 +36,8 @@ import { AdminAnalyticsModule } from '../admin-analytics/admin-analytics.module'
     FeedModule,
     NotificationModule,
     ReportModule,
-    AdminAnalyticsModule
+    AdminAnalyticsModule,
+    GalleryModule
   ],
   controllers: [AppController],
   providers: [AppService],

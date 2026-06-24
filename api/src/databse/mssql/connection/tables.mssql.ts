@@ -16,6 +16,7 @@ export enum Tables{
     tbl_Hashtag = 'tbl_Hashtag',
     tbl_PostHashtag = 'tbl_PostHashtag',
     tbl_Report = 'tbl_Report',
+    tbl_FileDeleteRequest = 'FileDeleteRequest',
 }
 
 export class TableGroup{

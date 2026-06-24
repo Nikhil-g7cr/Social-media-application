@@ -17,6 +17,8 @@ import Navbar from "../components/layout/Navbar";
 import PrivateRoute from "./ProtectedRoutes";
 import AdminDashboard from "../containers/Admin";
 import ManagerDashboard from "../containers/Manager";
+import GalleryPage from "../containers/Gallery";
+import FileRequestsPage from "../containers/FileRequests";
 
 // Create Reusable Role Arrays for cleaner code
 
@@ -79,6 +81,16 @@ const Approutes = () => {
         <Route path="/manager" element={
           <PrivateRoute allowedRoles={['MANAGER', 'ADMIN']}>
             <ManagerDashboard/>
+          </PrivateRoute>
+        }/>
+        <Route path="/gallery" element={
+          <PrivateRoute allowedRoles={['MANAGER', 'ADMIN']}>
+            <GalleryPage/>
+          </PrivateRoute>
+        }/>
+        <Route path="/file-requests" element={
+          <PrivateRoute allowedRoles={['MANAGER', 'ADMIN']}>
+            <FileRequestsPage/>
           </PrivateRoute>
         }/>
 

@@ -27,6 +27,10 @@ export const adminAnalyticsApiSlice = apiSlice.injectEndpoints({
             transformResponse: (response: any) => response?.data || response,
             providesTags: ['AdminAnalytics'] as any,
         }),
+        getPendingFileRequests: builder.query<any, void>({
+            query: () => ({ url: 'gallery/requests/pending-count' }),
+            transformResponse: (response: any) => response?.data || response,
+        }),
     }),
 });
 
@@ -36,4 +40,5 @@ export const {
     useGetContentDistributionQuery,
     useGetTopUsersQuery,
     useGetRecentActivityQuery,
+    useGetPendingFileRequestsQuery,
 } = adminAnalyticsApiSlice;

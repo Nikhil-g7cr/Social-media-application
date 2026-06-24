@@ -6,8 +6,10 @@ import {
     useGetGrowthAnalyticsQuery, 
     useGetContentDistributionQuery, 
     useGetTopUsersQuery, 
-    useGetRecentActivityQuery 
+    useGetRecentActivityQuery,
+    useGetPendingFileRequestsQuery
 } from '../../../redux/features/adminAnalytics/adminAnalyticsApiSlice';
+import { useNavigate } from 'react-router-dom';
 
 import StatisticsCards from './components/StatisticsCards';
 import GrowthCharts from './components/GrowthCharts';
@@ -19,14 +21,17 @@ import EngagementChart from './components/EngagementChart';
 interface AdminAnalyticsProps {
     /** Called when the user clicks "View All Reports →" inside the analytics panel */
     onNavigateToReports?: () => void;
+    /** Called when the user clicks the Pending File Requests card */
+    onNavigateToFileRequests?: () => void;
 }
 
-const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) => {
+const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, onNavigateToFileRequests }) => {
     const { data: summary, isLoading: loadingSummary, isFetching: fetchingSummary, error: summaryError, refetch: refetchSummary } = useGetDashboardSummaryQuery(undefined, { pollingInterval: 60000 });
     const { data: growth, refetch: refetchGrowth } = useGetGrowthAnalyticsQuery(undefined, { pollingInterval: 60000 });
     const { data: contentDist, refetch: refetchContentDist } = useGetContentDistributionQuery(undefined, { pollingInterval: 60000 });
     const { data: topUsers = [], refetch: refetchTopUsers } = useGetTopUsersQuery(undefined, { pollingInterval: 60000 });
     const { data: activity, refetch: refetchActivity } = useGetRecentActivityQuery(undefined, { pollingInterval: 60000 });
+    const { data: fileRequestsData, refetch: refetchFileRequests } = useGetPendingFileRequestsQuery(undefined, { pollingInterval: 60000 });
 
     const loading = loadingSummary;
     const isFetching = fetchingSummary;
@@ -38,6 +43,7 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) 
         refetchContentDist();
         refetchTopUsers();
         refetchActivity();
+        refetchFileRequests();
     };
 
     if (loading && !summary) {
@@ -108,6 +114,19 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports }) 
                     trend={summary?.pendingReports > 0 ? 'Needs attention' : 'All clear'}
                     trendUp={false}
                     color="bg-amber-50"
+                />
+            </div>
+            
+            {/* ── Row 1.5: File Requests KPI ────────────────────────────────── */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <StatisticsCards
+                    title="Pending File Requests"
+                    value={fileRequestsData?.count || 0}
+                    icon={<HardDrive className="text-orange-500" size={24} />}
+                    trend={fileRequestsData?.count > 0 ? 'Review needed' : 'All clear'}
+                    trendUp={false}
+                    color="bg-orange-50"
+                    onClick={onNavigateToFileRequests}
                 />
             </div>
 

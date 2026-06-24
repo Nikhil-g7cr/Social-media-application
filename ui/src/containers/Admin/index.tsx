@@ -29,6 +29,9 @@ import ConfirmationModal from '../../components/shared/ConfirmationModal';
 import { message } from 'antd';
 import AdminAnalytics from './AdminAnalytics';
 import AdminSidebar from './AdminAnalytics/components/Admin.SideBar';
+import GalleryPage from '../Gallery';
+import FileRequestsPage from '../FileRequests';
+import { FiImage, FiFolder } from 'react-icons/fi';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ModalState {
@@ -416,12 +419,15 @@ const AdminDashboard = () => {
 
   // ── Tab Content ────────────────────────────────────────────────────────────
 
-  const renderContent = () => {
+    const renderContent = () => {
     switch (activeTab) {
       case 'analytics':
         return (
           <div className="animate-fade-in-up">
-            <AdminAnalytics onNavigateToReports={() => setActiveTab('reports')} />
+            <AdminAnalytics 
+              onNavigateToReports={() => setActiveTab('reports')} 
+              onNavigateToFileRequests={() => setActiveTab('file-requests')}
+            />
           </div>
         );
 
@@ -584,6 +590,20 @@ const AdminDashboard = () => {
           </div>
         );
 
+      case 'gallery':
+        return (
+          <div className="animate-fade-in-up">
+            <GalleryPage />
+          </div>
+        );
+
+      case 'file-requests':
+        return (
+          <div className="animate-fade-in-up">
+            <FileRequestsPage />
+          </div>
+        );
+
       default:
         return null;
     }
@@ -595,6 +615,8 @@ const AdminDashboard = () => {
     { id: 'posts', label: 'Manage Posts', icon: FiFileText },
     { id: 'comments', label: 'Manage Comments', icon: FiMessageSquare },
     { id: 'reports', label: 'User Reports', icon: FiAlertOctagon },
+    { id: 'gallery', label: 'Gallery', icon: FiImage },
+    { id: 'file-requests', label: 'File Requests', icon: FiFolder },
   ];
 
   // ── Render ─────────────────────────────────────────────────────────────────

@@ -5,7 +5,9 @@ import DataTable from '../../components/shared/DataTable';
 import { useGetUsersQuery, useUpdateUserProfileMutation } from '../../redux/features/user/userApiSlice';
 import { useGetAllExplorePostsQuery, useDeletePostMutation } from '../../redux/features/post/postApiSlice';
 import { useGetReportsQuery, useResolveReportMutation } from '../../redux/features/report/reportApiSlice';
-import { FiUsers, FiFileText, FiMessageSquare, FiAlertOctagon, FiMenu, FiX } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiMessageSquare, FiAlertOctagon, FiMenu, FiX, FiImage, FiFolder } from 'react-icons/fi';
+import GalleryPage from '../Gallery';
+import FileRequestsPage from '../FileRequests';
 
 const ManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState('posts');
@@ -169,6 +171,18 @@ const ManagerDashboard = () => {
             </div>
           </div>
         );
+      case 'gallery':
+        return (
+          <div className="animate-fade-in-up">
+            <GalleryPage />
+          </div>
+        );
+      case 'file-requests':
+        return (
+          <div className="animate-fade-in-up">
+            <FileRequestsPage />
+          </div>
+        );
       default:
         return null;
     }
@@ -179,6 +193,8 @@ const ManagerDashboard = () => {
     { id: 'comments', label: 'Moderate Comments', icon: FiMessageSquare },
     { id: 'reports', label: 'User Complaints', icon: FiAlertOctagon },
     { id: 'users', label: 'Suspend Users', icon: FiUsers },
+    { id: 'gallery', label: 'Gallery', icon: FiImage },
+    { id: 'file-requests', label: 'File Requests', icon: FiFolder },
   ];
 
   return (
