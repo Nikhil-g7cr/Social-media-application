@@ -26,6 +26,7 @@ const CreatePostPreview: React.FC<CreatePostPreviewProps> = ({ files, onRemove }
         preview={true}
         showDots={true}
         showArrows={true}
+        className="h-[350px] sm:h-[400px] bg-black"
       />
       {onRemove && (
         <button

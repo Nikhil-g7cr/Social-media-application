@@ -181,8 +181,8 @@ const UpdatePostPage = () => {
                ];
 
                return combinedPreview.length > 0 ? (
-                 <div className="relative w-full">
-                   <MediaCarousel media={combinedPreview as any} preview={true} showDots={true} showArrows={true} />
+                 <div className="relative w-full rounded-xl overflow-hidden">
+                   <MediaCarousel media={combinedPreview as any} preview={true} showDots={true} showArrows={true} className="h-[350px] sm:h-[400px] bg-black" />
                    <button 
                      onClick={() => {
                        setExistingMedia([]);

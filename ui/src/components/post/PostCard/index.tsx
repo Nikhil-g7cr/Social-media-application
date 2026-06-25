@@ -51,8 +51,8 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
       <p className="mt-4 text-gray-800 whitespace-pre-wrap">{post.content}</p>
 
       {mediaToRender.length > 0 && (
-        <div className="mt-4" onDoubleClick={() => toggleLike(post.id, isLiked)}>
-          <MediaCarousel media={mediaToRender} />
+        <div className="mt-4 rounded-xl overflow-hidden" onDoubleClick={() => toggleLike(post.id, isLiked)}>
+          <MediaCarousel media={mediaToRender} className="h-[350px] sm:h-[500px] bg-black" />
         </div>
       )}
 
