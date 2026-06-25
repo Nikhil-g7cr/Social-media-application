@@ -9,6 +9,8 @@ import { FiUsers, FiFileText, FiMessageSquare, FiAlertOctagon, FiImage, FiFolder
 import GalleryPage from '../Gallery';
 import FileRequestsPage from '../FileRequests';
 import { PanelShell } from '../../components/layout/Panel';
+import { Modal, Input, message } from 'antd';
+import { useCreateFileRequestMutation } from '../../redux/features/gallery/galleryApiSlice';
 
 const ManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState('posts');
@@ -23,6 +25,12 @@ const ManagerDashboard = () => {
   const [updateUser] = useUpdateUserProfileMutation();
   const [deletePost] = useDeletePostMutation();
   const [resolveReport] = useResolveReportMutation();
+  const [createFileRequest, { isLoading: isSubmitting }] = useCreateFileRequestMutation();
+
+  const [deletePostModal, setDeletePostModal] = useState(false);
+  const [selectedPost, setSelectedPost] = useState<any>(null);
+  const [deleteReason, setDeleteReason] = useState('');
+  const [messageApi, contextHolder] = message.useMessage();
 
   if (user?.role !== 'MANAGER' && user?.role !== 'ADMIN') {
     return <Navigate to="/" replace />;
@@ -30,6 +38,29 @@ const ManagerDashboard = () => {
 
   const handleToggleSuspend = async (userId: string, isActive: boolean) => {
     await updateUser({ id: userId, isActive: !isActive });
+  };
+
+  const submitDeleteRequest = async () => {
+    if (!deleteReason.trim()) {
+      messageApi.error('Reason is required');
+      return;
+    }
+
+    try {
+      await createFileRequest({
+        fileName: `[POST DELETION] by @${selectedPost?.author?.username || 'Unknown'}`,
+        fileUrl: `https://mock.blob.core.windows.net/posts/POST:${selectedPost?.id}`,
+        reason: deleteReason
+      }).unwrap();
+      
+      messageApi.success('Delete request submitted successfully');
+      setDeletePostModal(false);
+      setDeleteReason('');
+      setSelectedPost(null);
+    } catch (error) {
+      console.error('Error submitting request:', error);
+      messageApi.error('Failed to submit delete request');
+    }
   };
 
   const userColumns = [
@@ -109,10 +140,13 @@ const ManagerDashboard = () => {
                   actions={(row) => (
                     <div className="space-x-3 flex justify-end">
                       <button 
-                        onClick={() => deletePost(row.id)}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-sm transition-all duration-200"
+                        onClick={() => {
+                          setSelectedPost(row);
+                          setDeletePostModal(true);
+                        }}
+                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 hover:shadow-sm transition-all duration-200"
                       >
-                        Delete/Hide Post
+                        Request Deletion
                       </button>
                     </div>
                   )}
@@ -199,17 +233,53 @@ const ManagerDashboard = () => {
   ];
 
   return (
-    <PanelShell
-      isSidebarOpen={isSidebarOpen}
-      setIsSidebarOpen={setIsSidebarOpen}
-      activeTab={activeTab}
-      setActiveTab={setActiveTab}
-      navItems={navItems}
-      title="Manager Control"
-      badge="M"
-    >
-      {renderContent()}
-    </PanelShell>
+    <>
+      {contextHolder}
+      <PanelShell
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        navItems={navItems}
+        title="Manager Control"
+        badge="M"
+      >
+        {renderContent()}
+      </PanelShell>
+
+      <Modal
+        title="Request Post Deletion"
+        open={deletePostModal}
+        onCancel={() => {
+          setDeletePostModal(false);
+          setDeleteReason('');
+        }}
+        footer={[
+          <button key="back" onClick={() => setDeletePostModal(false)} className="px-4 py-2 border border-gray-300 bg-white text-gray-700 rounded-md mr-2 hover:bg-gray-50 transition-colors">
+            Cancel
+          </button>,
+          <button 
+            key="submit" 
+            className="px-4 py-2 bg-red-600 text-white rounded-md disabled:opacity-50 hover:bg-red-700 transition-colors"
+            disabled={!deleteReason.trim() || isSubmitting}
+            onClick={submitDeleteRequest}
+          >
+            {isSubmitting ? 'Submitting...' : 'Submit Request'}
+          </button>
+        ]}
+      >
+        <div style={{ marginBottom: 16 }}>
+          <p className="text-gray-600 text-sm">You are requesting the deletion of a post by <strong>@{selectedPost?.author?.username}</strong>.</p>
+        </div>
+        <Input.TextArea
+          autoFocus
+          placeholder="Reason for deletion"
+          rows={4}
+          value={deleteReason}
+          onChange={(e) => setDeleteReason(e.target.value)}
+        />
+      </Modal>
+    </>
   );
 };
 

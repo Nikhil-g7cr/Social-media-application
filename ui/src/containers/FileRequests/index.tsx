@@ -7,6 +7,7 @@ import {
   useGetFileRequestsQuery, 
   useUpdateFileRequestStatusMutation 
 } from '../../redux/features/gallery/galleryApiSlice';
+import { useDeletePostMutation } from '../../redux/features/post/postApiSlice';
 
 const { Title } = Typography;
 
@@ -30,14 +31,19 @@ const FileRequestsPage: React.FC = () => {
   // RTK Query Hooks
   const { data: responseData, isLoading, isFetching } = useGetFileRequestsQuery();
   const [updateStatus] = useUpdateFileRequestStatusMutation();
+  const [deletePost] = useDeletePostMutation();
 
   const requests: RequestItem[] = responseData?.data && Array.isArray(responseData.data) 
     ? responseData.data 
     : (Array.isArray(responseData) ? responseData : []);
 
-  const handleUpdateStatus = async (id: string, status: string) => {
+  const handleUpdateStatus = async (record: RequestItem, status: string) => {
     try {
-      await updateStatus({ id, status }).unwrap();
+      if (status === 'APPROVED' && record.FileUrl?.includes('/POST:')) {
+        const postId = record.FileUrl.split('/POST:')[1];
+        await deletePost(postId).unwrap();
+      }
+      await updateStatus({ id: record.ID, status }).unwrap();
       messageApi.success(`Request ${status.toLowerCase()} successfully`);
     } catch (error) {
       console.error('Error updating request status:', error);
@@ -55,14 +61,20 @@ const FileRequestsPage: React.FC = () => {
 
   const columns: TableProps<RequestItem>['columns'] = [
     {
-      title: 'File Name',
+      title: 'Target Name',
       key: 'FileName',
-      render: (_, record) => record.FileName?.split('/').pop() || 'Unknown',
+      render: (_, record) => {
+        if (record.FileUrl?.includes('/POST:')) return record.FileName;
+        return record.FileName?.split('/').pop() || 'Unknown';
+      },
     },
     {
-      title: 'File Type',
+      title: 'Type',
       key: 'FileType',
-      render: (_, record) => record.FileName?.split('.').pop()?.toUpperCase() || 'Unknown',
+      render: (_, record) => {
+        if (record.FileUrl?.includes('/POST:')) return <Tag color="blue">POST</Tag>;
+        return record.FileName?.split('.').pop()?.toUpperCase() || 'Unknown';
+      },
     },
     {
       title: 'Requested By',
@@ -94,14 +106,20 @@ const FileRequestsPage: React.FC = () => {
       align: 'right',
       render: (_, record) => (
         <Space>
-          <Button 
-            size="small" 
-            href={record.FileUrl} 
-            target="_blank" 
-            rel="noopener noreferrer"
-          >
-            View File
-          </Button>
+          {record.FileUrl?.includes('/POST:') ? (
+            <Button size="small" disabled title="Cannot preview post content directly from here">
+              View Post
+            </Button>
+          ) : (
+            <Button 
+              size="small" 
+              href={record.FileUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+            >
+              View File
+            </Button>
+          )}
           
           {userRole === 'ADMIN' && record.Status === 'PENDING' && (
             <Space>
@@ -109,7 +127,7 @@ const FileRequestsPage: React.FC = () => {
                 size="small" 
                 type="primary"
                 style={{ backgroundColor: '#52c41a' }}
-                onClick={() => handleUpdateStatus(record.ID, 'APPROVED')}
+                onClick={() => handleUpdateStatus(record, 'APPROVED')}
               >
                 Approve
               </Button>
@@ -117,7 +135,7 @@ const FileRequestsPage: React.FC = () => {
                 size="small" 
                 danger
                 type="primary"
-                onClick={() => handleUpdateStatus(record.ID, 'REJECTED')}
+                onClick={() => handleUpdateStatus(record, 'REJECTED')}
               >
                 Reject
               </Button>
