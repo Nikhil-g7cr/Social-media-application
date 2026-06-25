@@ -50,6 +50,7 @@ const AdminDashboard = () => {
   // Modal states — each action gets its own independent modal
   const [softDeleteModal, setSoftDeleteModal] = useState<ModalState>(CLOSED_MODAL);
   const [hardDeleteModal, setHardDeleteModal] = useState<ModalState>(CLOSED_MODAL);
+  const [deletePostModal, setDeletePostModal] = useState<ModalState>(CLOSED_MODAL);
 
   const user = useAppSelector((state: any) => state.auth.user);
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers.onlineUserIds);
@@ -69,7 +70,7 @@ const AdminDashboard = () => {
 
   // ── Mutations ──────────────────────────────────────────────────────────────
   const [updateUser] = useUpdateUserProfileMutation();
-  const [deletePost] = useDeletePostMutation();
+  const [deletePost, { isLoading: isDeletingPost }] = useDeletePostMutation();
   const [resolveReport] = useResolveReportMutation();
   const [softDeleteUser, { isLoading: isSoftDeleting }] = useSoftDeleteUserMutation();
   const [restoreUser, { isLoading: isRestoring }] = useRestoreUserMutation();
@@ -131,6 +132,18 @@ const AdminDashboard = () => {
       message.error('Failed to permanently delete user. Please try again.');
     } finally {
       setHardDeleteModal(CLOSED_MODAL);
+    }
+  };
+
+  const handleDeletePostConfirm = async () => {
+    if (!deletePostModal.userId) return;
+    try {
+      await deletePost(deletePostModal.userId).unwrap();
+      message.success('Post has been deleted successfully.');
+    } catch {
+      message.error('Failed to delete post. Please try again.');
+    } finally {
+      setDeletePostModal(CLOSED_MODAL);
     }
   };
 
@@ -248,16 +261,7 @@ const AdminDashboard = () => {
       label: 'Date',
       render: (val: string) => <span className="text-gray-500 text-sm">{val}</span>,
     },
-    // {
-    //   key: 'likes',
-    //   label: 'Engagement',
-    //   render: (val: number, row: any) => (
-    //     <div className="flex space-x-3 text-xs text-gray-500">
-    //       <span>👍 {val}</span>
-    //       <span>💬 {row.comments}</span>
-    //     </div>
-    //   ),
-    // },
+    
   ];
 
   const reportColumns = [
@@ -508,7 +512,7 @@ const AdminDashboard = () => {
                   actions={(row) => (
                     <div className="flex justify-end">
                       <button
-                        onClick={() => deletePost(row.id)}
+                        onClick={() => setDeletePostModal({ isOpen: true, userId: row.id })}
                         className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-sm transition-all duration-200"
                       >
                         Delete Post
@@ -677,6 +681,29 @@ const AdminDashboard = () => {
         confirmText="Permanently Delete"
         icon="error"
         isLoading={isHardDeleting}
+      />
+
+      {/* ── Delete Post Confirmation Modal ───────────────────────────────────── */}
+      <ConfirmationModal
+        isOpen={deletePostModal.isOpen}
+        onClose={() => setDeletePostModal(CLOSED_MODAL)}
+        onConfirm={handleDeletePostConfirm}
+        title="Delete Post"
+        description={
+          <div className="space-y-2">
+            <p>
+              Are you sure you want to delete this post?
+            </p>
+            <ul className="text-xs text-gray-500 space-y-1 mt-2 list-disc list-inside">
+              <li>The post and all its media will be permanently removed.</li>
+              <li>All associated comments and likes will be deleted.</li>
+              <li className="text-rose-500 font-medium">This cannot be undone.</li>
+            </ul>
+          </div>
+        }
+        confirmText="Delete Post"
+        icon="warning"
+        isLoading={isDeletingPost}
       />
     </>
   );
