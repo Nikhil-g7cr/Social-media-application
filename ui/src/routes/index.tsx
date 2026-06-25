@@ -9,6 +9,7 @@ import { LoginPage } from "../components/features/Auth/Login";
 import ProfilePage from "../containers/profile";
 import UpdateProfilePage from "../containers/profile/UpdateProfile";
 import UpdatePostPage from "../containers/post/UpdatePost";
+import PostDeepLink from "../containers/post/PostDeepLink";
 import MessagesPage from "../containers/Message";
 import ExplorePage from "../containers/Explore";
 import ActivityPage from "../containers/activity";
@@ -41,6 +42,7 @@ const Approutes = () => {
         <Route path="/explore" element={<ExplorePage/>}/>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupForm />} />
+        <Route path="/post/:postId" element={<PostDeepLink />} />
 
         {/* PROTECTED ROUTES */}
         <Route path="/profile/update" element={

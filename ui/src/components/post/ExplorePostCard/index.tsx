@@ -1,12 +1,15 @@
 import React, { memo } from 'react';
 import { Heart, MessageCircle } from 'lucide-react';
 import MediaCarousel from '../../media/MediaCarousel';
+import { usePostPopup, PostPopupMode } from '../../layout/post-popup';
 
 interface ExplorePostCardProps {
   post: any;
 }
 
 const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
+  const { open } = usePostPopup();
+
   let mediaToRender = post.media || [];
   if (mediaToRender.length === 0 && post.mediaUrl) {
     mediaToRender = [{ mediaUrl: post.mediaUrl, mediaType: 'IMAGE' }];
@@ -15,6 +18,7 @@ const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
   return (
     <div 
       className="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-200 cursor-pointer shadow-sm hover:shadow-md transition-shadow h-full"
+      onClick={() => open(PostPopupMode.VIEW, { postId: post.id })}
     >
       {/* Post Media or Text Fallback */}
       {mediaToRender.length > 0 ? (

@@ -4,7 +4,7 @@ import Approutes from './routes';
 import { useAppDispatch } from './redux/hooks';
 import { initializeSocket } from './utils/socket';
 import { setOnlineUsers, userOnline, userOffline } from './redux/features/onlineUsers/onlineUsersSlice';
-
+import { PostPopupProvider } from './components/layout/post-popup';
 function App() {
   const dispatch = useAppDispatch();
 
@@ -36,9 +36,9 @@ function App() {
   }, [dispatch]);
 
   return (
-    <div>
+    <PostPopupProvider>
       <Approutes/>
-    </div>
+    </PostPopupProvider>
   )
 }
 

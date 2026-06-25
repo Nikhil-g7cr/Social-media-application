@@ -59,10 +59,19 @@ export const reportApiSlice = apiSlice.injectEndpoints({
             },
             invalidatesTags: ['Report'],
         }),
+        createReport: builder.mutation<Report, { targetType: string; targetId: string; reason: string }>({
+            query: (data) => ({
+                url: 'report',
+                method: 'POST',
+                data,
+            }),
+            invalidatesTags: ['Report'],
+        }),
     }),
 });
 
 export const {
     useGetReportsQuery,
     useResolveReportMutation,
+    useCreateReportMutation,
 } = reportApiSlice;

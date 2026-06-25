@@ -3,16 +3,23 @@ import { MoreHorizontal, Heart, Share2 } from "lucide-react";
 import CommentSection from "../../../shared/shared-components/CommentSection";
 import Avatar from "../../../shared/shared-components/Avatar";
 import MediaCarousel from "../../media/MediaCarousel";
+import { usePostPopup, PostPopupMode } from "../../layout/post-popup";
 
 interface PostCardProps {
   post: any;
   user: any;
   onlineUserIds: string[];
   toggleLike: (postId: string, isLikedByMe: boolean | undefined) => void;
+  compact?: boolean;
 }
 
-const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLike }) => {
+const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLike, compact }) => {
   const isLiked = post.likedBy?.includes(user?.id) || post.isLikedByMe;
+  const { open } = usePostPopup();
+
+  const handleCardClick = () => {
+    open(PostPopupMode.VIEW, { postId: post.id });
+  };
 
   // Normalize media for the carousel
   let mediaToRender = post.media || [];
@@ -21,7 +28,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
   }
 
   return (
-    <div className="bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition">
+    <div 
+      className="bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition cursor-pointer"
+      onClick={handleCardClick}
+    >
       <div className="flex justify-between">
         <div className="flex gap-3">
           <div className="relative">
@@ -43,7 +53,10 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
           </div>
         </div>
 
-        <button>
+        <button onClick={(e) => { 
+          e.stopPropagation(); 
+          open(PostPopupMode.REPORT, { postId: post.id }); 
+        }}>
           <MoreHorizontal className="h-5 w-5 text-gray-400" />
         </button>
       </div>
@@ -51,14 +64,18 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
       <p className="mt-4 text-gray-800 whitespace-pre-wrap">{post.content}</p>
 
       {mediaToRender.length > 0 && (
-        <div className="mt-4 rounded-xl overflow-hidden" onDoubleClick={() => toggleLike(post.id, isLiked)}>
-          <MediaCarousel media={mediaToRender} className="h-[350px] sm:h-[500px] bg-black" />
+        <div 
+          className={`mt-4 rounded-xl overflow-hidden ${compact ? 'max-h-[300px]' : ''}`} 
+          onClick={(e) => e.stopPropagation()} 
+          onDoubleClick={(e) => { e.stopPropagation(); toggleLike(post.id, isLiked); }}
+        >
+          <MediaCarousel media={mediaToRender} className={`${compact ? 'h-[250px] sm:h-[300px]' : 'h-[350px] sm:h-[500px]'} bg-black`} />
         </div>
       )}
 
       <div className="flex justify-between pt-4 mt-4 border-t">
         <button
-          onClick={() => toggleLike(post.id, isLiked)}
+          onClick={(e) => { e.stopPropagation(); toggleLike(post.id, isLiked); }}
           className={`flex items-center gap-2 p-2 rounded-full transition-colors duration-200 ${
             isLiked ? "text-red-500" : "text-gray-500"
           }`}
@@ -67,11 +84,20 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
           <span>{post.likes}</span>
         </button>
 
-        <div className="flex items-center gap-2 p-2 rounded-full text-gray-500">
+        <div 
+          className="flex items-center gap-2 p-2 rounded-full text-gray-500"
+          onClick={(e) => { e.stopPropagation(); handleCardClick(); }}
+        >
           <CommentSection postId={post.id} initialCommentCount={post.comments} />
         </div>
 
-        <button className="flex items-center gap-2 p-2 rounded-full text-gray-500">
+        <button 
+          className="flex items-center gap-2 p-2 rounded-full text-gray-500"
+          onClick={(e) => { 
+            e.stopPropagation(); 
+            open(PostPopupMode.SHARE, { postId: post.id }); 
+          }}
+        >
           <Share2 className="h-5 w-5" />
         </button>
       </div>
