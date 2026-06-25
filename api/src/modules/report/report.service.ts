@@ -61,7 +61,6 @@ export class ReportService {
       }
 
       report.Status = status;
-      report.ResolvedAt = new Date();
       report.ResolvedBy = payload.sub;
       await report.save();
 
