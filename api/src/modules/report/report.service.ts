@@ -22,7 +22,6 @@ export class ReportService {
         TargetID: body.targetId,
         Reason: body.reason,
         Status: 'PENDING',
-        CreatedAt: new Date(),
       } as any);
 
       return createResponse(HttpStatus.CREATED, 'Report created successfully', report);
