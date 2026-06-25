@@ -10,7 +10,6 @@ import {
 } from 'class-validator';
 
 export class UsersDTO {
-  // ❌ REMOVED: ID field deleted. The database/service handles this!
 
   @IsString()
   @IsNotEmpty()

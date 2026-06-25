@@ -13,5 +13,6 @@ export abstract class UserAbsSQLDAO {
     abstract hardDeleteUser(UserId: string): Promise<AppResponse>
     /** @deprecated Use hardDeleteUser instead */
     abstract deleteUser(UserId: string): Promise<AppResponse>
+    abstract findByUsername(username:string): Promise<AppResponse>
     abstract getUserRoleByID(UserID: string): Promise<AppResponse>
 }

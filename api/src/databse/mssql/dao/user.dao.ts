@@ -39,6 +39,11 @@ export class UserSQLDao implements UserAbsSQLDAO {
   // READ OPERATIONS (No Transactions Needed)
   // ==========================================
 
+  async findByUsername(username:string): Promise<AppResponse>{
+    throw new Error("Pending to build this")
+
+  }
+
   async getUsers(userInfo?: any, showDeleted = false): Promise<AppResponse> {
     try {
       const whereClause: any = showDeleted ? {} : { IsDeleted: false };
