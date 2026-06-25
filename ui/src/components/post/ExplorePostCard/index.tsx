@@ -1,31 +1,32 @@
 import React, { memo } from 'react';
 import { Heart, MessageCircle } from 'lucide-react';
-import PostImage from '../../shared/shared-components/PostImage';
+import MediaCarousel from '../../media/MediaCarousel';
 
 interface ExplorePostCardProps {
   post: any;
 }
 
 const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
+  let mediaToRender = post.media || [];
+  if (mediaToRender.length === 0 && post.mediaUrl) {
+    mediaToRender = [{ mediaUrl: post.mediaUrl, mediaType: 'IMAGE' }];
+  }
+
   return (
     <div 
-      className="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-200 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
+      className="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-200 cursor-pointer shadow-sm hover:shadow-md transition-shadow h-full"
     >
-      {/* Post Image or Text Fallback */}
-      {post.media && post.media.length > 0 ? (
-        post.media[0].mediaType === 'VIDEO' ? (
-          <video src={post.media[0].mediaUrl} className="w-full h-auto min-h-[160px] object-cover transform transition-transform duration-500 group-hover:scale-105" />
-        ) : (
-          <PostImage 
-            mediaUrl={post.media[0].mediaUrl} 
-            className="w-full h-auto min-h-[160px] object-cover transform transition-transform duration-500 group-hover:scale-105"
+      {/* Post Media or Text Fallback */}
+      {mediaToRender.length > 0 ? (
+        <div className="transform transition-transform duration-500 group-hover:scale-105 h-full">
+          {/* Use MediaCarousel, hide arrows/dots for cleaner Explore look if desired, or keep them */}
+          <MediaCarousel 
+            media={mediaToRender} 
+            showArrows={false} 
+            showDots={true} 
+            className="w-full h-full min-h-[160px]" 
           />
-        )
-      ) : post.mediaUrl ? (
-        <PostImage 
-          mediaUrl={post.mediaUrl} 
-          className="w-full h-auto min-h-[160px] object-cover transform transition-transform duration-500 group-hover:scale-105"
-        />
+        </div>
       ) : (
         <div className="w-full h-40 flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100 p-4 text-center transition-transform duration-500 group-hover:scale-105">
           <p className="text-sm font-medium text-gray-700 line-clamp-4">
@@ -35,7 +36,7 @@ const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
       )}
 
       {/* Hover Overlay: Darkens image and shows stats */}
-      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end">
+      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex flex-col justify-end pointer-events-none">
         
         {/* Central Stats */}
         <div className="absolute inset-0 flex items-center justify-center gap-6 text-white font-bold translate-y-4 group-hover:translate-y-0 transition-transform duration-200">
@@ -49,7 +50,7 @@ const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
           </div>
         </div>
 
-        {/* Author Info at the bottom (No link to profile as requested) */}
+        {/* Author Info at the bottom */}
         <div className="p-4 flex items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-200 delay-75">
           <img 
             src={post.author.avatarUrl} 

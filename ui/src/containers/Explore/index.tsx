@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Search, Heart, MessageCircle, TrendingUp, Image as ImageIcon, PlayCircle } from 'lucide-react';
 import { useGetAllExplorePostsQuery, useGetTrendingPostsQuery } from '../../redux/features/post/postApiSlice';
-import PostImage from '../../shared/shared-components/PostImage';
-import ExplorePostCard from './ExplorePostCard';
+import ExplorePostCard from '../../components/post/ExplorePostCard';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 import ErrorDisplay from '../../components/errors/ErrorDisplay';
 

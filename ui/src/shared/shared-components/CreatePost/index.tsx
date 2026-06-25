@@ -1,11 +1,11 @@
 import React, { useState, useRef, useCallback } from "react";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
 import { useAppSelector } from "../../../redux/hooks";
 import { useGetUserByIdQuery } from "../../../redux/features/user/userApiSlice";
 import { useCreatePostMutation } from "../../../redux/features/post/postApiSlice";
 import { useMediaUpload } from "../../../hooks/useMediaUpload";
-import PostImage from "../PostImage";
 import Avatar from "../Avatar";
+import CreatePostPreview from "../../../components/post/CreatePostPreview";
 
 export default function CreatePost() {
   const { user } = useAppSelector((state: any) => state.auth);
@@ -15,30 +15,48 @@ export default function CreatePost() {
   const [newPostContent, setNewPostContent] = useState("");
   
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+  const [imageWarning, setImageWarning] = useState("");
+  const [videoWarning, setVideoWarning] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const files = Array.from(e.target.files);
-      setSelectedFiles((prev) => [...prev, ...files]);
-      const newPreviews = files.map(file => URL.createObjectURL(file));
-      setImagePreviews((prev) => [...prev, ...newPreviews]);
-    }
-  }, []);
-
-  const removeImage = useCallback((index: number) => {
-    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
-    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+      const incomingFiles = Array.from(e.target.files);
+      
+      setSelectedFiles((prev) => {
+        const allFiles = [...prev, ...incomingFiles];
+        
+        const images = allFiles.filter(f => !f.type.startsWith('video/'));
+        const videos = allFiles.filter(f => f.type.startsWith('video/'));
+        
+        let allowedImages = images;
+        let allowedVideos = videos;
+        
+        if (images.length > 8) {
+          allowedImages = images.slice(0, 8);
+          setImageWarning("You can upload a maximum of 8 images. Extra images were ignored.");
+        } else {
+          setImageWarning("");
+        }
+        
+        if (videos.length > 4) {
+          allowedVideos = videos.slice(0, 4);
+          setVideoWarning("You can upload a maximum of 4 videos. Extra videos were ignored.");
+        } else {
+          setVideoWarning("");
+        }
+        
+        const allowedSet = new Set([...allowedImages, ...allowedVideos]);
+        return allFiles.filter(f => allowedSet.has(f));
+      });
     }
   }, []);
 
   const removeAllImages = useCallback(() => {
     setSelectedFiles([]);
-    setImagePreviews([]);
+    setImageWarning("");
+    setVideoWarning("");
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -95,24 +113,12 @@ export default function CreatePost() {
             className="w-full bg-gray-50 rounded-xl p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
 
-          {imagePreviews.length > 0 && (
-            <div className="mt-3 flex flex-wrap gap-2">
-              {imagePreviews.map((preview, idx) => (
-                <div key={idx} className="relative inline-block">
-                  {selectedFiles[idx]?.type.startsWith('video') ? (
-                    <video src={preview} className="max-h-64 rounded-xl object-contain border" controls />
-                  ) : (
-                    <img src={preview} alt="Preview" className="max-h-64 rounded-xl object-contain border" />
-                  )}
-                  <button
-                    type="button"
-                    onClick={() => removeImage(idx)}
-                    className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white rounded-full transition"
-                  >
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ))}
+          <CreatePostPreview files={selectedFiles} onRemove={removeAllImages} />
+          
+          {(imageWarning || videoWarning) && (
+            <div className="mt-2 text-sm text-amber-600 bg-amber-50 p-2 rounded-lg border border-amber-100">
+              {imageWarning && <p>{imageWarning}</p>}
+              {videoWarning && <p>{videoWarning}</p>}
             </div>
           )}
 

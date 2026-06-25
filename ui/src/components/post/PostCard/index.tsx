@@ -1,8 +1,8 @@
 import React, { memo } from "react";
 import { MoreHorizontal, Heart, Share2 } from "lucide-react";
-import PostImage from "../../shared/shared-components/PostImage";
-import CommentSection from "../../shared/shared-components/CommentSection";
-import Avatar from "../../shared/shared-components/Avatar";
+import CommentSection from "../../../shared/shared-components/CommentSection";
+import Avatar from "../../../shared/shared-components/Avatar";
+import MediaCarousel from "../../media/MediaCarousel";
 
 interface PostCardProps {
   post: any;
@@ -13,6 +13,12 @@ interface PostCardProps {
 
 const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLike }) => {
   const isLiked = post.likedBy?.includes(user?.id) || post.isLikedByMe;
+
+  // Normalize media for the carousel
+  let mediaToRender = post.media || [];
+  if (mediaToRender.length === 0 && post.mediaUrl) {
+    mediaToRender = [{ mediaUrl: post.mediaUrl, mediaType: 'IMAGE' }]; // fallback for very old text+single image posts
+  }
 
   return (
     <div className="bg-white rounded-2xl border p-5 shadow-sm hover:shadow-md transition">
@@ -44,29 +50,11 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
 
       <p className="mt-4 text-gray-800 whitespace-pre-wrap">{post.content}</p>
 
-      {post.media && post.media.length > 0 ? (
-        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2" onDoubleClick={() => toggleLike(post.id, isLiked)}>
-          {post.media.map((m: any, idx: number) => (
-            <div key={idx} className={`rounded-xl overflow-hidden border border-gray-100 bg-gray-50 ${post.media.length === 1 ? 'sm:col-span-2' : ''}`}>
-              {m.mediaType === 'VIDEO' ? (
-                <video src={m.mediaUrl} className="w-full max-h-[500px] object-contain cursor-pointer" controls />
-              ) : (
-                <PostImage mediaUrl={m.mediaUrl} className="w-full max-h-[500px] object-contain cursor-pointer" />
-              )}
-            </div>
-          ))}
+      {mediaToRender.length > 0 && (
+        <div className="mt-4" onDoubleClick={() => toggleLike(post.id, isLiked)}>
+          <MediaCarousel media={mediaToRender} />
         </div>
-      ) : post.mediaUrl ? (
-        <div
-          className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
-          onDoubleClick={() => toggleLike(post.id, isLiked)}
-        >
-          <PostImage
-            mediaUrl={post.mediaUrl}
-            className="w-full max-h-[500px] object-contain cursor-pointer"
-          />
-        </div>
-      ) : null}
+      )}
 
       <div className="flex justify-between pt-4 mt-4 border-t">
         <button

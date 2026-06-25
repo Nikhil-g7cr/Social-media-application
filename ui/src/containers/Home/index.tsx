@@ -19,8 +19,7 @@ import ExplorePage from "../Explore";
 import { useGetPostsQuery, useGetTrendingHashtagsQuery } from "../../redux/features/post/postApiSlice";
 import { useLikePostMutation, useUnlikePostMutation } from "../../redux/features/like/likeApiSlice";
 import CreatePost from "../../shared/shared-components/CreatePost";
-import PostImage from "../../shared/shared-components/PostImage";
-import PostCard from "./PostCard";
+import PostCard from "../../components/post/PostCard";
 import InfiniteScroll from "../../shared/shared-components/InfiniteScroll/index";
 import ErrorDisplay from "../../components/errors/ErrorDisplay";
 

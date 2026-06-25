@@ -10,6 +10,7 @@ import { updatePostSchema, type UpdatePostFormData } from "../../components/layo
 import { useGetPostByIdQuery, useUpdatePostMutation } from "../../redux/features/post/postApiSlice";
 import { useMediaUpload } from "../../hooks/useMediaUpload";
 import type { RootState } from "../../redux/store";
+import MediaCarousel from "../../components/media/MediaCarousel";
 
 const UpdatePostPage = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -165,40 +166,38 @@ const UpdatePostPage = () => {
         </div>
 
         <div className="flex flex-col items-center justify-center mb-8">
-           <div className="w-full flex flex-wrap gap-2 mb-4 justify-center">
-             {existingMedia.map((m, idx) => (
-               <div key={`existing-${idx}`} className="relative inline-block">
-                 {m.mediaType === 'VIDEO' ? (
-                   <video src={m.mediaUrl} className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" controls />
-                 ) : (
-                   <img src={m.mediaUrl} alt="Preview" className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" />
-                 )}
-                 <button 
-                   onClick={() => removeExistingMedia(idx)} 
-                   className="absolute -top-3 -right-3 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg"
-                   type="button"
-                 >
-                   <X className="w-5 h-5" />
-                 </button>
-               </div>
-             ))}
+           <div className="w-full flex flex-col items-center mb-4 justify-center gap-4">
+             {(() => {
+               // Combine existing and new for preview
+               const combinedPreview = [
+                 ...existingMedia.map(m => ({
+                   mediaUrl: m.mediaUrl,
+                   mediaType: m.mediaType,
+                 })),
+                 ...newFiles.map(f => ({
+                   mediaUrl: URL.createObjectURL(f),
+                   mediaType: f.type.startsWith('video/') ? 'VIDEO' : 'IMAGE',
+                 }))
+               ];
 
-             {newFilePreviews.map((preview, idx) => (
-               <div key={`new-${idx}`} className="relative inline-block">
-                 {newFiles[idx]?.type.startsWith('video') ? (
-                   <video src={preview} className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" controls />
-                 ) : (
-                   <img src={preview} alt="Preview" className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" />
-                 )}
-                 <button 
-                   onClick={() => removeNewFile(idx)} 
-                   className="absolute -top-3 -right-3 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg"
-                   type="button"
-                 >
-                   <X className="w-5 h-5" />
-                 </button>
-               </div>
-             ))}
+               return combinedPreview.length > 0 ? (
+                 <div className="relative w-full">
+                   <MediaCarousel media={combinedPreview as any} preview={true} showDots={true} showArrows={true} />
+                   <button 
+                     onClick={() => {
+                       setExistingMedia([]);
+                       setNewFiles([]);
+                       setNewFilePreviews([]);
+                     }} 
+                     className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg z-20"
+                     type="button"
+                     title="Clear All Media"
+                   >
+                     <X className="w-5 h-5" />
+                   </button>
+                 </div>
+               ) : null;
+             })()}
            </div>
 
            <button 
