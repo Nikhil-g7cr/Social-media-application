@@ -24,7 +24,16 @@ export interface Post {
     likes: number;
     comments: number;
     isLikedByMe?: boolean;
+    type?: string;
     mediaUrl?: string;
+    media?: {
+        mediaType: string;
+        mediaUrl: string;
+        mimeType?: string;
+        fileSize?: number;
+        blobName?: string;
+        fileName?: string;
+    }[];
     likedBy?: string[];
 }
 
@@ -54,7 +63,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    type: p.Type,
                     mediaUrl: p.MediaURL,
+                    media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
                 return { posts, hasMore };
             },
@@ -96,7 +107,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
                                 comments: newPostRaw.Comments?.length || 0,
                                 isLikedByMe: false,
                                 likedBy: newPostRaw.Likes?.map((l: any) => l.UserID) || [],
+                                type: newPostRaw.Type,
                                 mediaUrl: newPostRaw.MediaURL,
+                                media: newPostRaw.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                             };
                             draft.posts.unshift(newPost);
                         });
@@ -126,7 +139,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    type: p.Type,
                     mediaUrl: p.MediaURL,
+                    media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
                 return { posts, hasMore };
             },
@@ -165,7 +180,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    type: p.Type,
                     mediaUrl: p.MediaURL,
+                    media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
                 return { posts, hasMore };
             },
@@ -208,7 +225,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    type: p.Type,
                     mediaUrl: p.MediaURL,
+                    media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
                 return { posts, hasMore };
             },
@@ -247,7 +266,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     comments: p.Comments?.length || 0,
                     isLikedByMe: true,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    type: p.Type,
                     mediaUrl: p.MediaURL,
+                    media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
                 return { posts, hasMore };
             },
@@ -285,7 +306,9 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     comments: p.Comments?.length || 0,
                     isLikedByMe: false,
                     likedBy: p.Likes?.map((l: any) => l.UserID) || [],
+                    type: p.Type,
                     mediaUrl: p.MediaURL,
+                    media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 };
             },
             providesTags: (_result, _error, id) => [{ type: 'Post', id }],

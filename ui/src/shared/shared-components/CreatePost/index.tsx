@@ -2,7 +2,8 @@ import React, { useState, useRef, useCallback } from "react";
 import { Image as ImageIcon, X } from "lucide-react";
 import { useAppSelector } from "../../../redux/hooks";
 import { useGetUserByIdQuery } from "../../../redux/features/user/userApiSlice";
-import { useCreatePostMutation, useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../../redux/features/post/postApiSlice";
+import { useCreatePostMutation } from "../../../redux/features/post/postApiSlice";
+import { useMediaUpload } from "../../../hooks/useMediaUpload";
 import PostImage from "../PostImage";
 import Avatar from "../Avatar";
 
@@ -10,26 +11,34 @@ export default function CreatePost() {
   const { user } = useAppSelector((state: any) => state.auth);
   const { data: userProfile } = useGetUserByIdQuery(user?.id as string, { skip: !user?.id });
   const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
-  const [getUploadUrl] = useGetUploadUrlMutation();
-  const [uploadImageToAzure] = useUploadImageToAzureMutation();
+  const { uploadFiles } = useMediaUpload();
   const [newPostContent, setNewPostContent] = useState("");
   
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      setSelectedFiles((prev) => [...prev, ...files]);
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setImagePreviews((prev) => [...prev, ...newPreviews]);
     }
   }, []);
 
-  const removeImage = useCallback(() => {
-    setSelectedImage(null);
-    setImagePreview(null);
+  const removeImage = useCallback((index: number) => {
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }, []);
+
+  const removeAllImages = useCallback(() => {
+    setSelectedFiles([]);
+    setImagePreviews([]);
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -37,35 +46,36 @@ export default function CreatePost() {
 
   const handleCreatePost = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newPostContent.trim() && !selectedImage) return;
+    if (!newPostContent.trim() && selectedFiles.length === 0) return;
 
     try {
       setIsUploading(true);
-      let mediaURL = undefined;
+      let mediaPayload: any[] | undefined = undefined;
       let type = 'TEXT';
 
-      if (selectedImage) {
-        const { uploadUrl, blobPath } = await getUploadUrl({
-          fileName: selectedImage.name,
-          contentType: selectedImage.type,
-        }).unwrap();
-
-        await uploadImageToAzure({ uploadUrl, file: selectedImage }).unwrap();
-
-        mediaURL = blobPath;
-        type = 'IMAGE';
+      if (selectedFiles.length > 0) {
+        const uploadedFiles = await uploadFiles(selectedFiles);
+        mediaPayload = uploadedFiles.map(f => ({
+          mediaUrl: f.mediaUrl,
+          blobName: f.blobName,
+          mediaType: f.mimeType.startsWith('video') ? 'VIDEO' : 'IMAGE',
+          fileName: f.fileName,
+          mimeType: f.mimeType,
+          fileSize: f.fileSize
+        }));
+        type = selectedFiles.some(f => f.type.startsWith('video')) ? 'VIDEO' : 'IMAGE';
       }
 
-      await createPost({ content: newPostContent, type, mediaURL } as any).unwrap();
+      await createPost({ content: newPostContent, type, media: mediaPayload } as any).unwrap();
       
       setNewPostContent("");
-      removeImage();
+      removeAllImages();
     } catch (error) {
       console.error("Failed to create post", error);
     } finally {
       setIsUploading(false);
     }
-  }, [newPostContent, selectedImage, getUploadUrl, uploadImageToAzure, createPost, removeImage]);
+  }, [newPostContent, selectedFiles, uploadFiles, createPost, removeAllImages]);
 
   return (
     <div className="bg-white rounded-2xl border p-5 shadow-sm">
@@ -85,16 +95,24 @@ export default function CreatePost() {
             className="w-full bg-gray-50 rounded-xl p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
 
-          {imagePreview && (
-            <div className="relative mt-3 inline-block">
-              <img src={imagePreview} alt="Preview" className="max-h-64 rounded-xl object-contain border" />
-              <button
-                type="button"
-                onClick={removeImage}
-                className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white rounded-full transition"
-              >
-                <X className="h-4 w-4" />
-              </button>
+          {imagePreviews.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {imagePreviews.map((preview, idx) => (
+                <div key={idx} className="relative inline-block">
+                  {selectedFiles[idx]?.type.startsWith('video') ? (
+                    <video src={preview} className="max-h-64 rounded-xl object-contain border" controls />
+                  ) : (
+                    <img src={preview} alt="Preview" className="max-h-64 rounded-xl object-contain border" />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => removeImage(idx)}
+                    className="absolute top-2 right-2 p-1 bg-black/50 hover:bg-black/70 text-white rounded-full transition"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ))}
             </div>
           )}
 
@@ -110,13 +128,14 @@ export default function CreatePost() {
               type="file"
               ref={fileInputRef}
               onChange={handleImageChange}
-              accept="image/*"
+              accept="image/*,video/*"
+              multiple
               className="hidden"
             />
 
             <button
               type="submit"
-              disabled={isSubmitting || isUploading || (!newPostContent.trim() && !selectedImage)}
+              disabled={isSubmitting || isUploading || (!newPostContent.trim() && selectedFiles.length === 0)}
               className="px-6 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition flex items-center"
             >
               {isSubmitting || isUploading ? "Posting..." : "Post"}

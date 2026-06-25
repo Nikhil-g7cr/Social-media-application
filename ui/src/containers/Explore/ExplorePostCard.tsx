@@ -12,7 +12,16 @@ const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
       className="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-200 cursor-pointer shadow-sm hover:shadow-md transition-shadow"
     >
       {/* Post Image or Text Fallback */}
-      {post.mediaUrl ? (
+      {post.media && post.media.length > 0 ? (
+        post.media[0].mediaType === 'VIDEO' ? (
+          <video src={post.media[0].mediaUrl} className="w-full h-auto min-h-[160px] object-cover transform transition-transform duration-500 group-hover:scale-105" />
+        ) : (
+          <PostImage 
+            mediaUrl={post.media[0].mediaUrl} 
+            className="w-full h-auto min-h-[160px] object-cover transform transition-transform duration-500 group-hover:scale-105"
+          />
+        )
+      ) : post.mediaUrl ? (
         <PostImage 
           mediaUrl={post.mediaUrl} 
           className="w-full h-auto min-h-[160px] object-cover transform transition-transform duration-500 group-hover:scale-105"

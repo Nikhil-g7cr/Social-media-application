@@ -48,6 +48,20 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         transaction,
       });
 
+      if (createPostDto.media && createPostDto.media.length > 0) {
+        const postMediaData = createPostDto.media.map((m, index) => ({
+          PostID: newPost.ID,
+          MediaType: m.mediaType,
+          MediaURL: m.mediaUrl,
+          BlobName: m.blobName,
+          FileName: m.fileName,
+          MimeType: m.mimeType,
+          FileSize: m.fileSize,
+          DisplayOrder: index + 1
+        }));
+        await this.sequelize.models.PostMedia.bulkCreate(postMediaData, { transaction });
+      }
+
       if (createPostDto.content) {
         await this.extractAndSaveHashtags(newPost.ID, createPostDto.content, transaction);
       }
@@ -99,6 +113,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             model: this.sequelize.models.Comments,
             as: 'Comments',
             attributes: ['ID']
+          },
+          {
+            model: this.sequelize.models.PostMedia,
+            as: 'Media',
           }
         ]
       });
@@ -151,6 +169,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             model: this.sequelize.models.Comments,
             as: 'Comments',
             attributes: ['ID']
+          },
+          {
+            model: this.sequelize.models.PostMedia,
+            as: 'Media',
           }
         ]
       });
@@ -183,6 +205,12 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     try {
       const post = await this.postModel.findOne({
         where: { ID: postId },
+        include: [
+          {
+            model: this.sequelize.models.PostMedia,
+            as: 'Media',
+          }
+        ]
       });
 
       if (!post) {
@@ -238,6 +266,23 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           transaction
         });
         await this.extractAndSaveHashtags(postId, updatePostDto.content, transaction);
+      }
+
+      if (updatePostDto.media !== undefined) {
+        await this.sequelize.models.PostMedia.destroy({ where: { PostID: postId }, transaction });
+        if (updatePostDto.media.length > 0) {
+          const postMediaData = updatePostDto.media.map((m, index) => ({
+            PostID: postId,
+            MediaType: m.mediaType,
+            MediaURL: m.mediaUrl,
+            BlobName: m.blobName,
+            FileName: m.fileName,
+            MimeType: m.mimeType,
+            FileSize: m.fileSize,
+            DisplayOrder: index + 1
+          }));
+          await this.sequelize.models.PostMedia.bulkCreate(postMediaData, { transaction });
+        }
       }
 
       await transaction.commit();
@@ -334,6 +379,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       await this.sequelize.models.Likes.destroy({ where: { PostID: postId }, transaction });
       await this.sequelize.models.PostHashtags.destroy({ where: { PostID: postId }, transaction });
       await this.sequelize.models.PostView.destroy({ where: { Post_id: postId }, transaction });
+      await this.sequelize.models.PostMedia.destroy({ where: { PostID: postId }, transaction });
 
       const deletedRowsCount = await this.postModel.destroy({
         where: { ID: postId },
@@ -407,6 +453,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             model: this.sequelize.models.Comments,
             as: 'Comments',
             attributes: ['ID']
+          },
+          {
+            model: this.sequelize.models.PostMedia,
+            as: 'Media',
           }
         ]
       });
@@ -498,6 +548,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             model: this.sequelize.models.Comments,
             as: 'Comments',
             attributes: ['ID'],
+          },
+          {
+            model: this.sequelize.models.PostMedia,
+            as: 'Media',
           }
         ],
         order: [['CreatedAt', 'DESC']],
@@ -597,6 +651,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             as: 'Comments',
             attributes: ['ID'],
           },
+          {
+            model: this.sequelize.models.PostMedia,
+            as: 'Media',
+          }
         ],
       });
 

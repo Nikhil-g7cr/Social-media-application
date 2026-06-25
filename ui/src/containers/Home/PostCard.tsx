@@ -44,7 +44,19 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
 
       <p className="mt-4 text-gray-800 whitespace-pre-wrap">{post.content}</p>
 
-      {post.mediaUrl && (
+      {post.media && post.media.length > 0 ? (
+        <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2" onDoubleClick={() => toggleLike(post.id, isLiked)}>
+          {post.media.map((m: any, idx: number) => (
+            <div key={idx} className={`rounded-xl overflow-hidden border border-gray-100 bg-gray-50 ${post.media.length === 1 ? 'sm:col-span-2' : ''}`}>
+              {m.mediaType === 'VIDEO' ? (
+                <video src={m.mediaUrl} className="w-full max-h-[500px] object-contain cursor-pointer" controls />
+              ) : (
+                <PostImage mediaUrl={m.mediaUrl} className="w-full max-h-[500px] object-contain cursor-pointer" />
+              )}
+            </div>
+          ))}
+        </div>
+      ) : post.mediaUrl ? (
         <div
           className="mt-4 rounded-xl overflow-hidden border border-gray-100 bg-gray-50"
           onDoubleClick={() => toggleLike(post.id, isLiked)}
@@ -54,7 +66,7 @@ const PostCard: React.FC<PostCardProps> = ({ post, user, onlineUserIds, toggleLi
             className="w-full max-h-[500px] object-contain cursor-pointer"
           />
         </div>
-      )}
+      ) : null}
 
       <div className="flex justify-between pt-4 mt-4 border-t">
         <button

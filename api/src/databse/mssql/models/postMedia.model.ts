@@ -2,6 +2,7 @@ import {
   BelongsTo,
   Column,
   DataType,
+  Default,
   ForeignKey,
   Model,
   PrimaryKey,
@@ -19,6 +20,10 @@ export const enum PostMediaColumns {
   MediaURL = 'MediaURL',
   DisplayOrder = 'DisplayOrder',
   CreatedAt = 'CreatedAt',
+  BlobName = 'BlobName',
+  FileName = 'FileName',
+  MimeType = 'MimeType',
+  FileSize = 'FileSize',
 }
 
 @Table({
@@ -27,7 +32,11 @@ export const enum PostMediaColumns {
 })
 export class PostMedia extends Model<PostMedia> {
   @PrimaryKey
-  @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
+  @Default(DataType.UUIDV4)
+  @Column({
+    type: SQLDataType.UNIQUEIDENTIFIER,
+    allowNull: false
+  })
   [PostMediaColumns.ID]!: string;
 
   @ForeignKey(() => Posts)
@@ -49,6 +58,18 @@ export class PostMedia extends Model<PostMedia> {
     defaultValue: Sequelize.literal('GETDATE()'),
   })
   [PostMediaColumns.CreatedAt]!: Date;
+
+  @Column({ type: `${SQLDataType.VARCHAR}(1000)`, allowNull: true })
+  [PostMediaColumns.BlobName]?: string;
+
+  @Column({ type: `${SQLDataType.VARCHAR}(255)`, allowNull: true })
+  [PostMediaColumns.FileName]?: string;
+
+  @Column({ type: `${SQLDataType.VARCHAR}(100)`, allowNull: true })
+  [PostMediaColumns.MimeType]?: string;
+
+  @Column({ type: DataType.BIGINT, allowNull: true })
+  [PostMediaColumns.FileSize]?: number;
 
   @BelongsTo(() => Posts, {
     foreignKey: PostMediaColumns.PostID,

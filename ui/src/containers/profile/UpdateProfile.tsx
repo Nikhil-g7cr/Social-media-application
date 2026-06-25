@@ -8,7 +8,7 @@ import DynamicForm from "../../shared/shared-components/DynamicForm";
 import { updateProfileFields } from "../../components/layout/form/fields/updateProfile.field";
 import { updateProfileSchema } from "../../components/layout/form/schemas/updateProfile.schema";
 import { useGetUserByIdQuery, useUpdateUserProfileMutation } from "../../redux/features/user/userApiSlice";
-import { useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../redux/features/post/postApiSlice";
+import { useMediaUpload } from "../../hooks/useMediaUpload";
 import type { RootState } from "../../redux/store";
 
 interface UpdateProfileFormData {
@@ -26,8 +26,7 @@ const UpdateProfilePage = () => {
   });
 
   const [updateProfile, { isLoading: isUpdating }] = useUpdateUserProfileMutation();
-  const [getUploadUrl] = useGetUploadUrlMutation();
-  const [uploadImageToAzure] = useUploadImageToAzureMutation();
+  const { uploadFiles } = useMediaUpload();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -65,14 +64,8 @@ const UpdateProfilePage = () => {
 
       // Only upload if a new image was selected
       if (selectedImage) {
-        const { uploadUrl, blobPath } = await getUploadUrl({
-          fileName: selectedImage.name,
-          contentType: selectedImage.type,
-        }).unwrap();
-
-        await uploadImageToAzure({ uploadUrl, file: selectedImage }).unwrap();
-
-        profilePictureUrl = blobPath;
+        const uploadedFiles = await uploadFiles([selectedImage]);
+        profilePictureUrl = uploadedFiles[0].mediaUrl;
       } else if (!imagePreview) {
         // If they removed the image
         profilePictureUrl = "";

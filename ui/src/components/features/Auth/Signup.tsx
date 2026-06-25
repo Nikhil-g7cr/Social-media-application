@@ -7,7 +7,7 @@ import DynamicForm from "../../../shared/shared-components/DynamicForm";
 import { signupFields } from "../../layout/form/fields/signup.field";
 import { signupSchema } from "../../layout/form/schemas/signup.schema";
 import { useSignupMutation } from "../../../redux/features/auth/authApiSlice";
-import { useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../../redux/features/post/postApiSlice";
+import { useMediaUpload } from "../../../hooks/useMediaUpload";
 
 interface SignupFormData {
   FullName: string;
@@ -21,8 +21,7 @@ interface SignupFormData {
 
 const SignupPage = () => {
   const [signup, { isLoading }] = useSignupMutation();
-  const [getUploadUrl] = useGetUploadUrlMutation();
-  const [uploadImageToAzure] = useUploadImageToAzureMutation();
+  const { uploadFiles } = useMediaUpload();
   const navigate = useNavigate();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -52,14 +51,8 @@ const SignupPage = () => {
       let profilePictureUrl = "";
 
       if (selectedImage) {
-        const { uploadUrl, blobPath } = await getUploadUrl({
-          fileName: selectedImage.name,
-          contentType: selectedImage.type,
-        }).unwrap();
-
-        await uploadImageToAzure({ uploadUrl, file: selectedImage }).unwrap();
-
-        profilePictureUrl = blobPath;
+        const uploadedFiles = await uploadFiles([selectedImage]);
+        profilePictureUrl = uploadedFiles[0].mediaUrl;
       }
 
       const payload = {

@@ -7,7 +7,7 @@ import { Likes } from './like.model';
 import { PostView } from './postView.model';
 import { Hashtags } from './hashtag.model';
 import { PostHashtags } from './postHashtag.model';
-// import { PostMedia } from './postMedia.model';
+import { PostMedia } from './postMedia.model';
 
 export const enum PostsColumns {
   ID = 'ID',
@@ -98,9 +98,8 @@ class Posts extends Model<Posts> {
 	@BelongsToMany(() => Hashtags, () => PostHashtags)
 	Hashtags!: Hashtags[];
 
-	// Make sure to import PostMedia at the top of the file!
-	// @HasMany(() => PostMedia, { foreignKey: 'PostID' })
-	// Media!: PostMedia[];
+	@HasMany(() => PostMedia, { foreignKey: 'PostID' })
+	Media!: PostMedia[];
 
 }
 

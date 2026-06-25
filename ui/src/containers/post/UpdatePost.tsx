@@ -7,7 +7,8 @@ import { useSelector } from "react-redux";
 import DynamicForm from "../../shared/shared-components/DynamicForm";
 import { updatePostFields } from "../../components/layout/form/fields/updatePost.field";
 import { updatePostSchema, type UpdatePostFormData } from "../../components/layout/form/schemas/updatePost.schema";
-import { useGetPostByIdQuery, useUpdatePostMutation, useGetUploadUrlMutation, useUploadImageToAzureMutation } from "../../redux/features/post/postApiSlice";
+import { useGetPostByIdQuery, useUpdatePostMutation } from "../../redux/features/post/postApiSlice";
+import { useMediaUpload } from "../../hooks/useMediaUpload";
 import type { RootState } from "../../redux/store";
 
 const UpdatePostPage = () => {
@@ -20,31 +21,42 @@ const UpdatePostPage = () => {
   });
 
   const [updatePost, { isLoading: isUpdating }] = useUpdatePostMutation();
-  const [getUploadUrl] = useGetUploadUrlMutation();
-  const [uploadImageToAzure] = useUploadImageToAzureMutation();
+  const { uploadFiles } = useMediaUpload();
 
-  const [selectedImage, setSelectedImage] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [existingMedia, setExistingMedia] = useState<any[]>([]);
+  const [newFiles, setNewFiles] = useState<File[]>([]);
+  const [newFilePreviews, setNewFilePreviews] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (post?.mediaUrl) {
-      setImagePreview(post.mediaUrl);
+    if (post?.media && post.media.length > 0) {
+      setExistingMedia(post.media);
+    } else if (post?.mediaUrl) {
+      // Fallback for older posts with single media
+      setExistingMedia([{
+        mediaType: post.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+        mediaUrl: post.mediaUrl,
+      }]);
     }
   }, [post]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0];
-      setSelectedImage(file);
-      setImagePreview(URL.createObjectURL(file));
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      setNewFiles((prev) => [...prev, ...files]);
+      const newPreviews = files.map(file => URL.createObjectURL(file));
+      setNewFilePreviews((prev) => [...prev, ...newPreviews]);
     }
   };
 
-  const removeImage = () => {
-    setSelectedImage(null);
-    setImagePreview(null);
+  const removeExistingMedia = (index: number) => {
+    setExistingMedia((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeNewFile = (index: number) => {
+    setNewFiles((prev) => prev.filter((_, i) => i !== index));
+    setNewFilePreviews((prev) => prev.filter((_, i) => i !== index));
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -55,30 +67,34 @@ const UpdatePostPage = () => {
     
     try {
       setIsUploading(true);
-      let mediaURL = post?.mediaUrl;
-      let type: 'TEXT' | 'IMAGE' = post?.mediaUrl ? 'IMAGE' : 'TEXT';
+      let mediaPayload: any[] = [...existingMedia];
+      let type: 'TEXT' | 'IMAGE' | 'VIDEO' = existingMedia.some(m => m.mediaType === 'VIDEO') ? 'VIDEO' : 'IMAGE';
 
-      // Only upload if a new image was selected
-      if (selectedImage) {
-        const { uploadUrl, blobPath } = await getUploadUrl({
-          fileName: selectedImage.name,
-          contentType: selectedImage.type,
-        }).unwrap();
+      if (newFiles.length > 0) {
+        const uploadedFiles = await uploadFiles(newFiles);
+        const mappedUploaded = uploadedFiles.map(f => ({
+          mediaUrl: f.mediaUrl,
+          blobName: f.blobName,
+          mediaType: f.mimeType.startsWith('video') ? 'VIDEO' : 'IMAGE',
+          fileName: f.fileName,
+          mimeType: f.mimeType,
+          fileSize: f.fileSize
+        }));
+        mediaPayload = [...mediaPayload, ...mappedUploaded];
+      }
 
-        await uploadImageToAzure({ uploadUrl, file: selectedImage }).unwrap();
-
-        mediaURL = blobPath;
-        type = 'IMAGE';
-      } else if (!imagePreview) {
-        // If they removed the image
-        mediaURL = "";
+      if (mediaPayload.length === 0) {
         type = 'TEXT';
+      } else if (mediaPayload.some(m => m.mediaType === 'VIDEO')) {
+        type = 'VIDEO';
+      } else {
+        type = 'IMAGE';
       }
 
       const payload: any = {
         id: postId,
         type,
-        mediaURL,
+        media: mediaPayload,
       };
 
       if (values.content && values.content.trim().length > 0) {
@@ -149,28 +165,51 @@ const UpdatePostPage = () => {
         </div>
 
         <div className="flex flex-col items-center justify-center mb-8">
-           {imagePreview ? (
-             <div className="relative">
-               <img src={imagePreview} alt="Preview" className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" />
-               <button 
-                 onClick={removeImage} 
-                 className="absolute -top-3 -right-3 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg"
-                 type="button"
-               >
-                 <X className="w-5 h-5" />
-               </button>
-             </div>
-           ) : (
-             <button 
-               onClick={() => fileInputRef.current?.click()} 
-               className="w-full max-w-sm h-32 rounded-xl bg-gray-50 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:bg-gray-100 hover:border-blue-400 transition-colors group"
-               type="button"
-             >
-               <ImageIcon className="w-10 h-10 text-gray-400 group-hover:text-blue-500 transition-colors mb-2" />
-               <span className="text-sm font-medium text-gray-500 group-hover:text-blue-600">Add Image (Optional)</span>
-             </button>
-           )}
-           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+           <div className="w-full flex flex-wrap gap-2 mb-4 justify-center">
+             {existingMedia.map((m, idx) => (
+               <div key={`existing-${idx}`} className="relative inline-block">
+                 {m.mediaType === 'VIDEO' ? (
+                   <video src={m.mediaUrl} className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" controls />
+                 ) : (
+                   <img src={m.mediaUrl} alt="Preview" className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" />
+                 )}
+                 <button 
+                   onClick={() => removeExistingMedia(idx)} 
+                   className="absolute -top-3 -right-3 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg"
+                   type="button"
+                 >
+                   <X className="w-5 h-5" />
+                 </button>
+               </div>
+             ))}
+
+             {newFilePreviews.map((preview, idx) => (
+               <div key={`new-${idx}`} className="relative inline-block">
+                 {newFiles[idx]?.type.startsWith('video') ? (
+                   <video src={preview} className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" controls />
+                 ) : (
+                   <img src={preview} alt="Preview" className="max-h-64 rounded-xl object-contain border border-gray-200 shadow-sm" />
+                 )}
+                 <button 
+                   onClick={() => removeNewFile(idx)} 
+                   className="absolute -top-3 -right-3 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg"
+                   type="button"
+                 >
+                   <X className="w-5 h-5" />
+                 </button>
+               </div>
+             ))}
+           </div>
+
+           <button 
+             onClick={() => fileInputRef.current?.click()} 
+             className="w-full max-w-sm h-32 rounded-xl bg-gray-50 flex flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:bg-gray-100 hover:border-blue-400 transition-colors group"
+             type="button"
+           >
+             <ImageIcon className="w-10 h-10 text-gray-400 group-hover:text-blue-500 transition-colors mb-2" />
+             <span className="text-sm font-medium text-gray-500 group-hover:text-blue-600">Add Media (Optional)</span>
+           </button>
+           <input type="file" ref={fileInputRef} className="hidden" accept="image/*,video/*" multiple onChange={handleImageChange} />
         </div>
 
         <DynamicForm

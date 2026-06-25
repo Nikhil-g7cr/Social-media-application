@@ -269,7 +269,13 @@ const ProfilePage: React.FC = () => {
                     key={post.id}
                     className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
                   >
-                    {post.mediaUrl ? (
+                    {post.media && post.media.length > 0 ? (
+                      post.media[0].mediaType === 'VIDEO' ? (
+                        <video src={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                      ) : (
+                        <PostImage mediaUrl={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                      )
+                    ) : post.mediaUrl ? (
                       <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
@@ -312,7 +318,13 @@ const ProfilePage: React.FC = () => {
                     key={post.id}
                     className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
                   >
-                    {post.mediaUrl ? (
+                    {post.media && post.media.length > 0 ? (
+                      post.media[0].mediaType === 'VIDEO' ? (
+                        <video src={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                      ) : (
+                        <PostImage mediaUrl={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
+                      )
+                    ) : post.mediaUrl ? (
                       <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
                     ) : (
                       <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">

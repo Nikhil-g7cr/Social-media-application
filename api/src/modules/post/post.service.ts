@@ -38,6 +38,13 @@ export class PostService implements PostAbstractSvc {
         if (postData.MediaURL) {
           postData.MediaURL = await this.fileService.generateReadUrl(postData.MediaURL);
         }
+        if (postData.Media && Array.isArray(postData.Media)) {
+          for (const m of postData.Media) {
+            if (m.MediaURL) {
+              m.MediaURL = await this.fileService.generateReadUrl(m.MediaURL);
+            }
+          }
+        }
         
         // Emit domain event for decoupling via Service Bus wrapper
         await this.serviceBus.publishEvent('ContentEvents', 'post.created', {
@@ -70,6 +77,13 @@ export class PostService implements PostAbstractSvc {
               post.MediaURL = await this.fileService.generateReadUrl(
                 post.MediaURL,
               );
+            }
+            if (post.Media && Array.isArray(post.Media)) {
+              for (const m of post.Media) {
+                if (m.MediaURL) {
+                  m.MediaURL = await this.fileService.generateReadUrl(m.MediaURL);
+                }
+              }
             }
 
             return post;
@@ -104,6 +118,13 @@ export class PostService implements PostAbstractSvc {
                 post.MediaURL,
               );
             }
+            if (post.Media && Array.isArray(post.Media)) {
+              for (const m of post.Media) {
+                if (m.MediaURL) {
+                  m.MediaURL = await this.fileService.generateReadUrl(m.MediaURL);
+                }
+              }
+            }
             return post;
           }),
         );
@@ -130,6 +151,13 @@ export class PostService implements PostAbstractSvc {
         response.data.MediaURL = await this.fileService.generateReadUrl(
           response.data.MediaURL,
         );
+      }
+      if (response.data?.Media && Array.isArray(response.data.Media)) {
+        for (const m of response.data.Media) {
+          if (m.MediaURL) {
+            m.MediaURL = await this.fileService.generateReadUrl(m.MediaURL);
+          }
+        }
       }
 
       return response;
@@ -191,6 +219,13 @@ export class PostService implements PostAbstractSvc {
                 post.MediaURL,
               );
             }
+            if (post.Media && Array.isArray(post.Media)) {
+              for (const m of post.Media) {
+                if (m.MediaURL) {
+                  m.MediaURL = await this.fileService.generateReadUrl(m.MediaURL);
+                }
+              }
+            }
             return post;
           }),
         );
@@ -222,6 +257,13 @@ export class PostService implements PostAbstractSvc {
               post.MediaURL = await this.fileService.generateReadUrl(
                 post.MediaURL,
               );
+            }
+            if (post.Media && Array.isArray(post.Media)) {
+              for (const m of post.Media) {
+                if (m.MediaURL) {
+                  m.MediaURL = await this.fileService.generateReadUrl(m.MediaURL);
+                }
+              }
             }
             return post;
           }),
