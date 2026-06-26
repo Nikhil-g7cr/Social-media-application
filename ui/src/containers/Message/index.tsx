@@ -28,11 +28,9 @@ import {
   type ChatAttachment,
 } from "../../redux/features/chat/chatApiSlice";
 import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
-import { useSelector } from "react-redux";
-import type { RootState } from "@reduxjs/toolkit/query";
-import PostImage from "../../shared/shared-components/PostImage";
 import Avatar from "../../shared/shared-components/Avatar";
 import API from "../../config/axiosConfig";
+import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
 
 // --- TypeScript Interfaces ---
 interface UIMessage {
@@ -81,20 +79,18 @@ const MessagesPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // --- Search State ---
-  const [searchTerm, setSearchTerm] = useState("");
-  const [debouncedTerm, setDebouncedTerm] = useState("");
+
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
+  // ==============Debouncing===============================
+  const { searchTerm, setSearchTerm, debouncedTerm } = useDebouncedSearch(
+    "",
+    500,
+  );
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebouncedTerm(searchTerm), 500);
-    return () => clearTimeout(timer);
-  }, [searchTerm]);
-
-  const { data: searchResults, isFetching: isSearchFetching } =
-    useSearchUsersQuery(debouncedTerm, {
-      skip: debouncedTerm.length === 0,
-    });
+  const { data: searchResults = [], isFetching: isSearchFetching } =
+    useSearchUsersQuery(debouncedTerm, { skip: !debouncedTerm.trim() });
+  // =======================end=============================
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -431,34 +427,49 @@ const MessagesPage: React.FC = () => {
                   <div className="p-4 text-center text-sm text-gray-500">
                     Searching...
                   </div>
-                ) : searchResults && searchResults.length > 0 ? (
-                  <ul className="py-2">
-                    {searchResults.map((u) => (
-                      <li
-                        key={u.id}
-                        onClick={() => handleStartNewChat(u.id)}
-                        className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
-                      >
-                        <Avatar
-                          url={u.avatarUrl}
-                          name={u.name}
-                          className="w-8 h-8 rounded-full object-cover border border-gray-200"
-                        />
-                        <div className="flex flex-col truncate">
-                          <span className="text-sm font-semibold text-gray-900 truncate">
-                            {u.name}
-                          </span>
-                          <span className="text-xs text-gray-500 truncate">
-                            @{u.username}
-                          </span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
                 ) : (
-                  <div className="p-4 text-center text-sm text-gray-500">
-                    No users found.
-                  </div>
+                  (() => {
+                    // 1. Pre-filter the results before rendering
+                    const filteredResults =
+                      searchResults?.filter((u) => u.id !== CURRENT_USER_ID) ||
+                      [];
+
+                    // 2. Check if the *filtered* results are empty
+                    if (filteredResults.length === 0) {
+                      return (
+                        <div className="p-4 text-center text-sm text-gray-500">
+                          No users found.
+                        </div>
+                      );
+                    }
+
+                    // 3. Render the list if results exist
+                    return (
+                      <ul className="py-2">
+                        {filteredResults.map((u) => (
+                          <li
+                            key={u.id}
+                            onClick={() => handleStartNewChat(u.id)}
+                            className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
+                          >
+                            <Avatar
+                              url={u.avatarUrl}
+                              name={u.name}
+                              className="w-8 h-8 rounded-full object-cover border border-gray-200"
+                            />
+                            <div className="flex flex-col truncate">
+                              <span className="text-sm font-semibold text-gray-900 truncate">
+                                {u.name}
+                              </span>
+                              <span className="text-xs text-gray-500 truncate">
+                                @{u.username}
+                              </span>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  })()
                 )}
               </div>
             )}
