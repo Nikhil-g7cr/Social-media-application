@@ -13,6 +13,7 @@ interface DynamicFormProps {
   submitButtonText?: string;
   loading?: boolean;
   disabled?: boolean;
+  mode?: "onChange" | "onBlur" | "onSubmit" | "onTouched" | "all";
   onSubmit: (data: any) => void | Promise<void>;
 }
 
@@ -23,6 +24,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   submitButtonText = "Submit",
   loading = false,
   disabled = false,
+  mode = "onChange",
   onSubmit,
 }) => {
   const {
@@ -33,7 +35,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   } = useForm({
     defaultValues,
     resolver: validationSchema ? zodResolver(validationSchema as any) : undefined,
-    mode: "onChange",
+    mode: mode,
   });
 
   // 1. Define the Object Map (Dictionary)

@@ -1,13 +1,15 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { notification } from "antd";
 import { Image as ImageIcon, X } from "lucide-react";
 
 import DynamicForm from "../../../shared/shared-components/DynamicForm";
 import { signupFields } from "../../layout/form/fields/signup.field";
-import { signupSchema } from "../../layout/form/schemas/signup.schema";
+// FIX 1: Import the new getSignupSchema function instead of the static signupSchema
+import { getSignupSchema } from "../../layout/form/schemas/signup.schema"; 
 import { useSignupMutation } from "../../../redux/features/auth/authApiSlice";
 import { useMediaUpload } from "../../../hooks/useMediaUpload";
+import { useLazyCheckUsernameAvailabilityQuery } from "../../../redux/features/user/userApiSlice";
 
 interface SignupFormData {
   FullName: string;
@@ -21,13 +23,27 @@ interface SignupFormData {
 
 const SignupPage = () => {
   const [signup, { isLoading }] = useSignupMutation();
-  const { uploadFiles } = useMediaUpload();
+const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const { uploadFiles } = useMediaUpload();
   const navigate = useNavigate();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const checkUsernameAvailability = async (username: string) => {
+    try {
+      const response = await triggerCheckUsername(username).unwrap();
+      // Adjust this based on your API response. Example assumes { isAvailable: true }
+      return response.available === true; 
+    } catch (error) {
+      console.error("Failed to check username", error);
+      return false; // If API fails, block the username to be safe
+    }
+  };
+
+  // Generate the dynamic schema that includes the API check
+  const schema = useMemo(() => getSignupSchema(checkUsernameAvailability), []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -131,7 +147,9 @@ const SignupPage = () => {
 
         <DynamicForm
           fields={signupFields as any}
-          validationSchema={signupSchema}
+          // FIX 2: Pass the dynamically generated 'schema' and add mode="onBlur"
+          validationSchema={schema} 
+          mode="onBlur"
           submitButtonText={isUploading ? "Uploading..." : "Create Account"}
           loading={isLoading || isUploading}
           disabled={isLoading || isUploading}
