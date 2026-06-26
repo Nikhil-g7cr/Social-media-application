@@ -1,71 +1,86 @@
 import {
   IsEmail,
+  IsEnum,
   IsNotEmpty,
   IsOptional,
   IsString,
   IsStrongPassword,
+  IsUrl,
+  Matches,
   MaxLength,
   MinLength,
-  Matches,
 } from 'class-validator';
 
-export class UsersDTO {
+export enum Gender {
+  Male = 'Male',
+  Female = 'Female',
+  Other = 'Other',
+}
 
+export class UsersDTO {
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
   @MinLength(3)
-  @Matches(/^[A-Za-z]+$/, { message: 'Full name must only contain alphabets and no spaces' })
+  @MaxLength(50)
+  @Matches(/^[\p{L}]+(?:[ '-][\p{L}]+)*$/u, {
+    message:
+      'Full name may only contain letters, spaces, apostrophes (\') and hyphens (-).',
+  })
   FullName!: string;
 
   @IsString()
   @IsNotEmpty()
-  @MaxLength(50)
   @MinLength(3)
-  @Matches(/^[A-Za-z0-9]+$/, { message: 'Username must only contain alphanumeric characters and no spaces' })
+  @MaxLength(30)
+  @Matches(/^(?!.*[._]{2})(?![._])[a-zA-Z0-9._]+(?<![._])$/, {
+    message:
+      "Username may contain letters, numbers, periods (.) and underscores (_). It cannot start/end with '.' or '_' or contain consecutive '.' or '_'.",
+  })
   UserName!: string;
 
-  @IsEmail()
+  @IsEmail({}, { message: 'Please enter a valid email address.' })
   @IsNotEmpty()
-  @MaxLength(100)
-  @MinLength(7)
-  @Matches(/^[a-zA-Z0-9]/, { message: 'Email must start with a letter or number' })
+  @MaxLength(255)
   EmailAddress!: string;
 
-  @IsStrongPassword({
-    minLength: 8,
-    minLowercase: 1,
-    minUppercase: 1,
-    minNumbers: 1,
-    minSymbols: 1,
+  @IsStrongPassword(
+    {
+      minLength: 8,
+      minLowercase: 1,
+      minUppercase: 1,
+      minNumbers: 1,
+      minSymbols: 1,
+    },
+    {
+      message:
+        'Password must contain at least 8 characters, including uppercase, lowercase, number, and special character.',
+    },
+  )
+  @Matches(/^\S*$/, {
+    message: 'Password cannot contain spaces.',
   })
-  @Matches(/^\S*$/, { message: 'Password must not contain spaces' })
-  @IsNotEmpty()
   Password!: string;
 
-  // ✅ FIXED: Changed @Min/@Max to @MinLength/@MaxLength
-  // ✅ FIXED: Changed @IsNotEmpty to @IsOptional so users aren't forced to write a bio
-  @IsOptional() 
+  @IsOptional()
   @IsString()
-  @MinLength(5)
-  @MaxLength(2000)
+  @MaxLength(250)
   Bio?: string;
 
-  @IsString()
   @IsOptional()
   @MaxLength(1000)
   ProfilePictureUrl?: string;
 
-  @IsString()
-  @IsOptional() // Made optional so users don't have to provide gender if they don't want to
-  Gender?: string;
+  @IsOptional()
+  @IsEnum(Gender, {
+    message: 'Gender must be Male, Female or Other.',
+  })
+  Gender?: Gender;
 
-/* ============================================================================================
-    Including Role or IsActive in a public signup DTO is risky because attackers can 
-    exploit it to create admin or active accounts (privilege escalation).
-    Instead, rely on backend defaults (e.g., role = USER, 
-    inactive by default) and only allow setting these fields 
-    in a separate admin-only DTO protected by authorization.
-    ============================================================================================
- */
+  /* ============================================================================================
+      Including Role or IsActive in a public signup DTO is risky because attackers can
+      exploit it to create admin or active accounts (privilege escalation).
+      Instead, rely on backend defaults (e.g., Role = USER,
+      IsActive = true/false as appropriate) and expose these
+      fields only through admin-protected DTOs.
+     ============================================================================================ */
 }
