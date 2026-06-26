@@ -27,19 +27,29 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
               {
                 model: Users,
                 as: 'User',
-                attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
-              }
-            ]
+                attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+              },
+            ],
           },
         ],
         order: [['CreatedAt', 'DESC']],
       });
 
-      return createResponse(HttpStatus.OK, 'User comments retrieved successfully', comments);
+      return createResponse(
+        HttpStatus.OK,
+        'User comments retrieved successfully',
+        comments,
+      );
     } catch (error: any) {
-      this.logger.error(`[CommentSQLDAO] getUserComments Error: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(
+        `[CommentSQLDAO] getUserComments Error: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Failed to retrieve user comments'),
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Failed to retrieve user comments',
+        ),
         description: error.message,
       };
     }
@@ -48,19 +58,33 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
   async deleteComment(commentId: string, userId: string): Promise<AppResponse> {
     try {
       const comment = await this.commentModel.findOne({
-        where: { ID: commentId, UserID: userId }
+        where: { ID: commentId, UserID: userId },
       });
 
       if (!comment) {
-        return createResponse(HttpStatus.NOT_FOUND, 'Comment not found or unauthorized', null);
+        return createResponse(
+          HttpStatus.NOT_FOUND,
+          'Comment not found or unauthorized',
+          null,
+        );
       }
 
       await this.commentModel.destroy({ where: { ID: commentId } });
-      return createResponse(HttpStatus.OK, 'Comment deleted successfully', null);
+      return createResponse(
+        HttpStatus.OK,
+        'Comment deleted successfully',
+        null,
+      );
     } catch (error: any) {
-      this.logger.error(`[CommentSQLDAO] deleteComment Error: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(
+        `[CommentSQLDAO] deleteComment Error: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Failed to delete comment'),
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Failed to delete comment',
+        ),
         description: error.message,
       };
     }
@@ -76,8 +100,8 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
         ID: randomUUID(),
         PostID: postId,
         UserID: userId,
-        ParentCommentID: null, 
-        Content: commentText, 
+        ParentCommentID: null,
+        Content: commentText,
       };
 
       const newComment = await this.commentModel.create(payload as any);

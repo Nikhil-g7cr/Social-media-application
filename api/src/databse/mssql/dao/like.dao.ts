@@ -26,7 +26,7 @@ export class LikeSQLDAO implements LikeAbstractSQLDAO {
               {
                 model: Users,
                 as: 'User',
-                attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureURL'],
+                attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
               }
             ]
           },

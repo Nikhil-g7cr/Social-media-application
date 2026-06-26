@@ -404,7 +404,24 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 method: 'POST',
                 data: { commentText },
             }),
-            invalidatesTags: (_result, _error, { postId }) => [{ type: 'Comment', id: postId }, 'Post'],
+            invalidatesTags: (_result, _error, { postId }) => [{ type: 'Comment', id: postId }],
+            async onQueryStarted({ postId }, { dispatch, queryFulfilled }) {
+                const patches = [
+                    dispatch(postApiSlice.util.updateQueryData('getPosts', { page: 1, limit: 10 }, (draft) => {
+                        const post = draft.posts.find(p => p.id === postId);
+                        if (post) post.comments += 1;
+                    })),
+                    dispatch(postApiSlice.util.updateQueryData('getAllExplorePosts', { page: 1, limit: 10 }, (draft) => {
+                        const post = draft.posts.find(p => p.id === postId);
+                        if (post) post.comments += 1;
+                    })),
+                ];
+                try {
+                    await queryFulfilled;
+                } catch {
+                    patches.forEach(p => p.undo());
+                }
+            },
         }),
     }),
 });
