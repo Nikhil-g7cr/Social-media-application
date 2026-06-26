@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Search,
   Send,
@@ -61,17 +61,22 @@ const MessagesPage: React.FC = () => {
 
   const { user, token } = useAppSelector((state: any) => state.auth);
   const CURRENT_USER_ID = user?.id || "";
-  const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
+  const onlineUserIds = useAppSelector(
+    (state: any) => state.onlineUsers?.onlineUserIds || [],
+  );
 
   // --- State ---
   const [conversations, setConversations] = useState<UIConversation[]>([]);
-  const [activeConversation, setActiveConversation] = useState<UIConversation | null>(null);
+  const [activeConversation, setActiveConversation] =
+    useState<UIConversation | null>(null);
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
 
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
+  const [uploadProgress, setUploadProgress] = useState<{
+    [key: string]: number;
+  }>({});
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -86,13 +91,17 @@ const MessagesPage: React.FC = () => {
     return () => clearTimeout(timer);
   }, [searchTerm]);
 
-  const { data: searchResults, isFetching: isSearchFetching } = useSearchUsersQuery(debouncedTerm, {
-    skip: debouncedTerm.length === 0,
-  });
+  const { data: searchResults, isFetching: isSearchFetching } =
+    useSearchUsersQuery(debouncedTerm, {
+      skip: debouncedTerm.length === 0,
+    });
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (searchWrapperRef.current && !searchWrapperRef.current.contains(event.target as Node)) {
+      if (
+        searchWrapperRef.current &&
+        !searchWrapperRef.current.contains(event.target as Node)
+      ) {
         setIsSearchOpen(false);
       }
     }
@@ -101,10 +110,14 @@ const MessagesPage: React.FC = () => {
   }, []);
 
   // --- RTK Query ---
-  const { data: apiConversations, isLoading: isConversationsLoading } = useGetConversationsQuery();
-  const { data: apiMessages } = useGetMessagesByConversationIdQuery(activeConversation?.id || "", {
-    skip: !activeConversation,
-  });
+  const { data: apiConversations, isLoading: isConversationsLoading } =
+    useGetConversationsQuery();
+  const { data: apiMessages } = useGetMessagesByConversationIdQuery(
+    activeConversation?.id || "",
+    {
+      skip: !activeConversation,
+    },
+  );
   const [startConversation] = useStartConversationMutation();
   const [clearChatHistory] = useClearChatHistoryMutation();
 
@@ -128,23 +141,30 @@ const MessagesPage: React.FC = () => {
   // --- Update conversations from RTK Query ---
   useEffect(() => {
     if (apiConversations) {
-      const formattedConversations = apiConversations.map((conv: RTKConversation) => ({
-        id: conv.id,
-        participantName: conv.participant?.name || "Unknown User",
-        avatarUrl: conv.participant?.avatarUrl,
-        lastMessage: conv.latestMessage?.content || "No messages yet",
-        time: conv.latestMessage?.createdAt
-          ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
-          : "",
-        unreadCount: 0,
-        isOnline: false,
-        participantId: conv.participant?.id || "",
-      }));
+      const formattedConversations = apiConversations.map(
+        (conv: RTKConversation) => ({
+          id: conv.id,
+          participantName: conv.participant?.name || "Unknown User",
+          avatarUrl: conv.participant?.avatarUrl,
+          lastMessage: conv.latestMessage?.content || "No messages yet",
+          time: conv.latestMessage?.createdAt
+            ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+              })
+            : "",
+          unreadCount: 0,
+          isOnline: false,
+          participantId: conv.participant?.id || "",
+        }),
+      );
       setConversations(formattedConversations);
 
       // Auto-open via URL param
       if (targetConvId && !activeConversation) {
-        const target = formattedConversations.find((c) => c.id === targetConvId);
+        const target = formattedConversations.find(
+          (c) => c.id === targetConvId,
+        );
         if (target) {
           setActiveConversation(target);
           setIsMobileChatOpen(true);
@@ -153,7 +173,9 @@ const MessagesPage: React.FC = () => {
 
       // Auto-open a newly started conversation after refetch
       if (pendingConvIdRef.current) {
-        const target = formattedConversations.find((c) => c.id === pendingConvIdRef.current);
+        const target = formattedConversations.find(
+          (c) => c.id === pendingConvIdRef.current,
+        );
         if (target) {
           pendingConvIdRef.current = null;
           setActiveConversation(target);
@@ -171,7 +193,10 @@ const MessagesPage: React.FC = () => {
         id: msg.id,
         senderId: msg.senderId,
         text: msg.content,
-        timestamp: new Date(msg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
         attachments: msg.attachments,
       }));
       setMessages(formattedMessages);
@@ -211,17 +236,21 @@ const MessagesPage: React.FC = () => {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files);
-      const validFiles = files.filter(file => {
+      const validFiles = files.filter((file) => {
         const sizeInMB = file.size / (1024 * 1024);
-        if (file.type.startsWith('image/') && sizeInMB > 20) {
+        if (file.type.startsWith("image/") && sizeInMB > 20) {
           alert(`Image ${file.name} is too large. Max 20MB.`);
           return false;
         }
-        if (file.type.startsWith('video/') && sizeInMB > 100) {
+        if (file.type.startsWith("video/") && sizeInMB > 100) {
           alert(`Video ${file.name} is too large. Max 100MB.`);
           return false;
         }
-        if (!file.type.startsWith('image/') && !file.type.startsWith('video/') && sizeInMB > 50) {
+        if (
+          !file.type.startsWith("image/") &&
+          !file.type.startsWith("video/") &&
+          sizeInMB > 50
+        ) {
           alert(`Document ${file.name} is too large. Max 50MB.`);
           return false;
         }
@@ -233,7 +262,11 @@ const MessagesPage: React.FC = () => {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!newMessage.trim() && selectedFiles.length === 0) || !activeConversation) return;
+    if (
+      (!newMessage.trim() && selectedFiles.length === 0) ||
+      !activeConversation
+    )
+      return;
 
     setIsUploading(true);
     const uploadedAttachments: ChatAttachment[] = [];
@@ -241,31 +274,34 @@ const MessagesPage: React.FC = () => {
     for (const file of selectedFiles) {
       try {
         const fileId = Math.random().toString(36).substring(7);
-        setUploadProgress(prev => ({ ...prev, [fileId]: 0 }));
+        setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
 
-        const res = await API.post('/files/upload-url', {
+        const res = await API.post("/files/upload-url", {
           fileName: file.name,
           contentType: file.type,
-          folder: 'chat-attachments',
+          folder: "chat-attachments",
           fileSize: file.size,
-          mimeType: file.type
+          mimeType: file.type,
         });
 
         // Backend wraps responses with { status, data, message }
         const uploadUrl = res.data?.data?.uploadUrl || res.data?.uploadUrl;
 
-        if (!uploadUrl) throw new Error('Failed to get upload URL');
+        if (!uploadUrl) throw new Error("Failed to get upload URL");
 
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();
-          xhr.open('PUT', uploadUrl, true);
-          xhr.setRequestHeader('x-ms-blob-type', 'BlockBlob');
-          xhr.setRequestHeader('Content-Type', file.type);
+          xhr.open("PUT", uploadUrl, true);
+          xhr.setRequestHeader("x-ms-blob-type", "BlockBlob");
+          xhr.setRequestHeader("Content-Type", file.type);
 
           xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
               const percentComplete = (event.loaded / event.total) * 100;
-              setUploadProgress(prev => ({ ...prev, [fileId]: percentComplete }));
+              setUploadProgress((prev) => ({
+                ...prev,
+                [fileId]: percentComplete,
+              }));
             }
           };
 
@@ -277,15 +313,15 @@ const MessagesPage: React.FC = () => {
             }
           };
 
-          xhr.onerror = () => reject(new Error('Upload failed'));
+          xhr.onerror = () => reject(new Error("Upload failed"));
           xhr.send(file);
         });
 
-        const extension = file.name.split('.').pop() || '';
-        const baseUrl = uploadUrl.split('?')[0];
+        const extension = file.name.split(".").pop() || "";
+        const baseUrl = uploadUrl.split("?")[0];
 
         uploadedAttachments.push({
-          id: '',
+          id: "",
           fileUrl: baseUrl,
           fileType: file.type,
           fileSizeBytes: file.size,
@@ -294,7 +330,7 @@ const MessagesPage: React.FC = () => {
           fileExtension: extension,
         });
       } catch (err) {
-        console.error('File upload error', err);
+        console.error("File upload error", err);
         alert(`Failed to upload ${file.name}`);
       }
     }
@@ -310,15 +346,45 @@ const MessagesPage: React.FC = () => {
     socket.emit("sendMessage", {
       conversationId: activeConversation.id,
       text,
-      attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined
+      attachments:
+        uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
     });
 
     setTimeout(scrollToBottom, 100);
   };
 
+  // ===============cleaning the conversation===============
+  const cleanConversations = useMemo(() => {
+    if (!conversations) return [];
+
+    // 1. Filter out conversations where the user doesn't exist anymore
+    // (Adjust the condition if your backend sends a specific flag like conv.isDeleted)
+    const validConversations = conversations.filter(
+      (conv) => conv.participantId && conv.participantName,
+    );
+
+    // 2. Remove duplicates (Keep only one conversation per participantId)
+    const seenParticipants = new Set();
+    const deduplicatedConversations = [];
+
+    for (const conv of validConversations) {
+      // If we haven't seen this user yet, add them to our clean list
+      if (!seenParticipants.has(conv.participantId)) {
+        seenParticipants.add(conv.participantId);
+        deduplicatedConversations.push(conv);
+      }
+    }
+
+    return deduplicatedConversations;
+  }, [conversations]);
+
   const handleClearChat = async () => {
     if (!activeConversation) return;
-    if (window.confirm("Are you sure you want to clear this chat history from your screen? This action cannot be undone.")) {
+    if (
+      window.confirm(
+        "Are you sure you want to clear this chat history from your screen? This action cannot be undone.",
+      )
+    ) {
       try {
         await clearChatHistory(activeConversation.id).unwrap();
         setMessages([]); // Immediately clear local state messages
@@ -362,7 +428,9 @@ const MessagesPage: React.FC = () => {
             {isSearchOpen && debouncedTerm.length > 0 && (
               <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-64 overflow-y-auto z-50">
                 {isSearchFetching ? (
-                  <div className="p-4 text-center text-sm text-gray-500">Searching...</div>
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    Searching...
+                  </div>
                 ) : searchResults && searchResults.length > 0 ? (
                   <ul className="py-2">
                     {searchResults.map((u) => (
@@ -377,14 +445,20 @@ const MessagesPage: React.FC = () => {
                           className="w-8 h-8 rounded-full object-cover border border-gray-200"
                         />
                         <div className="flex flex-col truncate">
-                          <span className="text-sm font-semibold text-gray-900 truncate">{u.name}</span>
-                          <span className="text-xs text-gray-500 truncate">@{u.username}</span>
+                          <span className="text-sm font-semibold text-gray-900 truncate">
+                            {u.name}
+                          </span>
+                          <span className="text-xs text-gray-500 truncate">
+                            @{u.username}
+                          </span>
                         </div>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <div className="p-4 text-center text-sm text-gray-500">No users found.</div>
+                  <div className="p-4 text-center text-sm text-gray-500">
+                    No users found.
+                  </div>
                 )}
               </div>
             )}
@@ -393,16 +467,20 @@ const MessagesPage: React.FC = () => {
 
         {/* Conversation List */}
         <div className="flex-1 overflow-y-auto">
-          {conversations.length === 0 ? (
+          {/* USE cleanConversations HERE */}
+          {cleanConversations.length === 0 ? (
             <div className="p-6 text-center text-sm text-gray-400">
               No conversations yet. Search for someone above!
             </div>
           ) : (
-            conversations.map((conv) => (
+            // USE cleanConversations HERE
+            cleanConversations.map((conv) => (
               <div
                 key={conv.id}
                 onClick={() => handleSelectConversation(conv)}
-                className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition border-b border-gray-100 ${activeConversation?.id === conv.id ? "bg-blue-50/50" : ""}`}
+                className={`flex items-center gap-3 p-4 cursor-pointer hover:bg-gray-50 transition border-b border-gray-100 ${
+                  activeConversation?.id === conv.id ? "bg-blue-50/50" : ""
+                }`}
               >
                 <div className="relative flex-shrink-0">
                   <Avatar
@@ -419,9 +497,17 @@ const MessagesPage: React.FC = () => {
                     <h3 className="text-sm font-semibold text-gray-900 truncate">
                       {conv.participantName}
                     </h3>
-                    <span className="text-xs text-gray-500 flex-shrink-0">{conv.time}</span>
+                    <span className="text-xs text-gray-500 flex-shrink-0">
+                      {conv.time}
+                    </span>
                   </div>
-                  <p className={`text-sm truncate ${conv.unreadCount > 0 ? "font-semibold text-gray-900" : "text-gray-500"}`}>
+                  <p
+                    className={`text-sm truncate ${
+                      conv.unreadCount > 0
+                        ? "font-semibold text-gray-900"
+                        : "text-gray-500"
+                    }`}
+                  >
                     {conv.lastMessage}
                   </p>
                 </div>
@@ -461,7 +547,9 @@ const MessagesPage: React.FC = () => {
                     {activeConversation.participantName}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {onlineUserIds.includes(activeConversation.participantId) ? "Active now" : "Offline"}
+                    {onlineUserIds.includes(activeConversation.participantId)
+                      ? "Active now"
+                      : "Offline"}
                   </p>
                 </div>
               </div>
@@ -488,30 +576,66 @@ const MessagesPage: React.FC = () => {
             {/* Chat Messages Area */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg) => {
-                const isMe = String(msg.senderId).toLowerCase() === String(CURRENT_USER_ID).toLowerCase();
+                const isMe =
+                  String(msg.senderId).toLowerCase() ===
+                  String(CURRENT_USER_ID).toLowerCase();
                 return (
-                  <div key={msg.id} className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                    <div className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isMe ? "items-end" : "items-start"}`}>
+                  <div
+                    key={msg.id}
+                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                  >
+                    <div
+                      className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                    >
                       <div
-                        className={`px-4 py-2 rounded-2xl ${isMe
-                          ? "bg-blue-600 text-white rounded-br-none"
-                          : "bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm"
-                          }`}
+                        className={`px-4 py-2 rounded-2xl ${
+                          isMe
+                            ? "bg-blue-600 text-white rounded-br-none"
+                            : "bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm"
+                        }`}
                       >
                         {msg.attachments && msg.attachments.length > 0 && (
                           <div className="flex flex-col gap-2 mb-2">
                             {msg.attachments.map((att: any) => {
-                              if (att.mimeType?.startsWith('image/')) {
-                                return <img key={att.id} src={att.fileUrl} alt={att.originalFileName} className="max-w-full max-h-64 rounded-lg object-contain cursor-pointer" onClick={() => window.open(att.fileUrl, '_blank')} />;
-                              } else if (att.mimeType?.startsWith('video/')) {
-                                return <video key={att.id} src={att.fileUrl} controls className="max-w-full max-h-64 rounded-lg" />;
+                              if (att.mimeType?.startsWith("image/")) {
+                                return (
+                                  <img
+                                    key={att.id}
+                                    src={att.fileUrl}
+                                    alt={att.originalFileName}
+                                    className="max-w-full max-h-64 rounded-lg object-contain cursor-pointer"
+                                    onClick={() =>
+                                      window.open(att.fileUrl, "_blank")
+                                    }
+                                  />
+                                );
+                              } else if (att.mimeType?.startsWith("video/")) {
+                                return (
+                                  <video
+                                    key={att.id}
+                                    src={att.fileUrl}
+                                    controls
+                                    className="max-w-full max-h-64 rounded-lg"
+                                  />
+                                );
                               } else {
                                 return (
-                                  <a key={att.id} href={att.fileUrl} target="_blank" rel="noopener noreferrer" className={`flex items-center gap-2 p-2 rounded-lg ${isMe ? 'bg-blue-700 hover:bg-blue-800 text-white' : 'bg-gray-100 hover:bg-gray-200 text-gray-900'} transition`}>
+                                  <a
+                                    key={att.id}
+                                    href={att.fileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`flex items-center gap-2 p-2 rounded-lg ${isMe ? "bg-blue-700 hover:bg-blue-800 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"} transition`}
+                                  >
                                     <FileIcon className="h-5 w-5" />
                                     <div className="flex flex-col overflow-hidden">
-                                      <span className="text-sm font-semibold truncate">{att.originalFileName}</span>
-                                      <span className="text-xs opacity-75">{(att.fileSizeBytes / 1024).toFixed(1)} KB</span>
+                                      <span className="text-sm font-semibold truncate">
+                                        {att.originalFileName}
+                                      </span>
+                                      <span className="text-xs opacity-75">
+                                        {(att.fileSizeBytes / 1024).toFixed(1)}{" "}
+                                        KB
+                                      </span>
                                     </div>
                                     <Download className="h-4 w-4 ml-auto" />
                                   </a>
@@ -520,9 +644,15 @@ const MessagesPage: React.FC = () => {
                             })}
                           </div>
                         )}
-                        {msg.text && <p className="text-sm whitespace-pre-wrap">{msg.text}</p>}
+                        {msg.text && (
+                          <p className="text-sm whitespace-pre-wrap">
+                            {msg.text}
+                          </p>
+                        )}
                       </div>
-                      <span className="text-[10px] text-gray-400 mt-1 mx-1">{msg.timestamp}</span>
+                      <span className="text-[10px] text-gray-400 mt-1 mx-1">
+                        {msg.timestamp}
+                      </span>
                     </div>
                   </div>
                 );
@@ -536,28 +666,65 @@ const MessagesPage: React.FC = () => {
               {selectedFiles.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-3">
                   {selectedFiles.map((file, idx) => (
-                    <div key={idx} className="relative flex items-center bg-gray-50 border border-gray-200 p-2 rounded-lg shadow-sm w-48">
+                    <div
+                      key={idx}
+                      className="relative flex items-center bg-gray-50 border border-gray-200 p-2 rounded-lg shadow-sm w-48"
+                    >
                       <div className="mr-2">
-                        {file.type.startsWith('image/') ? <ImageIcon className="h-6 w-6 text-blue-500" /> : file.type.startsWith('video/') ? <Play className="h-6 w-6 text-purple-500" /> : <FileIcon className="h-6 w-6 text-orange-500" />}
+                        {file.type.startsWith("image/") ? (
+                          <ImageIcon className="h-6 w-6 text-blue-500" />
+                        ) : file.type.startsWith("video/") ? (
+                          <Play className="h-6 w-6 text-purple-500" />
+                        ) : (
+                          <FileIcon className="h-6 w-6 text-orange-500" />
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-gray-800 truncate">{file.name}</p>
-                        <p className="text-[10px] text-gray-500">{(file.size / (1024 * 1024)).toFixed(2)} MB</p>
+                        <p className="text-xs font-semibold text-gray-800 truncate">
+                          {file.name}
+                        </p>
+                        <p className="text-[10px] text-gray-500">
+                          {(file.size / (1024 * 1024)).toFixed(2)} MB
+                        </p>
                       </div>
-                      <button type="button" onClick={() => setSelectedFiles(prev => prev.filter((_, i) => i !== idx))} className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1 hover:bg-red-50 text-red-500">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setSelectedFiles((prev) =>
+                            prev.filter((_, i) => i !== idx),
+                          )
+                        }
+                        className="absolute -top-2 -right-2 bg-white border border-gray-200 rounded-full p-1 hover:bg-red-50 text-red-500"
+                      >
                         <X className="h-3 w-3" />
                       </button>
                     </div>
                   ))}
                 </div>
               )}
-              <form onSubmit={handleSendMessage} className="flex items-end gap-2">
-                <input type="file" multiple className="hidden" ref={fileInputRef} onChange={handleFileSelect} />
+              <form
+                onSubmit={handleSendMessage}
+                className="flex items-end gap-2"
+              >
+                <input
+                  type="file"
+                  multiple
+                  className="hidden"
+                  ref={fileInputRef}
+                  onChange={handleFileSelect}
+                />
                 <div className="flex items-center gap-2 text-gray-400 pb-2">
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition">
+                  <button
+                    type="button"
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition"
+                  >
                     <Paperclip className="h-5 w-5" />
                   </button>
-                  <button type="button" className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition hidden sm:block">
+                  <button
+                    type="button"
+                    className="p-2 hover:text-blue-600 hover:bg-gray-100 rounded-full transition hidden sm:block"
+                  >
                     <Smile className="h-5 w-5" />
                   </button>
                 </div>
@@ -576,10 +743,17 @@ const MessagesPage: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  disabled={(!newMessage.trim() && selectedFiles.length === 0) || isUploading}
+                  disabled={
+                    (!newMessage.trim() && selectedFiles.length === 0) ||
+                    isUploading
+                  }
                   className="p-3 mb-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition"
                 >
-                  {isUploading ? <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full" /> : <Send className="h-5 w-5 ml-0.5" />}
+                  {isUploading ? (
+                    <div className="h-5 w-5 animate-spin border-2 border-white border-t-transparent rounded-full" />
+                  ) : (
+                    <Send className="h-5 w-5 ml-0.5" />
+                  )}
                 </button>
               </form>
             </div>
@@ -590,9 +764,12 @@ const MessagesPage: React.FC = () => {
             <div className="h-20 w-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
               <Send className="h-10 w-10 ml-1" />
             </div>
-            <h3 className="text-xl font-bold text-gray-900 mb-2">Your Messages</h3>
+            <h3 className="text-xl font-bold text-gray-900 mb-2">
+              Your Messages
+            </h3>
             <p className="text-gray-500 max-w-sm">
-              Search for someone above to start a new conversation, or select one from the sidebar.
+              Search for someone above to start a new conversation, or select
+              one from the sidebar.
             </p>
           </div>
         )}
