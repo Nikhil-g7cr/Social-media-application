@@ -50,6 +50,12 @@ export class UserController {
     return await this.userService.searchUsers(query || '');
   }
 
+  @Get('username/:userName')
+  async findByUserName(
+    @Param('userName') userName: string,
+  ): Promise<AppResponse> {
+    return await this.userService.findByUsername(userName);
+  }
   /**
    * GET /user/:id
    * Fetches a single user by ID.
@@ -62,6 +68,10 @@ export class UserController {
     const payload: AtPayload = req.user;
     return await this.userService.getUserByID(id, payload);
   }
+
+  // GET/username/:username
+
+  
 
   /**
    * POST /user

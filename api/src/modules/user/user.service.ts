@@ -119,4 +119,13 @@ export class UserService implements UsersAbstractSvc {
     async deleteUser(userID: string, payload: AtPayload): Promise<AppResponse> {
         return this.hardDeleteUser(userID, payload);
     }
+
+    async findByUsername(userName: string): Promise<AppResponse> {
+        try {
+            return await this.userSQLAbsDAO.findByUsername(userName);
+        } catch (error:any) {
+            this.logger.error(error.stack || error.message);
+            throw error;
+        }
+    }
 }
