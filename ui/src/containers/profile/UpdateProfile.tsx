@@ -7,9 +7,13 @@ import { useSelector } from "react-redux";
 import DynamicForm from "../../shared/shared-components/DynamicForm";
 import { updateProfileFields } from "../../components/layout/form/fields/updateProfile.field";
 import { updateProfileSchema } from "../../components/layout/form/schemas/updateProfile.schema";
-import { useGetUserByIdQuery, useUpdateUserProfileMutation } from "../../redux/features/user/userApiSlice";
+import {
+  useGetUserByIdQuery,
+  useUpdateUserProfileMutation,
+} from "../../redux/features/user/userApiSlice";
 import { useMediaUpload } from "../../hooks/useMediaUpload";
 import type { RootState } from "../../redux/store";
+import Avatar from "../../shared/shared-components/Avatar";
 
 interface UpdateProfileFormData {
   FullName?: string;
@@ -20,12 +24,14 @@ interface UpdateProfileFormData {
 const UpdateProfilePage = () => {
   const navigate = useNavigate();
   const currentUser = useSelector((state: RootState) => state.auth.user);
-  
-  const { data: userProfile, isLoading: isFetchingProfile } = useGetUserByIdQuery(currentUser?.id as string, {
-    skip: !currentUser?.id,
-  });
 
-  const [updateProfile, { isLoading: isUpdating }] = useUpdateUserProfileMutation();
+  const { data: userProfile, isLoading: isFetchingProfile } =
+    useGetUserByIdQuery(currentUser?.id as string, {
+      skip: !currentUser?.id,
+    });
+
+  const [updateProfile, { isLoading: isUpdating }] =
+    useUpdateUserProfileMutation();
   const { uploadFiles } = useMediaUpload();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -57,7 +63,7 @@ const UpdateProfilePage = () => {
 
   const handleUpdate = async (values: UpdateProfileFormData) => {
     if (!currentUser?.id) return;
-    
+
     try {
       setIsUploading(true);
       let profilePictureUrl = userProfile?.avatarUrl;
@@ -108,7 +114,11 @@ const UpdateProfilePage = () => {
   };
 
   if (isFetchingProfile) {
-    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading...
+      </div>
+    );
   }
 
   const defaultValues = {
@@ -121,44 +131,56 @@ const UpdateProfilePage = () => {
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10 mt-10">
       <div className="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-gray-900">
-            Update Profile
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900">Update Profile</h1>
           <p className="text-gray-500 mt-2">
             Update your personal information and profile picture.
           </p>
         </div>
 
         <div className="flex flex-col items-center justify-center mb-8">
-           {imagePreview ? (
-             <div className="relative">
-               <img src={imagePreview} alt="Preview" className="w-24 h-24 rounded-full object-cover border border-gray-200 shadow-sm" />
-               <button 
-                 onClick={removeImage} 
-                 className="absolute -top-1 -right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow"
-                 type="button"
-               >
-                 <X className="w-4 h-4" />
-               </button>
-             </div>
-           ) : (
-             <button 
-               onClick={() => fileInputRef.current?.click()} 
-               className="w-24 h-24 rounded-full bg-gray-50 flex items-center justify-center border-2 border-dashed border-gray-300 hover:bg-gray-100 hover:border-blue-400 transition-colors group"
-               type="button"
-             >
-               <ImageIcon className="w-8 h-8 text-gray-400 group-hover:text-blue-500 transition-colors" />
-             </button>
-           )}
-           <p className="text-sm font-medium text-gray-600 mt-3">Profile Picture</p>
-           <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleImageChange} />
+          {imagePreview ? (
+            <div className="relative">
+              <Avatar
+                url={imagePreview}
+                name={userProfile?.name}
+                className="w-24 h-24 rounded-full object-cover border border-gray-200 shadow-sm"
+              />
+              <button
+                onClick={removeImage}
+                className="absolute -top-1 -right-1 p-1 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow"
+                type="button"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="w-24 h-24 rounded-full bg-gray-50 flex items-center justify-center border-2 border-dashed border-gray-300 hover:bg-gray-100 hover:border-blue-400 transition-colors group"
+              type="button"
+            >
+              <ImageIcon className="w-8 h-8 text-gray-400 group-hover:text-blue-500 transition-colors" />
+            </button>
+          )}
+          <p className="text-sm font-medium text-gray-600 mt-3">
+            Profile Picture
+          </p>
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={handleImageChange}
+          />
         </div>
 
         <DynamicForm
           fields={updateProfileFields as any}
           defaultValues={defaultValues}
           validationSchema={updateProfileSchema}
-          submitButtonText={isUploading || isUpdating ? "Saving..." : "Save Changes"}
+          submitButtonText={
+            isUploading || isUpdating ? "Saving..." : "Save Changes"
+          }
           loading={isUpdating || isUploading}
           disabled={isUpdating || isUploading}
           onSubmit={handleUpdate}
