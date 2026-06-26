@@ -11,6 +11,7 @@ export const signupFields = [
     label: "Username",
     type: "text",
     placeholder: "Choose a username",
+    asyncValidator:undefined,
     required: true,
   },
   {

@@ -63,19 +63,23 @@ export class UserSQLDao implements UserAbsSQLDAO {
     try {
       const user = await this._user.findOne({
         where: {
-          UserName: username,
+          UserName: username.toLowerCase(),
+          IsDeleted: false,
         },
+        attributes: ['ID'], // Only fetch what's needed
       });
 
-      if (!user) {
-        return createResponse(404, 'Username not found', null);
-      }
+      return createResponse(200, 'Username check completed.', {
+        available: !user,
+      });
+    } catch (error: any) {
+      this.logger.error(error.stack || error.message, 500);
 
-      return createResponse(200, 'Username found',{email:user.EmailAddress, username:user.UserName});
-    } catch (err: any) {
-      this.logger.error(err.stack || err.message);
-
-      return createResponse(500, 'Failed to retrieve user', err.message);
+      return createResponse(
+        500,
+        'Failed to check username availability.',
+        null,
+      );
     }
   }
 

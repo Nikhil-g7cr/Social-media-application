@@ -50,7 +50,7 @@ export class UserController {
     return await this.userService.searchUsers(query || '');
   }
 
-  @Get('username/:userName')
+  @Get('check-username/:userName')
   async findByUserName(
     @Param('userName') userName: string,
   ): Promise<AppResponse> {
