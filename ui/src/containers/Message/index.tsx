@@ -174,6 +174,7 @@ const MessagesPage: React.FC = () => {
         );
         if (target) {
           pendingConvIdRef.current = null;
+          setMessages([]);
           setActiveConversation(target);
           setIsMobileChatOpen(true);
         }

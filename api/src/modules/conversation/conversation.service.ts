@@ -83,63 +83,35 @@ export class ConversationService {
   }
 
   async startConversation(currentUserId: string, targetUserId: string) {
-    if (currentUserId === targetUserId) {
-      throw new Error('Cannot start conversation with yourself');
-    }
+  if (currentUserId === targetUserId) throw new Error('Cannot start conversation with yourself');
 
-    // Mutual Follow Guard
-    const [iFollowThem, theyFollowMe] = await Promise.all([
-      this.followDao.isFollowing(currentUserId, targetUserId),
-      this.followDao.isFollowing(targetUserId, currentUserId),
-    ]);
-
-    if (!iFollowThem || !theyFollowMe) {
-      throw new ForbiddenException('You can only chat with people who mutually follow you.');
-    }
-
-    const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
-    const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
-
-    const currentUserConvIds = currentUserCps.map(cp => cp.ConversationID);
-    const targetUserConvIds = targetUserCps.map(cp => cp.ConversationID);
-
-    const sharedConvIds = currentUserConvIds.filter(id => targetUserConvIds.includes(id));
-
-    if (sharedConvIds.length > 0) {
-      const existingConv = await Conversation.findOne({
-        where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' }
-      });
-      if (existingConv) {
-        return { conversationId: existingConv.ID };
-      }
-    }
-
-    const newConvId = uuidv4();
-    await Conversation.create({
-      ID: newConvId,
-      Type: 'single',
-      CreatedBy: currentUserId,
-      CreatedAt: new Date(),
-    } as any);
-
-    await CP.create({
-      ID: uuidv4(),
-      ConversationID: newConvId,
-      UserID: currentUserId,
-      Role: 'admin',
-      JoinedAt: new Date(),
-    } as any);
-
-    await CP.create({
-      ID: uuidv4(),
-      ConversationID: newConvId,
-      UserID: targetUserId,
-      Role: 'member',
-      JoinedAt: new Date(),
-    } as any);
-
-    return { conversationId: newConvId };
+  const [iFollowThem, theyFollowMe] = await Promise.all([
+    this.followDao.isFollowing(currentUserId, targetUserId),
+    this.followDao.isFollowing(targetUserId, currentUserId),
+  ]);
+  if (!iFollowThem || !theyFollowMe) {
+    throw new ForbiddenException('You can only chat with people who mutually follow you.');
   }
+
+  // ALWAYS re-check for an existing conversation right before creating — no stale local state involved
+  const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
+  const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
+  const sharedConvIds = currentUserCps.map(cp => cp.ConversationID)
+    .filter(id => targetUserCps.some(cp => cp.ConversationID === id));
+
+  if (sharedConvIds.length > 0) {
+    const existingConv = await Conversation.findOne({ where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' } });
+    if (existingConv) return { conversationId: existingConv.ID };
+  }
+
+  // Only create if truly nothing found
+  const newConvId = uuidv4();
+  await Conversation.create({ ID: newConvId, Type: 'single', CreatedBy: currentUserId, CreatedAt: new Date() } as any);
+  await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: currentUserId, Role: 'admin', JoinedAt: new Date() } as any);
+  await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: targetUserId, Role: 'member', JoinedAt: new Date() } as any);
+
+  return { conversationId: newConvId };
+}
 
   async clearHistory(conversationId: string, userId: string) {
     const cp = await CP.findOne({
