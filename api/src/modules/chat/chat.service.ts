@@ -4,6 +4,7 @@ import { MessageAttachment } from '../../databse/mssql/models/messageAttachment.
 import { CP } from '../../databse/mssql/models/conversationParticipants.model';
 import { v4 as uuidv4 } from 'uuid';
 import { NotificationService } from '../notification/notification.service';
+import { Op } from 'sequelize';
 
 @Injectable()
 export class ChatService {
@@ -92,9 +93,18 @@ export class ChatService {
   }
 
   // 2. Fetch past messages for a specific chat room — normalized
-  async getConversationHistory(conversationId: string) {
+  async getConversationHistory(conversationId: string, userId:string) {
+
+    const cp = await CP.findOne({
+      where:{ConversationID:conversationId, UserID:userId}
+    });
+    const whereClause:any = {ConversationID:conversationId}
+
+    if (cp && cp.HistoryClearedAt) {
+      whereClause.CreatedAt = { [Op.gt]: cp.HistoryClearedAt };
+    }
     const messages = await Message.findAll({
-      where: { ConversationID: conversationId },
+      where: whereClause,
       include: [{ model: MessageAttachment, as: 'attachments' }],
       order: [['CreatedAt', 'ASC']],
     });

@@ -23,7 +23,7 @@ import {
   useGetMessagesByConversationIdQuery,
   useStartConversationMutation,
   useClearChatHistoryMutation,
-  type Conversation as RTKConversation,
+  type Conversation as ServerConversation,
   type ChatMessage,
   type ChatAttachment,
 } from "../../redux/features/chat/chatApiSlice";
@@ -32,7 +32,11 @@ import Avatar from "../../shared/shared-components/Avatar";
 import API from "../../config/axiosConfig";
 import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
 
-// --- TypeScript Interfaces ---
+// =====================================================================
+// TYPES
+// =====================================================================
+// UI-friendly shape of a single chat message (after we normalize
+// whatever the server sends us into something easy to render).
 interface UIMessage {
   id: string;
   senderId: string;
@@ -41,6 +45,7 @@ interface UIMessage {
   attachments?: ChatAttachment[];
 }
 
+// UI-friendly shape of a conversation row shown in the left sidebar list.
 interface UIConversation {
   id: string;
   participantName: string;
@@ -52,48 +57,65 @@ interface UIConversation {
   participantId: string;
 }
 
+const NO_MESSAGES_PLACEHOLDER = "No messages yet";
+
 const MessagesPage: React.FC = () => {
+  // =====================================================================
+  // ======= Reading ?convId= from the URL so we can deep-link straight
+  // ======= into a specific conversation (e.g. from a notification)
+  // =====================================================================
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const targetConvId = searchParams.get("convId");
+  const deepLinkConversationId = searchParams.get("convId");
+  // ===================== end of URL deep-link setup =====================
 
-  const { user, token } = useAppSelector((state: any) => state.auth);
+  const { user } = useAppSelector((state: any) => state.auth);
   const CURRENT_USER_ID = user?.id || "";
   const onlineUserIds = useAppSelector(
     (state: any) => state.onlineUsers?.onlineUserIds || [],
   );
 
-  // --- State ---
+  // =====================================================================
+  // ======= Local UI state: sidebar list, active chat, message list,
+  // ======= the message draft box, and mobile responsive view toggle
+  // =====================================================================
   const [conversations, setConversations] = useState<UIConversation[]>([]);
   const [activeConversation, setActiveConversation] =
     useState<UIConversation | null>(null);
   const [messages, setMessages] = useState<UIMessage[]>([]);
-  const [newMessage, setNewMessage] = useState("");
+  const [messageDraft, setMessageDraft] = useState("");
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  // ===================== end of local UI state =====================
 
+  // =====================================================================
+  // ======= Attachment state: files picked but not yet sent, and the
+  // ======= per-file upload progress while they're being pushed to Azure
+  // =====================================================================
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploadProgress, setUploadProgress] = useState<{
-    [key: string]: number;
+    [fileId: string]: number;
   }>({});
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // ===================== end of attachment state =====================
 
-  // --- Search State ---
-
+  // =====================================================================
+  // ======= "Start a new chat" search box state (top of sidebar)
+  // =====================================================================
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
-  // ==============Debouncing===============================
+
   const { searchTerm, setSearchTerm, debouncedTerm } = useDebouncedSearch(
     "",
     500,
   );
 
-  const { data: searchResults = [], isFetching: isSearchFetching } =
+  const { data: userSearchResults = [], isFetching: isSearchFetching } =
     useSearchUsersQuery(debouncedTerm, { skip: !debouncedTerm.trim() });
-  // =======================end=============================
 
+  // Close the "new chat" search dropdown when the user clicks outside it
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
+    function handleClickOutsideSearch(event: MouseEvent) {
       if (
         searchWrapperRef.current &&
         !searchWrapperRef.current.contains(event.target as Node)
@@ -101,166 +123,230 @@ const MessagesPage: React.FC = () => {
         setIsSearchOpen(false);
       }
     }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutsideSearch);
+    return () =>
+      document.removeEventListener("mousedown", handleClickOutsideSearch);
   }, []);
+  // ===================== end of new-chat search box state =====================
 
-  // --- RTK Query ---
-  const { data: apiConversations, isLoading: isConversationsLoading } =
+  // =====================================================================
+  // ======= Server data: conversation list + messages for the active
+  // ======= conversation, plus the mutations we can call against them
+  // =====================================================================
+  const { data: serverConversations, isLoading: isConversationsLoading } =
     useGetConversationsQuery();
-  const { data: apiMessages } = useGetMessagesByConversationIdQuery(
+
+  const { data: serverMessages } = useGetMessagesByConversationIdQuery(
     activeConversation?.id || "",
     {
       skip: !activeConversation,
     },
   );
+
   const [startConversation] = useStartConversationMutation();
   const [clearChatHistory] = useClearChatHistoryMutation();
+  // ===================== end of server data hooks =====================
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // Track a newly created conversation so we can auto-open it after refetch
-  const pendingConvIdRef = useRef<string | null>(null);
+  // Holds the conversation ID we just created via "start new chat" so that
+  // once the conversation list refetches and includes it, we can jump
+  // straight into it automatically.
+  const pendingNewConversationIdRef = useRef<string | null>(null);
 
-  // Auto-scroll when messages update
+  // =====================================================================
+  // ======= Auto-scroll the message thread to the bottom whenever new
+  // ======= messages are added to the currently open conversation
+  // =====================================================================
   useEffect(() => {
     scrollToBottom();
   }, [messages.length]);
+  // ===================== end of auto-scroll effect =====================
 
-  // --- JOIN ROOM when switching active conversation (Bug Fix #6) ---
+  // =====================================================================
+  // ======= Join the socket.io room for whichever conversation is
+  // ======= currently open, so we receive live "newMessage" events for it
+  // =====================================================================
   useEffect(() => {
     if (activeConversation) {
       const socket = initializeSocket();
       socket.emit("joinRoom", { conversationId: activeConversation.id });
     }
   }, [activeConversation]);
+  // ===================== end of socket room join effect =====================
 
-  // --- Update conversations from RTK Query ---
+  // =====================================================================
+  // ======= Normalize the raw server conversation list into UIConversation
+  // ======= shape, and handle the two "auto open a conversation" cases:
+  // ======= 1) a ?convId= deep link from the URL
+  // ======= 2) a conversation we just created via "start new chat"
+  // =====================================================================
   useEffect(() => {
-    if (apiConversations) {
-      const formattedConversations = apiConversations.map(
-        (conv: RTKConversation) => ({
-          id: conv.id,
-          participantName: conv.participant?.name || "Unknown User",
-          avatarUrl: conv.participant?.avatarUrl,
-          lastMessage: conv.latestMessage?.content || "No messages yet",
-          time: conv.latestMessage?.createdAt
-            ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })
-            : "",
-          unreadCount: 0,
-          isOnline: false,
-          participantId: conv.participant?.id || "",
-        }),
+    if (!serverConversations) return;
+
+    const formattedConversations: UIConversation[] = serverConversations.map(
+      (conv: ServerConversation) => ({
+        id: conv.id,
+        participantName: conv.participant?.name || "Unknown User",
+        avatarUrl: conv.participant?.avatarUrl,
+        lastMessage: conv.latestMessage?.content || NO_MESSAGES_PLACEHOLDER,
+        time: conv.latestMessage?.createdAt
+          ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "",
+        unreadCount: 0,
+        isOnline: false,
+        participantId: conv.participant?.id || "",
+      }),
+    );
+    setConversations(formattedConversations);
+
+    // --- Case 1: deep link from URL (?convId=...) ---
+    if (deepLinkConversationId && !activeConversation) {
+      const targetConversation = formattedConversations.find(
+        (c) => c.id === deepLinkConversationId,
       );
-      setConversations(formattedConversations);
-
-      // Auto-open via URL param
-      if (targetConvId && !activeConversation) {
-        const target = formattedConversations.find(
-          (c) => c.id === targetConvId,
-        );
-        if (target) {
-          setActiveConversation(target);
-          setIsMobileChatOpen(true);
-        }
-      }
-
-      // Auto-open a newly started conversation after refetch
-      if (pendingConvIdRef.current) {
-        const target = formattedConversations.find(
-          (c) => c.id === pendingConvIdRef.current,
-        );
-        if (target) {
-          pendingConvIdRef.current = null;
-          setMessages([]);
-          setActiveConversation(target);
-          setIsMobileChatOpen(true);
-        }
+      if (targetConversation) {
+        setActiveConversation(targetConversation);
+        setIsMobileChatOpen(true);
       }
     }
-  }, [apiConversations, targetConvId]);
 
-  // --- Load message history when a conversation is selected ---
+    // --- Case 2: we just started a brand new conversation, open it now
+    //     that it has shown up in the refetched list ---
+    if (pendingNewConversationIdRef.current) {
+      const targetConversation = formattedConversations.find(
+        (c) => c.id === pendingNewConversationIdRef.current,
+      );
+      if (targetConversation) {
+        pendingNewConversationIdRef.current = null;
+        setMessages([]); // avoid flashing the previous chat's messages
+        setActiveConversation(targetConversation);
+        setIsMobileChatOpen(true);
+      }
+    }
+  }, [serverConversations, deepLinkConversationId]);
+  // ===================== end of conversation list normalization effect =====================
+
+  // =====================================================================
+  // ======= Load message history whenever the server returns messages
+  // ======= for the active conversation (fires on conversation switch)
+  // =====================================================================
   useEffect(() => {
-    if (apiMessages) {
-      // Backend returns normalized camelCase objects: { id, senderId, content, createdAt }
-      const formattedMessages: UIMessage[] = apiMessages.map((msg) => ({
-        id: msg.id,
-        senderId: msg.senderId,
-        text: msg.content,
-        timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-        attachments: msg.attachments,
-      }));
-      setMessages(formattedMessages);
-      scrollToBottom();
-    }
-  }, [apiMessages]);
+    if (!serverMessages) return;
 
-  // --- Handlers ---
+    // Backend returns normalized camelCase objects: { id, senderId, content, createdAt }
+    const formattedMessages: UIMessage[] = serverMessages.map((msg) => ({
+      id: msg.id,
+      senderId: msg.senderId,
+      text: msg.content,
+      timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+      attachments: msg.attachments,
+    }));
+    setMessages(formattedMessages);
+    scrollToBottom();
+  }, [serverMessages]);
+  // ===================== end of message history loading effect =====================
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  const handleSelectConversation = (conv: UIConversation) => {
-    setActiveConversation(conv);
-    setMessages([]); // Clear old messages while new ones load
+  // =====================================================================
+  // ======= User clicked a conversation in the sidebar list
+  // =====================================================================
+  const handleSelectConversation = (conversation: UIConversation) => {
+    setActiveConversation(conversation);
+    setMessages([]); // clear old messages while the new ones load
     setIsMobileChatOpen(true);
   };
+  // ===================== end of select-conversation handler =====================
 
-  const handleStartNewChat = async (userId: string) => {
+  // =====================================================================
+  // ======= User picked someone from the "start new chat" search box.
+  // ======= The backend either returns an EXISTING conversation id
+  // ======= (if you two already have one) or creates a new one — either
+  // ======= way we just open whatever id comes back.
+  // =====================================================================
+  const handleStartNewChat = async (targetUserId: string) => {
     try {
-      const res = await startConversation(userId).unwrap();
-      if (res.conversationId) {
-        setIsSearchOpen(false);
-        setSearchTerm("");
-        const existing = conversations.find((c) => c.id === res.conversationId);
-        if (existing) {
-          handleSelectConversation(existing);
-        } else {
-          pendingConvIdRef.current = res.conversationId;
-        }
+      const startConversationResponse = await startConversation(
+        targetUserId,
+      ).unwrap();
+
+      if (!startConversationResponse.conversationId) return;
+
+      setIsSearchOpen(false);
+      setSearchTerm("");
+
+      const alreadyInSidebarList = conversations.find(
+        (c) => c.id === startConversationResponse.conversationId,
+      );
+
+      if (alreadyInSidebarList) {
+        // We already have this conversation loaded (most common case —
+        // the backend found a mutual-follow conversation that already
+        // existed), so just open it directly with its full history.
+        handleSelectConversation(alreadyInSidebarList);
+      } else {
+        // Brand new conversation — wait for the list refetch to include
+        // it, then the normalization effect above will auto-open it.
+        pendingNewConversationIdRef.current =
+          startConversationResponse.conversationId;
       }
-    } catch (e) {
-      console.error("Failed to start chat", e);
+    } catch (error) {
+      console.error("Failed to start chat", error);
     }
   };
+  // ===================== end of start-new-chat handler =====================
 
+  // =====================================================================
+  // ======= Validate and stage files picked from the attachment button
+  // ======= (size limits differ for images / videos / other documents)
+  // =====================================================================
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const files = Array.from(e.target.files);
-      const validFiles = files.filter((file) => {
-        const sizeInMB = file.size / (1024 * 1024);
-        if (file.type.startsWith("image/") && sizeInMB > 20) {
-          alert(`Image ${file.name} is too large. Max 20MB.`);
-          return false;
-        }
-        if (file.type.startsWith("video/") && sizeInMB > 100) {
-          alert(`Video ${file.name} is too large. Max 100MB.`);
-          return false;
-        }
-        if (
-          !file.type.startsWith("image/") &&
-          !file.type.startsWith("video/") &&
-          sizeInMB > 50
-        ) {
-          alert(`Document ${file.name} is too large. Max 50MB.`);
-          return false;
-        }
-        return true;
-      });
-      setSelectedFiles((prev) => [...prev, ...validFiles]);
-    }
-  };
+    if (!e.target.files) return;
 
+    const pickedFiles = Array.from(e.target.files);
+    const validFiles = pickedFiles.filter((file) => {
+      const sizeInMB = file.size / (1024 * 1024);
+      if (file.type.startsWith("image/") && sizeInMB > 20) {
+        alert(`Image ${file.name} is too large. Max 20MB.`);
+        return false;
+      }
+      if (file.type.startsWith("video/") && sizeInMB > 100) {
+        alert(`Video ${file.name} is too large. Max 100MB.`);
+        return false;
+      }
+      if (
+        !file.type.startsWith("image/") &&
+        !file.type.startsWith("video/") &&
+        sizeInMB > 50
+      ) {
+        alert(`Document ${file.name} is too large. Max 50MB.`);
+        return false;
+      }
+      return true;
+    });
+
+    setSelectedFiles((prev) => [...prev, ...validFiles]);
+  };
+  // ===================== end of file selection/validation handler =====================
+
+  // =====================================================================
+  // ======= Send the current draft message (+ any staged attachments).
+  // ======= Attachments are uploaded to Azure Blob first, then the
+  // ======= text + attachment metadata is sent over the socket so the
+  // ======= gateway can persist it and broadcast it back to the room.
+  // =====================================================================
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (
-      (!newMessage.trim() && selectedFiles.length === 0) ||
+      (!messageDraft.trim() && selectedFiles.length === 0) ||
       !activeConversation
     )
       return;
@@ -273,7 +359,7 @@ const MessagesPage: React.FC = () => {
         const fileId = Math.random().toString(36).substring(7);
         setUploadProgress((prev) => ({ ...prev, [fileId]: 0 }));
 
-        const res = await API.post("/files/upload-url", {
+        const uploadUrlResponse = await API.post("/files/upload-url", {
           fileName: file.name,
           contentType: file.type,
           folder: "chat-attachments",
@@ -282,7 +368,9 @@ const MessagesPage: React.FC = () => {
         });
 
         // Backend wraps responses with { status, data, message }
-        const uploadUrl = res.data?.data?.uploadUrl || res.data?.uploadUrl;
+        const uploadUrl =
+          uploadUrlResponse.data?.data?.uploadUrl ||
+          uploadUrlResponse.data?.uploadUrl;
 
         if (!uploadUrl) throw new Error("Failed to get upload URL");
 
@@ -332,64 +420,89 @@ const MessagesPage: React.FC = () => {
       }
     }
 
-    const text = newMessage;
-    setNewMessage("");
+    const textToSend = messageDraft;
+    setMessageDraft("");
     setSelectedFiles([]);
     setUploadProgress({});
     setIsUploading(false);
 
-    // Send via WebSocket — the gateway saves to DB and broadcasts back
+    // Send via WebSocket — the gateway saves it to the DB and broadcasts
+    // the saved/normalized message back to everyone in the room.
     const socket = initializeSocket();
     socket.emit("sendMessage", {
       conversationId: activeConversation.id,
-      text,
+      text: textToSend,
       attachments:
         uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
     });
 
     setTimeout(scrollToBottom, 100);
   };
+  // ===================== end of send-message handler =====================
 
-  // ===============cleaning the conversation===============
-  const cleanConversations = useMemo(() => {
+  // =====================================================================
+  // ======= Build the sidebar list we actually render:
+  // ======= 1) drop any conversation missing participant info
+  // ======= 2) collapse to ONE row per participant — if duplicates exist
+  // =======    (e.g. left over from before this dedup logic existed),
+  // =======    prefer whichever duplicate actually HAS message history
+  // =======    so we never show the "looks like a brand new empty chat"
+  // =======    version when a real conversation with history exists.
+  // =====================================================================
+  const uniqueConversations = useMemo(() => {
     if (!conversations) return [];
 
-    // 1. Filter out conversations where the user doesn't exist anymore
-    // (Adjust the condition if your backend sends a specific flag like conv.isDeleted)
     const validConversations = conversations.filter(
       (conv) => conv.participantId && conv.participantName,
     );
 
-    // 2. Remove duplicates (Keep only one conversation per participantId)
-    const seenParticipants = new Set();
-    const deduplicatedConversations = [];
+    const conversationByParticipantId = new Map<string, UIConversation>();
 
     for (const conv of validConversations) {
-      // If we haven't seen this user yet, add them to our clean list
-      if (!seenParticipants.has(conv.participantId)) {
-        seenParticipants.add(conv.participantId);
-        deduplicatedConversations.push(conv);
+      const existing = conversationByParticipantId.get(conv.participantId);
+
+      if (!existing) {
+        conversationByParticipantId.set(conv.participantId, conv);
+        continue;
+      }
+
+      // If we already stored a duplicate for this participant, keep
+      // whichever one actually has messages instead of just keeping
+      // whichever happened to come first in the server's response.
+      const candidateHasHistory = conv.lastMessage !== NO_MESSAGES_PLACEHOLDER;
+      const existingHasHistory =
+        existing.lastMessage !== NO_MESSAGES_PLACEHOLDER;
+
+      if (candidateHasHistory && !existingHasHistory) {
+        conversationByParticipantId.set(conv.participantId, conv);
       }
     }
 
-    return deduplicatedConversations;
+    return Array.from(conversationByParticipantId.values());
   }, [conversations]);
+  // ===================== end of sidebar list de-duplication =====================
 
+  // =====================================================================
+  // ======= Wipe message history for the active conversation (per-user;
+  // ======= this only hides messages for the requesting user, it does
+  // ======= NOT delete them for the other participant)
+  // =====================================================================
   const handleClearChat = async () => {
     if (!activeConversation) return;
-    if (
-      window.confirm(
-        "Are you sure you want to clear this chat history from your screen? This action cannot be undone.",
-      )
-    ) {
-      try {
-        await clearChatHistory(activeConversation.id).unwrap();
-        setMessages([]); // Immediately clear local state messages
-      } catch (e) {
-        console.error("Failed to clear chat history", e);
-      }
+
+    const userConfirmed = window.confirm(
+      "Are you sure you want to clear this chat history from your screen? This action cannot be undone.",
+    );
+    if (!userConfirmed) return;
+
+    try {
+      await clearChatHistory(activeConversation.id).unwrap();
+      setMessages([]); // reflect the clear immediately in the UI
+    } catch (error) {
+      console.error("Failed to clear chat history", error);
     }
   };
+  // ===================== end of clear-chat handler =====================
 
   if (isConversationsLoading) {
     return (
@@ -401,7 +514,9 @@ const MessagesPage: React.FC = () => {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-white overflow-hidden border-t border-gray-200">
-      {/* --- LEFT COLUMN: CONVERSATION LIST --- */}
+      {/* ===================================================================== */}
+      {/* ======= LEFT COLUMN: conversation list + "start new chat" search ===== */}
+      {/* ===================================================================== */}
       <div
         className={`w-full md:w-1/3 lg:w-1/4 border-r border-gray-200 flex flex-col ${isMobileChatOpen ? "hidden md:flex" : "flex"}`}
       >
@@ -421,7 +536,7 @@ const MessagesPage: React.FC = () => {
               onFocus={() => setIsSearchOpen(true)}
               className="w-full pl-10 pr-4 py-2 bg-gray-100 border-transparent rounded-full focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
             />
-            {/* Search Dropdown */}
+            {/* --- "start new chat" results dropdown --- */}
             {isSearchOpen && debouncedTerm.length > 0 && (
               <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-64 overflow-y-auto z-50">
                 {isSearchFetching ? (
@@ -430,12 +545,12 @@ const MessagesPage: React.FC = () => {
                   </div>
                 ) : (
                   (() => {
-                    // 1. Pre-filter the results before rendering
+                    // Don't show ourselves as a chat target
                     const filteredResults =
-                      searchResults?.filter((u) => u.id !== CURRENT_USER_ID) ||
-                      [];
+                      userSearchResults?.filter(
+                        (u) => u.id !== CURRENT_USER_ID,
+                      ) || [];
 
-                    // 2. Check if the *filtered* results are empty
                     if (filteredResults.length === 0) {
                       return (
                         <div className="p-4 text-center text-sm text-gray-500">
@@ -444,26 +559,27 @@ const MessagesPage: React.FC = () => {
                       );
                     }
 
-                    // 3. Render the list if results exist
                     return (
                       <ul className="py-2">
-                        {filteredResults.map((u) => (
+                        {filteredResults.map((searchedUser) => (
                           <li
-                            key={u.id}
-                            onClick={() => handleStartNewChat(u.id)}
+                            key={searchedUser.id}
+                            onClick={() =>
+                              handleStartNewChat(searchedUser.id)
+                            }
                             className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
                           >
                             <Avatar
-                              url={u.avatarUrl}
-                              name={u.name}
+                              url={searchedUser.avatarUrl}
+                              name={searchedUser.name}
                               className="w-8 h-8 rounded-full object-cover border border-gray-200"
                             />
                             <div className="flex flex-col truncate">
                               <span className="text-sm font-semibold text-gray-900 truncate">
-                                {u.name}
+                                {searchedUser.name}
                               </span>
                               <span className="text-xs text-gray-500 truncate">
-                                @{u.username}
+                                @{searchedUser.username}
                               </span>
                             </div>
                           </li>
@@ -474,19 +590,18 @@ const MessagesPage: React.FC = () => {
                 )}
               </div>
             )}
+            {/* --- end of "start new chat" results dropdown --- */}
           </div>
         </div>
 
-        {/* Conversation List */}
+        {/* --- Conversation list (deduplicated) --- */}
         <div className="flex-1 overflow-y-auto">
-          {/* USE cleanConversations HERE */}
-          {cleanConversations.length === 0 ? (
+          {uniqueConversations.length === 0 ? (
             <div className="p-6 text-center text-sm text-gray-400">
               No conversations yet. Search for someone above!
             </div>
           ) : (
-            // USE cleanConversations HERE
-            cleanConversations.map((conv) => (
+            uniqueConversations.map((conv) => (
               <div
                 key={conv.id}
                 onClick={() => handleSelectConversation(conv)}
@@ -494,7 +609,7 @@ const MessagesPage: React.FC = () => {
                   activeConversation?.id === conv.id ? "bg-blue-50/50" : ""
                 }`}
               >
-                <div className="relative flex-shrink-0">
+                <div className="relative shrink-0">
                   <Avatar
                     url={conv.avatarUrl || undefined}
                     name={conv.participantName}
@@ -509,7 +624,7 @@ const MessagesPage: React.FC = () => {
                     <h3 className="text-sm font-semibold text-gray-900 truncate">
                       {conv.participantName}
                     </h3>
-                    <span className="text-xs text-gray-500 flex-shrink-0">
+                    <span className="text-xs text-gray-500 shrink-0">
                       {conv.time}
                     </span>
                   </div>
@@ -524,7 +639,7 @@ const MessagesPage: React.FC = () => {
                   </p>
                 </div>
                 {conv.unreadCount > 0 && (
-                  <div className="flex-shrink-0 bg-blue-600 text-white text-xs font-bold h-5 w-5 flex items-center justify-center rounded-full">
+                  <div className="shrink-0 bg-blue-600 text-white text-xs font-bold h-5 w-5 flex items-center justify-center rounded-full">
                     {conv.unreadCount}
                   </div>
                 )}
@@ -532,15 +647,19 @@ const MessagesPage: React.FC = () => {
             ))
           )}
         </div>
+        {/* --- end of conversation list --- */}
       </div>
+      {/* ===================== end of LEFT COLUMN ===================== */}
 
-      {/* --- RIGHT COLUMN: ACTIVE CHAT --- */}
+      {/* ===================================================================== */}
+      {/* ======= RIGHT COLUMN: active chat thread + message composer ========== */}
+      {/* ===================================================================== */}
       <div
         className={`w-full md:w-2/3 lg:w-3/4 flex flex-col bg-gray-50/50 ${!isMobileChatOpen ? "hidden md:flex" : "flex"}`}
       >
         {activeConversation ? (
           <>
-            {/* Chat Header */}
+            {/* --- Chat header: participant info + action buttons --- */}
             <div className="flex items-center justify-between p-4 bg-white border-b border-gray-200">
               <div className="flex items-center gap-3">
                 <button
@@ -584,24 +703,25 @@ const MessagesPage: React.FC = () => {
                 </button>
               </div>
             </div>
+            {/* --- end of chat header --- */}
 
-            {/* Chat Messages Area */}
+            {/* --- Message thread --- */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {messages.map((msg) => {
-                const isMe =
+                const isSentByMe =
                   String(msg.senderId).toLowerCase() ===
                   String(CURRENT_USER_ID).toLowerCase();
                 return (
                   <div
                     key={msg.id}
-                    className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                    className={`flex ${isSentByMe ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isMe ? "items-end" : "items-start"}`}
+                      className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isSentByMe ? "items-end" : "items-start"}`}
                     >
                       <div
                         className={`px-4 py-2 rounded-2xl ${
-                          isMe
+                          isSentByMe
                             ? "bg-blue-600 text-white rounded-br-none"
                             : "bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm"
                         }`}
@@ -637,7 +757,7 @@ const MessagesPage: React.FC = () => {
                                     href={att.fileUrl}
                                     target="_blank"
                                     rel="noopener noreferrer"
-                                    className={`flex items-center gap-2 p-2 rounded-lg ${isMe ? "bg-blue-700 hover:bg-blue-800 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"} transition`}
+                                    className={`flex items-center gap-2 p-2 rounded-lg ${isSentByMe ? "bg-blue-700 hover:bg-blue-800 text-white" : "bg-gray-100 hover:bg-gray-200 text-gray-900"} transition`}
                                   >
                                     <FileIcon className="h-5 w-5" />
                                     <div className="flex flex-col overflow-hidden">
@@ -671,10 +791,10 @@ const MessagesPage: React.FC = () => {
               })}
               <div ref={messagesEndRef} />
             </div>
+            {/* --- end of message thread --- */}
 
-            {/* Chat Input Area */}
+            {/* --- Composer: staged attachment previews + text input --- */}
             <div className="p-4 bg-white border-t border-gray-200">
-              {/* Selected Files Preview */}
               {selectedFiles.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-3">
                   {selectedFiles.map((file, idx) => (
@@ -741,10 +861,10 @@ const MessagesPage: React.FC = () => {
                   </button>
                 </div>
                 <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
+                  value={messageDraft}
+                  onChange={(e) => setMessageDraft(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 max-h-32 min-h-[44px] bg-gray-100 border-transparent rounded-2xl px-4 py-3 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none"
+                  className="flex-1 max-h-32 min-h-11 bg-gray-100 border-transparent rounded-2xl px-4 py-3 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none"
                   rows={1}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -756,7 +876,7 @@ const MessagesPage: React.FC = () => {
                 <button
                   type="submit"
                   disabled={
-                    (!newMessage.trim() && selectedFiles.length === 0) ||
+                    (!messageDraft.trim() && selectedFiles.length === 0) ||
                     isUploading
                   }
                   className="p-3 mb-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition"
@@ -769,9 +889,10 @@ const MessagesPage: React.FC = () => {
                 </button>
               </form>
             </div>
+            {/* --- end of composer --- */}
           </>
         ) : (
-          /* Empty State */
+          // --- Empty state: no conversation selected yet ---
           <div className="flex-1 flex flex-col items-center justify-center text-center p-8">
             <div className="h-20 w-20 bg-blue-50 text-blue-500 rounded-full flex items-center justify-center mb-4">
               <Send className="h-10 w-10 ml-1" />
@@ -786,6 +907,7 @@ const MessagesPage: React.FC = () => {
           </div>
         )}
       </div>
+      {/* ===================== end of RIGHT COLUMN ===================== */}
     </div>
   );
 };

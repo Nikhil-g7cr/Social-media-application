@@ -58,6 +58,13 @@ export class ConversationService {
         lm = null;
       }
 
+      // g-changes
+
+      if (!lm && historyClearedAt) {
+        continue;
+      }
+      // -----------
+
       result.push({
         id: conv.ID,
         type: conv.Type,
@@ -83,26 +90,36 @@ export class ConversationService {
   }
 
   async startConversation(currentUserId: string, targetUserId: string) {
-  if (currentUserId === targetUserId) throw new Error('Cannot start conversation with yourself');
+    if (currentUserId === targetUserId) {
+      throw new Error('Cannot start conversation with yourself');
+    }
 
-  const [iFollowThem, theyFollowMe] = await Promise.all([
-    this.followDao.isFollowing(currentUserId, targetUserId),
-    this.followDao.isFollowing(targetUserId, currentUserId),
-  ]);
-  if (!iFollowThem || !theyFollowMe) {
-    throw new ForbiddenException('You can only chat with people who mutually follow you.');
-  }
+    const [iFollowThem, theyFollowMe] = await Promise.all([
+      this.followDao.isFollowing(currentUserId, targetUserId),
+      this.followDao.isFollowing(targetUserId, currentUserId),
+    ]);
 
-  // ALWAYS re-check for an existing conversation right before creating — no stale local state involved
-  const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
-  const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
-  const sharedConvIds = currentUserCps.map(cp => cp.ConversationID)
-    .filter(id => targetUserCps.some(cp => cp.ConversationID === id));
+    if (!iFollowThem || !theyFollowMe) {
+      throw new ForbiddenException('You can only chat with people who mutually follow you.');
+    }
 
-  if (sharedConvIds.length > 0) {
-    const existingConv = await Conversation.findOne({ where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' } });
-    if (existingConv) return { conversationId: existingConv.ID };
-  }
+    const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
+    const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
+
+    // FIX: Convert UUIDs to lowercase to prevent JavaScript case-sensitivity mismatches with SQL Server
+    const currentUserConvIds = currentUserCps.map(cp => cp.ConversationID.toLowerCase());
+    const targetUserConvIds = targetUserCps.map(cp => cp.ConversationID.toLowerCase());
+
+    const sharedConvIds = currentUserConvIds.filter(id => targetUserConvIds.includes(id));
+
+    if (sharedConvIds.length > 0) {
+      const existingConv = await Conversation.findOne({
+        where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' }
+      });
+      if (existingConv) {
+        return { conversationId: existingConv.ID };
+      }
+    }
 
   // Only create if truly nothing found
   const newConvId = uuidv4();
@@ -123,6 +140,24 @@ export class ConversationService {
 
     cp.HistoryClearedAt = new Date();
     await cp.save();
+    // FIX: HARD DELETE LOGIC
+    // Check if ALL participants in this conversation have cleared their history
+    const allCps = await CP.findAll({ where: { ConversationID: conversationId } });
+    const allCleared = allCps.every(p => p.HistoryClearedAt !== null);
+
+    if (allCleared) {
+      // Find the earliest cleared date among the users
+      const minClearedAt = new Date(Math.min(...allCps.map(p => new Date(p.HistoryClearedAt!).getTime())));
+      
+      // Permanently delete messages older than the earliest cleared date from the database
+      await Message.destroy({
+        where: {
+          ConversationID: conversationId,
+          CreatedAt: { [Op.lte]: minClearedAt }
+        }
+      });
+    }
+
     return { success: true };
   }
 }

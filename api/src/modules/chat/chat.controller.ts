@@ -1,5 +1,6 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Controller, Get, Param, Req } from '@nestjs/common';
 import { ChatService } from './chat.service';
+import { CurrentUser } from 'src/core/decorators/current-user.decorator';
 
 @Controller('chat')
 export class ChatController {
@@ -7,7 +8,8 @@ export class ChatController {
 
   // GET http://localhost:5000/chat/:conversationId/history
   @Get(':conversationId/history')
-  async getChatHistory(@Param('conversationId') conversationId: string) {
-    return this.chatService.getConversationHistory(conversationId);
+  async getChatHistory(@Param('conversationId') conversationId: string, @CurrentUser() user:any) {
+    const userId = user.sub
+    return this.chatService.getConversationHistory(conversationId, userId);
   }
 }
