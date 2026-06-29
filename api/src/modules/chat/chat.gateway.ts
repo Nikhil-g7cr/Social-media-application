@@ -13,6 +13,7 @@ import { ChatService } from './chat.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from 'src/config/AppConfig';
+import { CP } from 'src/databse/mssql/models';
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
@@ -42,24 +43,33 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   // Track online users: userId -> count of active connections
   private onlineUsers = new Map<string, number>();
 
-  handleConnection(client: Socket) {
-    const userId = this.extractUserIdFromSocket(client);
-    console.log(`Client connected: ${client.id} | User: ${userId}`);
-    if (userId) {
-      client.join(`user_${userId}`);
-      
-      const count = this.onlineUsers.get(userId) || 0;
-      this.onlineUsers.set(userId, count + 1);
-      
-      if (count === 0) {
-        // First connection for this user
-        this.server.emit('userOnline', userId);
-      }
-      
-      // Sync currently online users to this newly connected client
-      client.emit('syncOnlineUsers', Array.from(this.onlineUsers.keys()));
+  async handleConnection(client: Socket) {
+  const userId = this.extractUserIdFromSocket(client);
+  console.log(`Client connected: ${client.id} | User: ${userId}`);
+  if (userId) {
+    client.join(`user_${userId}`);
+
+    // Join all conversation rooms this user is part of, so they receive
+    // live 'newMessage' updates even for chats they don't currently have open
+    const userConversations = await CP.findAll({
+      where: { UserID: userId },
+      attributes: ['ConversationID'],
+    });
+    userConversations.forEach(cp => client.join(cp.ConversationID));
+
+    // Online presence tracking (independent of conversation rooms)
+    const existingConnectionCount = this.onlineUsers.get(userId) || 0;
+    this.onlineUsers.set(userId, existingConnectionCount + 1);
+
+    if (existingConnectionCount === 0) {
+      // First connection for this user — broadcast that they're now online
+      this.server.emit('userOnline', userId);
     }
+
+    // Sync currently online users to this newly connected client
+    client.emit('syncOnlineUsers', Array.from(this.onlineUsers.keys()));
   }
+}
 
   handleDisconnect(client: Socket) {
     console.log(`Client disconnected: ${client.id}`);

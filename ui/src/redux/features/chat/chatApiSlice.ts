@@ -47,30 +47,34 @@ export const chatApiSlice = apiSlice.injectEndpoints({
             async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved, dispatch }) {
                 const { initializeSocket } = await import('../../../utils/socket');
                 const socket = initializeSocket();
+
+                // ✅ moved outside the try so it's still in scope below
+                const listener = (message: ChatMessage) => {
+                    let found = false;
+                    updateCachedData((draft) => {
+                        const conv = draft.find(c => c.id === message.conversationId);
+                        if (conv) {
+                            found = true;
+                            conv.latestMessage = message;
+                            const index = draft.indexOf(conv);
+                            if (index > 0) {
+                                draft.splice(index, 1);
+                                draft.unshift(conv);
+                            }
+                        }
+                    });
+                    if (!found) {
+                        dispatch(apiSlice.util.invalidateTags(['Conversation']));
+                    }
+                };
+
                 try {
                     await cacheDataLoaded;
-                    const listener = (message: ChatMessage) => {
-                        let found = false;
-                        updateCachedData((draft) => {
-                            const conv = draft.find(c => c.id === message.conversationId);
-                            if (conv) {
-                                found = true;
-                                conv.latestMessage = message;
-                                // Move to top
-                                const index = draft.indexOf(conv);
-                                if (index > 0) {
-                                    draft.splice(index, 1);
-                                    draft.unshift(conv);
-                                }
-                            }
-                        });
-                        if (!found) {
-                            dispatch(apiSlice.util.invalidateTags(['Conversation']));
-                        }
-                    };
                     socket.on('newMessage', listener);
                 } catch {}
+
                 await cacheEntryRemoved;
+                socket.off('newMessage', listener); // ✅ added
             }
         }),
         startConversation: builder.mutation<{ conversationId: string }, string>({
@@ -88,21 +92,25 @@ export const chatApiSlice = apiSlice.injectEndpoints({
             async onCacheEntryAdded(conversationId, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
                 const { initializeSocket } = await import('../../../utils/socket');
                 const socket = initializeSocket();
+
+                // ✅ moved outside the try so it's still in scope below
+                const listener = (message: ChatMessage) => {
+                    if (message.conversationId === conversationId) {
+                        updateCachedData((draft) => {
+                            if (!draft.find((m) => m.id === message.id)) {
+                                draft.push(message);
+                            }
+                        });
+                    }
+                };
+
                 try {
                     await cacheDataLoaded;
-                    const listener = (message: ChatMessage) => {
-                        if (message.conversationId === conversationId) {
-                            updateCachedData((draft) => {
-                                // Avoid duplicate inserts
-                                if (!draft.find((m) => m.id === message.id)) {
-                                    draft.push(message);
-                                }
-                            });
-                        }
-                    };
                     socket.on('newMessage', listener);
                 } catch {}
+
                 await cacheEntryRemoved;
+                socket.off('newMessage', listener); // ✅ added — cleanup when this cache entry (this conversation) is no longer subscribed to
             }
         }),
         clearChatHistory: builder.mutation<{ success: boolean }, string>({

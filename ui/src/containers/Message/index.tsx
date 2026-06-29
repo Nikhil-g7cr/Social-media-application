@@ -31,6 +31,7 @@ import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
 import Avatar from "../../shared/shared-components/Avatar";
 import API from "../../config/axiosConfig";
 import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
+import { notification } from "antd";
 
 // =====================================================================
 // TYPES
@@ -272,36 +273,30 @@ const MessagesPage: React.FC = () => {
   // ======= (if you two already have one) or creates a new one — either
   // ======= way we just open whatever id comes back.
   // =====================================================================
-  const handleStartNewChat = async (targetUserId: string) => {
-    try {
-      const startConversationResponse = await startConversation(
-        targetUserId,
-      ).unwrap();
+  const handleStartNewChat = async (targetUser: { id: string; name: string; username?: string; avatarUrl?: string }) => {
+  try {
+    const res = await startConversation(targetUser.id).unwrap();
+    if (!res.conversationId) return;
 
-      if (!startConversationResponse.conversationId) return;
-
-      setIsSearchOpen(false);
-      setSearchTerm("");
-
-      const alreadyInSidebarList = conversations.find(
-        (c) => c.id === startConversationResponse.conversationId,
-      );
-
-      if (alreadyInSidebarList) {
-        // We already have this conversation loaded (most common case —
-        // the backend found a mutual-follow conversation that already
-        // existed), so just open it directly with its full history.
-        handleSelectConversation(alreadyInSidebarList);
-      } else {
-        // Brand new conversation — wait for the list refetch to include
-        // it, then the normalization effect above will auto-open it.
-        pendingNewConversationIdRef.current =
-          startConversationResponse.conversationId;
-      }
-    } catch (error) {
-      console.error("Failed to start chat", error);
-    }
-  };
+    setIsSearchOpen(false);
+    setSearchTerm("");
+    setMessages([]);
+    setActiveConversation({
+      id: res.conversationId,
+      participantName: targetUser.name,
+      avatarUrl: targetUser.avatarUrl,
+      lastMessage: NO_MESSAGES_PLACEHOLDER,
+      time: "",
+      unreadCount: 0,
+      isOnline: onlineUserIds.includes(targetUser.id),
+      participantId: targetUser.id,
+    });
+    setIsMobileChatOpen(true);
+  } catch (error: any) {
+    const msg = error?.data?.message || "Could not start this conversation.";
+    notification.error({ message: "Couldn't open chat", description: msg }); // use antd, like elsewhere in the app
+  }
+};
   // ===================== end of start-new-chat handler =====================
 
   // =====================================================================
@@ -565,7 +560,7 @@ const MessagesPage: React.FC = () => {
                           <li
                             key={searchedUser.id}
                             onClick={() =>
-                              handleStartNewChat(searchedUser.id)
+                              handleStartNewChat(searchedUser)
                             }
                             className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
                           >

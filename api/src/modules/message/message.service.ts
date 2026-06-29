@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Message } from '../../databse/mssql/models/message.model';
+import { MessageAttachment } from '../../databse/mssql/models/messageAttachment.model'; // ✅ added
 
 import { Op } from 'sequelize';
 import { CP } from '../../databse/mssql/models/conversationParticipants.model';
@@ -12,13 +13,14 @@ export class MessageService {
     });
 
     const whereClause: any = { ConversationID: conversationId };
-    
+
     if (cp && cp.HistoryClearedAt) {
       whereClause.CreatedAt = { [Op.gt]: cp.HistoryClearedAt };
     }
 
     const messages = await Message.findAll({
       where: whereClause,
+      include: [{ model: MessageAttachment, as: 'attachments' }], // ✅ added
       order: [['CreatedAt', 'ASC']],
     });
 
@@ -29,6 +31,22 @@ export class MessageService {
       senderId: m.SenderID,
       content: m.Message,
       createdAt: m.CreatedAt,
+      // ✅ added — same shape the socket payload already uses (see chat.service.ts saveMessage / getConversationHistory)
+      attachments: m.attachments
+        ? m.attachments.map((a: any) => ({
+            id: a.ID,
+            fileUrl: a.FileURL,
+            fileType: a.FileType,
+            fileSizeBytes: a.FileSizeBytes,
+            originalFileName: a.OriginalFileName,
+            mimeType: a.MimeType,
+            fileExtension: a.FileExtension,
+            imageWidth: a.ImageWidth,
+            imageHeight: a.ImageHeight,
+            videoDuration: a.VideoDuration,
+            thumbnailUrl: a.ThumbnailURL,
+          }))
+        : [],
     }));
   }
 }
