@@ -41,16 +41,14 @@ export class ConversationService {
     });
 
     const result: any[] = [];
-    for (const conv of conversations) {
-      const otherParticipantCp = await CP.findOne({
-        where: {
-          ConversationID: conv.ID,
-          UserID: { [Op.ne]: userId },
-        },
-        include: [{ model: Users, as: 'User', attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'] }],
-      });
 
-      const p = otherParticipantCp?.User as any;
+    const otherCps = await CP.findAll({
+      where:{ ConversationID:{[Op.in]:conversationIds}, UserID:{[Op.ne]:userId}},
+      include:[{model:Users, as:'User', attributes:['ID', 'FullName', 'UserName', 'ProfilePictureUrl'] }]
+    })
+    const otherParticipentsByconv = new Map(otherCps.map(cp=>[cp.ConversationID, cp.User]))
+    for (const conv of conversations) {
+      const p:any  = otherParticipentsByconv.get(conv.ID);
       let lm = conv.messages && conv.messages.length > 0 ? conv.messages[0] as any : null;
       
       const historyClearedAt = cpMap.get(conv.ID);

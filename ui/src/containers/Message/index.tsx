@@ -429,7 +429,27 @@ const MessagesPage: React.FC = () => {
       text: textToSend,
       attachments:
         uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
-    });
+    },(
+      response:{event : string; data?: any; error?:string})=>{
+        if(response?.event === 'messageSent' && response.data){
+          setMessages((prev)=>{
+            if(prev.find((m)=>m.id === response.data.id)) return prev;
+
+            return [...prev,{
+                id: response.data.id,
+                senderId: response.data.senderId,
+                text: response.data.content,
+                timestamp: new Date(response.data.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                attachments: response.data.attachments,
+              },
+            ];
+          });
+          scrollToBottom();
+        }else{
+          notification.error({message:"Message failed to send", description:response?.error || "please try again."})
+        }
+      }
+    );
 
     setTimeout(scrollToBottom, 100);
   };
