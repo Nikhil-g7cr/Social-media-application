@@ -104,29 +104,31 @@ export class ConversationService {
     const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
     const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
 
-    // FIX: Convert UUIDs to lowercase to prevent JavaScript case-sensitivity mismatches with SQL Server
-    const currentUserConvIds = currentUserCps.map(cp => cp.ConversationID.toLowerCase());
-    const targetUserConvIds = targetUserCps.map(cp => cp.ConversationID.toLowerCase());
+    // Extract lowercase target IDs for safe JS comparison
+    const targetUserConvIdsLower = targetUserCps.map(cp => cp.ConversationID.toLowerCase());
 
-    const sharedConvIds = currentUserConvIds.filter(id => targetUserConvIds.includes(id));
+    // Filter using lowercase for accuracy, but map back to the ORIGINAL case ID for the DB
+    const sharedConvIds = currentUserCps
+      .filter(cp => targetUserConvIdsLower.includes(cp.ConversationID.toLowerCase()))
+      .map(cp => cp.ConversationID);
 
     if (sharedConvIds.length > 0) {
       const existingConv = await Conversation.findOne({
         where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' }
       });
       if (existingConv) {
-        return { conversationId: existingConv.ID };
+        return { conversationId: existingConv.ID }; // Returns existing chat room!
       }
     }
 
-  // Only create if truly nothing found
-  const newConvId = uuidv4();
-  await Conversation.create({ ID: newConvId, Type: 'single', CreatedBy: currentUserId, CreatedAt: new Date() } as any);
-  await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: currentUserId, Role: 'admin', JoinedAt: new Date() } as any);
-  await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: targetUserId, Role: 'member', JoinedAt: new Date() } as any);
+    // Only create if truly nothing found
+    const newConvId = uuidv4();
+    await Conversation.create({ ID: newConvId, Type: 'single', CreatedBy: currentUserId, CreatedAt: new Date() } as any);
+    await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: currentUserId, Role: 'admin', JoinedAt: new Date() } as any);
+    await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: targetUserId, Role: 'member', JoinedAt: new Date() } as any);
 
-  return { conversationId: newConvId };
-}
+    return { conversationId: newConvId };
+  }
 
   async clearHistory(conversationId: string, userId: string) {
     const cp = await CP.findOne({

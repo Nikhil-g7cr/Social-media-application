@@ -8,6 +8,9 @@ import { CP } from '../../databse/mssql/models/conversationParticipants.model';
 @Injectable()
 export class MessageService {
   async getConversationHistory(conversationId: string, userId: string) {
+    if (!userId) {
+        throw new Error("ChatService: getConversationHistory called with undefined userId. Check your Auth Guard/Decorator.");
+    }
     const cp = await CP.findOne({
       where: { ConversationID: conversationId, UserID: userId }
     });
@@ -15,7 +18,7 @@ export class MessageService {
     const whereClause: any = { ConversationID: conversationId };
 
     if (cp && cp.HistoryClearedAt) {
-      whereClause.CreatedAt = { [Op.gt]: cp.HistoryClearedAt };
+      whereClause.CreatedAt = { [Op.gt]: new Date(cp.HistoryClearedAt) };
     }
 
     const messages = await Message.findAll({

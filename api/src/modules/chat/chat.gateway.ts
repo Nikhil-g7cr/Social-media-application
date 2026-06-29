@@ -118,6 +118,6 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     // Broadcast a normalized shape to all clients in the room
     this.server.to(payload.conversationId).emit('newMessage', savedMessage);
 
-    return { event: 'messageSent', data: savedMessage };
+    return { status: 'success', data: savedMessage };
   }
 }

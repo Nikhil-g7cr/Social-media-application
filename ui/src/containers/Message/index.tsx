@@ -167,10 +167,50 @@ const MessagesPage: React.FC = () => {
   // ======= Join the socket.io room for whichever conversation is
   // ======= currently open, so we receive live "newMessage" events for it
   // =====================================================================
+  // useEffect(() => {
+  //   if (activeConversation) {
+  //     const socket = initializeSocket();
+  //     socket.emit("joinRoom", { conversationId: activeConversation.id });
+  //   }
+  // }, [activeConversation]);
+
+  // =====================================================================
+  // ======= Join the socket.io room & Listen for real-time messages
+  // =====================================================================
   useEffect(() => {
     if (activeConversation) {
       const socket = initializeSocket();
       socket.emit("joinRoom", { conversationId: activeConversation.id });
+
+      // Add the real-time listener for incoming messages
+      const handleNewMessage = (newMsg: any) => {
+        // Only push to UI if it belongs to the chat we are currently viewing
+        if (newMsg.conversationId === activeConversation.id) {
+          setMessages((prev) => {
+            // Deduplication check (just in case the callback also fired)
+            if (prev.find((m) => m.id === newMsg.id)) return prev;
+
+            return [
+              ...prev,
+              {
+                id: newMsg.id,
+                senderId: newMsg.senderId,
+                text: newMsg.content,
+                timestamp: new Date(newMsg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                attachments: newMsg.attachments,
+              },
+            ];
+          });
+          scrollToBottom();
+        }
+      };
+
+      socket.on("newMessage", handleNewMessage);
+
+      // Cleanup listener when changing conversations or unmounting
+      return () => {
+        socket.off("newMessage", handleNewMessage);
+      };
     }
   }, [activeConversation]);
   // ===================== end of socket room join effect =====================
@@ -262,7 +302,7 @@ const MessagesPage: React.FC = () => {
   // =====================================================================
   const handleSelectConversation = (conversation: UIConversation) => {
     setActiveConversation(conversation);
-    setMessages([]); // clear old messages while the new ones load
+    // setMessages([]); // clear old messages while the new ones load
     setIsMobileChatOpen(true);
   };
   // ===================== end of select-conversation handler =====================
@@ -280,7 +320,7 @@ const MessagesPage: React.FC = () => {
 
     setIsSearchOpen(false);
     setSearchTerm("");
-    setMessages([]);
+    // setMessages([]);
     setActiveConversation({
       id: res.conversationId,
       participantName: targetUser.name,
@@ -423,30 +463,34 @@ const MessagesPage: React.FC = () => {
 
     // Send via WebSocket — the gateway saves it to the DB and broadcasts
     // the saved/normalized message back to everyone in the room.
+    // Send via WebSocket
     const socket = initializeSocket();
     socket.emit("sendMessage", {
       conversationId: activeConversation.id,
       text: textToSend,
-      attachments:
-        uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
-    },(
-      response:{event : string; data?: any; error?:string})=>{
-        if(response?.event === 'messageSent' && response.data){
-          setMessages((prev)=>{
-            if(prev.find((m)=>m.id === response.data.id)) return prev;
+      attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
+    }, (response: { status?: string; data?: any; error?: string }) => {
+        
+        // ✅ Check for 'status === success' instead of 'event === messageSent'
+        if (response?.status === 'success' && response.data) {
+          setMessages((prev) => {
+            if (prev.find((m) => m.id === response.data.id)) return prev;
 
-            return [...prev,{
+            return [...prev, {
                 id: response.data.id,
                 senderId: response.data.senderId,
-                text: response.data.content,
+                text: response.data.content, // Make sure to read 'content'
                 timestamp: new Date(response.data.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
                 attachments: response.data.attachments,
               },
             ];
           });
           scrollToBottom();
-        }else{
-          notification.error({message:"Message failed to send", description:response?.error || "please try again."})
+        } else {
+          notification.error({ 
+            message: "Message failed to send", 
+            description: response?.error || "please try again." 
+          });
         }
       }
     );

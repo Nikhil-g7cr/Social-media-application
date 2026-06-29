@@ -10,6 +10,7 @@ export class ChatController {
   @Get(':conversationId/history')
   async getChatHistory(@Param('conversationId') conversationId: string, @CurrentUser() user:any) {
     const userId = user.sub
+    console.log("DEBUG: Current userId is", userId);
     return this.chatService.getConversationHistory(conversationId, userId);
   }
 }
