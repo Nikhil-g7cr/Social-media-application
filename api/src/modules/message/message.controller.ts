@@ -12,11 +12,19 @@ export class MessageController {
   constructor(private readonly messageService: MessageService) {}
 
   @Get('conversation/:conversationId')
-  @ApiOperation({ summary: 'Get history for a specific conversation' })
-  async getHistory(
+async getHistory(
+    @Req() req: any,
+    @CurrentUser() user: any,
+    @CurrentUser('sub') userId: string,
     @Param('conversationId') conversationId: string,
-    @CurrentUser('id') userId: string, // 👈 Grabs the validated user ID from the token
-  ) {
-    return this.messageService.getConversationHistory(conversationId, userId);
-  }
+) {
+    console.log("req.user =", req.user);
+    console.log("CurrentUser =", user);
+    console.log("userId =", userId);
+
+    return this.messageService.getConversationHistory(
+        conversationId,
+        userId,
+    );
+}
 }

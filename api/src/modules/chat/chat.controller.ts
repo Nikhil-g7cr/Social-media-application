@@ -8,8 +8,8 @@ export class ChatController {
 
   // GET http://localhost:5000/chat/:conversationId/history
   @Get(':conversationId/history')
-  async getChatHistory(@Param('conversationId') conversationId: string, @CurrentUser() user:any) {
-    const userId = user.sub
+  async getChatHistory(@Param('conversationId') conversationId: string, @CurrentUser() user:any, @CurrentUser('sub') UserId:string) {
+    const userId = UserId
     console.log("DEBUG: Current userId is", userId);
     return this.chatService.getConversationHistory(conversationId, userId);
   }

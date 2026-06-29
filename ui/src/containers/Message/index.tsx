@@ -71,6 +71,7 @@ const MessagesPage: React.FC = () => {
   // ===================== end of URL deep-link setup =====================
 
   const { user } = useAppSelector((state: any) => state.auth);
+  console.log("user from the message index file:---------->,",user);
   const CURRENT_USER_ID = user?.id || "";
   const onlineUserIds = useAppSelector(
     (state: any) => state.onlineUsers?.onlineUserIds || [],
@@ -277,8 +278,9 @@ const MessagesPage: React.FC = () => {
   useEffect(() => {
     if (!serverMessages) return;
 
-    // Backend returns normalized camelCase objects: { id, senderId, content, createdAt }
-    const formattedMessages: UIMessage[] = serverMessages.map((msg) => ({
+    // Backend returns normalized camelCase objects: { id, senderId, content, createdAt, attachments[] }
+    console.log(serverMessages);
+    const formattedMessages: UIMessage[] = serverMessages.map((msg: any) => ({
       id: msg.id,
       senderId: msg.senderId,
       text: msg.content,
@@ -286,7 +288,19 @@ const MessagesPage: React.FC = () => {
         hour: "2-digit",
         minute: "2-digit",
       }),
-      attachments: msg.attachments,
+      attachments: (msg.attachments ?? []).map((att: any) => ({
+        id: att.id,
+        fileUrl: att.fileUrl,
+        fileType: att.fileType,
+        fileSizeBytes: att.fileSizeBytes,
+        originalFileName: att.originalFileName,
+        mimeType: att.mimeType,
+        fileExtension: att.fileExtension,
+        imageWidth: att.imageWidth,
+        imageHeight: att.imageHeight,
+        videoDuration: att.videoDuration,
+        thumbnailUrl: att.thumbnailUrl,
+      })),
     }));
     setMessages(formattedMessages);
     scrollToBottom();
@@ -402,12 +416,14 @@ const MessagesPage: React.FC = () => {
           mimeType: file.type,
         });
 
-        // Backend wraps responses with { status, data, message }
-        const uploadUrl =
-          uploadUrlResponse.data?.data?.uploadUrl ||
-          uploadUrlResponse.data?.uploadUrl;
+        // Backend returns { uploadUrl, blobPath, expiresIn } directly (no data wrapper)
+        const uploadUrl: string | undefined =
+          uploadUrlResponse.data?.uploadUrl ||
+          uploadUrlResponse.data?.data?.uploadUrl;
 
-        if (!uploadUrl) throw new Error("Failed to get upload URL");
+        console.log("[upload] SAS url received:", uploadUrl ? "OK" : "MISSING", uploadUrlResponse.data);
+
+        if (!uploadUrl) throw new Error("Failed to get upload URL from server");
 
         await new Promise<void>((resolve, reject) => {
           const xhr = new XMLHttpRequest();

@@ -44,10 +44,12 @@ export class FileService implements OnModuleInit {
       // Ensure our frontend can upload directly to blob storage
       properties.cors = [
         {
-          allowedOrigins: 'http://localhost:3000,http://127.0.0.1:3000',
+          // Allow all common Vite/CRA/Next dev ports + production origins
+          allowedOrigins: '*',
           allowedMethods: 'GET,PUT,POST,HEAD,OPTIONS,DELETE',
-          allowedHeaders: '*',
-          exposedHeaders: '*',
+          // x-ms-blob-type is required by the browser for BlockBlob PUTs
+          allowedHeaders: 'x-ms-blob-type,Content-Type,Authorization,x-ms-date,x-ms-version,*',
+          exposedHeaders: 'ETag,Content-Length,x-ms-request-id,x-ms-version,*',
           maxAgeInSeconds: 3600,
         },
       ];
