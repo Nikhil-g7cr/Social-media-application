@@ -32,6 +32,7 @@ import Avatar from "../../shared/shared-components/Avatar";
 import API from "../../config/axiosConfig";
 import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
 import { notification } from "antd";
+import CreateGroupFeature from "../../components/layout/CreateGroupChat";
 
 // =====================================================================
 // TYPES
@@ -163,17 +164,6 @@ const MessagesPage: React.FC = () => {
     scrollToBottom();
   }, [messages.length]);
   // ===================== end of auto-scroll effect =====================
-
-  // =====================================================================
-  // ======= Join the socket.io room for whichever conversation is
-  // ======= currently open, so we receive live "newMessage" events for it
-  // =====================================================================
-  // useEffect(() => {
-  //   if (activeConversation) {
-  //     const socket = initializeSocket();
-  //     socket.emit("joinRoom", { conversationId: activeConversation.id });
-  //   }
-  // }, [activeConversation]);
 
   // =====================================================================
   // ======= Join the socket.io room & Listen for real-time messages
@@ -579,6 +569,14 @@ const MessagesPage: React.FC = () => {
   };
   // ===================== end of clear-chat handler =====================
 
+  // =======================Create GroupChat============================
+
+  const handleCreateGroupChat=async()=>{
+    console.log("create group is created")
+  }
+
+  // ===================================================================
+
   if (isConversationsLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50">
@@ -597,7 +595,11 @@ const MessagesPage: React.FC = () => {
       >
         {/* Header & Search */}
         <div className="p-4 border-b border-gray-200" ref={searchWrapperRef}>
+        <div className="flex flex-row justify-between align-middle">
           <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
+          <CreateGroupFeature onSubmit={handleCreateGroupChat}/>
+        </div>
+
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
             <input
