@@ -16,7 +16,7 @@ import {
   X,
 } from "lucide-react";
 import { initializeSocket } from "../../utils/socket";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useAppSelector } from "../../redux/hooks";
 import {
   useGetConversationsQuery,
@@ -26,6 +26,7 @@ import {
   type Conversation as ServerConversation,
   type ChatMessage,
   type ChatAttachment,
+  useStartGroupConvMutation,
 } from "../../redux/features/chat/chatApiSlice";
 import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
 import Avatar from "../../shared/shared-components/Avatar";
@@ -72,7 +73,6 @@ const MessagesPage: React.FC = () => {
   // ===================== end of URL deep-link setup =====================
 
   const { user } = useAppSelector((state: any) => state.auth);
-  console.log("user from the message index file:---------->,",user);
   const CURRENT_USER_ID = user?.id || "";
   const onlineUserIds = useAppSelector(
     (state: any) => state.onlineUsers?.onlineUserIds || [],
@@ -571,9 +571,32 @@ const MessagesPage: React.FC = () => {
 
   // =======================Create GroupChat============================
 
-  const handleCreateGroupChat=async()=>{
-    console.log("create group is created")
+  interface CreateGroupData {
+    title: string;
+    participants: string[];
   }
+  const navigate = useNavigate();
+  const [startGroupConv] = useStartGroupConvMutation();
+
+  const handleCreateGroupChat = async (data: CreateGroupData) => {
+    console.log("Data:-->", data);
+    try {
+      const response = await startGroupConv({
+        title: data.title,
+        participants: data.participants,
+      }).unwrap();
+
+      console.log("Group created:", response);
+
+      // Refresh conversations if needed
+      // refetch();
+
+      // Navigate to the new conversation
+      navigate(`/messages/${response.conversationId}`);
+    } catch (error) {
+      console.error("Failed to create group:", error);
+    }
+  };
 
   // ===================================================================
 

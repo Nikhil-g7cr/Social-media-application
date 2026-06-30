@@ -38,6 +38,12 @@ export interface Conversation {
     createdAt: string;
 }
 
+export interface CreateGroupConversationRequest {
+    title: string;
+    participants: string[];
+}
+
+
 export const chatApiSlice = apiSlice.injectEndpoints({
     endpoints: (builder) => ({
         getConversations: builder.query<Conversation[], void>({
@@ -85,6 +91,18 @@ export const chatApiSlice = apiSlice.injectEndpoints({
             transformResponse: (response: any) => response.data || response,
             invalidatesTags: ['Conversation'],
         }),
+
+        // groupchat api
+        startGroupConv: builder.mutation<{conversationId: string },CreateGroupConversationRequest>({
+            query:(data) => ({
+                url:`/conversation/group`,
+                method:`POST`,
+                data,
+            }),
+            transformResponse:(response:any)=> response.data || response,
+            invalidatesTags:["Conversation"]
+        }),
+        // ======end=========
         getMessagesByConversationId: builder.query<ChatMessage[], string>({
             query: (conversationId) => ({ url: `message/conversation/${conversationId}` }),
             transformResponse: (response: any) => response.data || response,
@@ -130,6 +148,7 @@ export const chatApiSlice = apiSlice.injectEndpoints({
 export const {
     useGetConversationsQuery,
     useStartConversationMutation,
+    useStartGroupConvMutation,
     useGetMessagesByConversationIdQuery,
     useClearChatHistoryMutation,
 } = chatApiSlice;

@@ -25,6 +25,7 @@ export class ConversationController {
   @Post('group')
   createGroup(@Req() req: any, @Body() dto: CreateGroupDto) {
     console.log("===== CREATE GROUP =====");
+    console.log("BODY =", dto);
     return this.conversationService.createGroupConv(
       req.user.sub,
       dto.title,

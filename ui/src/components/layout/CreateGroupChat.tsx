@@ -1,28 +1,25 @@
 import React, { useState } from 'react';
-import { Button, Modal, Input, Select, Space, message } from 'antd';
+import { Button, Modal, Input, Space, message } from 'antd';
 import { UsergroupAddOutlined } from '@ant-design/icons';
+import { X } from 'lucide-react';
+import Avatar from '../../shared/shared-components/Avatar';
+import type { SearchedUser } from '../features/message/userSearchBar';
+import UserSearch from '../features/message/userSearchBar';
 
 // Define the structure of the data you want to send back to the main page
-export interface GroupData {
-  name: string;
-  members: string[]; // Adjust this to 'number[]' if you use user IDs instead
+export interface CreateGroupData {
+  title: string;
+  participants: string[];
 }
 
 interface CreateGroupProps {
-  onSubmit: (data: GroupData) => void;
+  onSubmit: (data: CreateGroupData) => void;
 }
-
-// Mock data for members (replace this with your actual contacts/users list)
-const MEMBER_OPTIONS = [
-  { label: 'Alice Smith', value: 'user_1' },
-  { label: 'Bob Jones', value: 'user_2' },
-  { label: 'Charlie Brown', value: 'user_3' },
-];
 
 const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [groupName, setGroupName] = useState('');
-  const [selectedMembers, setSelectedMembers] = useState<string[]>([]);
+  const [selectedMembers, setSelectedMembers] = useState<SearchedUser[]>([]);
 
   const showModal = () => setIsModalOpen(true);
 
@@ -32,7 +29,6 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
   };
 
   const handleOk = () => {
-    // Basic validation
     if (!groupName.trim()) {
       message.error('Please enter a group name');
       return;
@@ -42,10 +38,12 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
       return;
     }
 
-    // Pass the data back to the parent component
-    onSubmit({ name: groupName, members: selectedMembers });
+    // Pass the mapped participant IDs back to the parent
+    onSubmit({
+      title: groupName,
+      participants: selectedMembers.map((member) => member.id),
+    });
 
-    // Close the popup and reset the fields
     setIsModalOpen(false);
     resetForm();
   };
@@ -55,20 +53,29 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
     setSelectedMembers([]);
   };
 
+  const handleSelectUser = (user: SearchedUser) => {
+    if (!selectedMembers.find((m) => m.id === user.id)) {
+      setSelectedMembers([...selectedMembers, user]);
+    }
+  };
+
+  const handleRemoveUser = (userId: string) => {
+    setSelectedMembers(selectedMembers.filter((m) => m.id !== userId));
+  };
+
   return (
     <>
-      {/* 1 & 2: Trigger Button with Ant Design Logo/Icon */}
       <Button
         type="primary"
         icon={<UsergroupAddOutlined />}
         onClick={showModal}
+        className="bg-blue-600 hover:bg-blue-700"
       >
         Create Group
       </Button>
 
-      {/* 3: The Popup Modal */}
       <Modal
-        title="Create New Group"
+        title={<span className="font-semibold text-lg">Create New Group</span>}
         open={isModalOpen}
         onOk={handleOk}
         onCancel={handleCancel}
@@ -76,39 +83,57 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
         cancelText="Cancel"
         destroyOnClose
       >
-        <Space direction="vertical" style={{ width: '100%' }} size="large">
-          
+        <Space direction="vertical" style={{ width: '100%', marginTop: '16px' }} size="large">
           {/* Group Name Input */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+            <label className="block mb-2 font-medium text-gray-700">
               Group Name
             </label>
             <Input
               placeholder="Enter group name..."
               value={groupName}
               onChange={(e) => setGroupName(e.target.value)}
+              size="large"
             />
           </div>
 
-          {/* Add Members Selection */}
+          {/* Add Members using the new UserSearch component */}
           <div>
-            <label style={{ display: 'block', marginBottom: '8px', fontWeight: 500 }}>
+            <label className="block mb-2 font-medium text-gray-700">
               Add Members
             </label>
-            <Select
-              mode="multiple"
-              allowClear
-              style={{ width: '100%' }}
-              placeholder="Select members to add"
-              value={selectedMembers}
-              onChange={setSelectedMembers}
-              options={MEMBER_OPTIONS}
-              filterOption={(input, option) =>
-                (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-              }
+            <UserSearch
+              onSelect={handleSelectUser}
+              placeholder="Search by name or username..."
+              excludeUserIds={selectedMembers.map((m) => m.id)} // Exclude already selected
             />
-          </div>
 
+            {/* Display Selected Members as Chips */}
+            {selectedMembers.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-4">
+                {selectedMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="flex items-center bg-blue-50 text-blue-700 rounded-full pl-1 pr-2 py-1 text-sm border border-blue-100"
+                  >
+                    <Avatar
+                      url={member.avatarUrl}
+                      name={member.name}
+                      className="w-6 h-6 mr-2"
+                    />
+                    <span className="font-medium mr-2">{member.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveUser(member.id)}
+                      className="text-blue-400 hover:text-blue-600 focus:outline-none p-0.5 rounded-full hover:bg-blue-100 transition-colors"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         </Space>
       </Modal>
     </>
