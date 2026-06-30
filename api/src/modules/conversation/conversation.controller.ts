@@ -2,6 +2,7 @@ import { Controller, Get, Post, Patch, Param, Req, UseGuards, Body } from '@nest
 import { ConversationService } from './conversation.service';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
 import { CreateGroupDto } from './dto/create-group.dto';
+import { AddGroupMembersDto } from './dto/add-group-members.dto';
 
 @Controller('conversation')
 @UseGuards(JwtAuthGuard)
@@ -29,6 +30,19 @@ export class ConversationController {
     return this.conversationService.createGroupConv(
       req.user.sub,
       dto.title,
+      dto.participants,
+    );
+  }
+
+  @Post(':id/members')
+  addGroupMembers(
+    @Req() req: any,
+    @Param('id') conversationId: string,
+    @Body() dto: AddGroupMembersDto,
+  ) {
+    return this.conversationService.addGroupMembers(
+      req.user.sub,
+      conversationId,
       dto.participants,
     );
   }

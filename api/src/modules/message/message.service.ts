@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { Message } from '../../databse/mssql/models/message.model';
-import { MessageAttachment } from '../../databse/mssql/models/messageAttachment.model'; // ✅ added
+import { MessageAttachment } from '../../databse/mssql/models/messageAttachment.model';
+import { Users } from '../../databse/mssql/models/user.model';
 
 import { Op } from 'sequelize';
 import { CP } from '../../databse/mssql/models/conversationParticipants.model';
@@ -23,12 +24,6 @@ export class MessageService {
       whereClause.CreatedAt = { [Op.gt]: new Date(cp.HistoryClearedAt) };
     }
 
-    // const messages = await Message.findAll({
-    //   where: whereClause,
-    //   include: [{ model: MessageAttachment, as: 'attachments' }], // ✅ added
-    //   order: [['CreatedAt', 'ASC']],
-    // });
-
     try {
       const messages = await Message.findAll({
         where: whereClause,
@@ -36,6 +31,11 @@ export class MessageService {
           {
             model: MessageAttachment,
             as: 'attachments',
+          },
+          {
+            model: Users,
+            as: 'Sender',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
           },
         ],
         order: [['CreatedAt', 'ASC']],
@@ -46,6 +46,14 @@ export class MessageService {
         id: m.ID,
         conversationId: m.ConversationID,
         senderId: m.SenderID,
+        sender: m.Sender
+          ? {
+              id: m.Sender.ID,
+              name: m.Sender.FullName,
+              username: m.Sender.UserName,
+              avatarUrl: m.Sender.ProfilePictureUrl || null,
+            }
+          : null,
         content: m.Message,
         createdAt: m.CreatedAt,
         attachments: m.attachments

@@ -19,6 +19,7 @@ export interface ChatMessage {
     id: string;
     conversationId: string;
     senderId: string;
+    sender?: ConversationParticipant | null;
     content: string;
     createdAt: string;
     attachments?: ChatAttachment[];
@@ -42,6 +43,11 @@ export interface ConversationParticipant {
 
 export interface CreateGroupConversationRequest {
     title: string;
+    participants: string[];
+}
+
+export interface AddGroupMembersRequest {
+    conversationId: string;
     participants: string[];
 }
 
@@ -104,6 +110,15 @@ export const chatApiSlice = apiSlice.injectEndpoints({
             transformResponse:(response:any)=> response.data || response,
             invalidatesTags:["Conversation"]
         }),
+        addGroupMembers: builder.mutation<{ conversationId: string; addedCount: number }, AddGroupMembersRequest>({
+            query: ({ conversationId, participants }) => ({
+                url: `/conversation/${conversationId}/members`,
+                method: 'POST',
+                data: { participants },
+            }),
+            transformResponse: (response: any) => response.data || response,
+            invalidatesTags: ['Conversation'],
+        }),
         // ======end=========
         getMessagesByConversationId: builder.query<ChatMessage[], string>({
             query: (conversationId) => ({ url: `message/conversation/${conversationId}` }),
@@ -151,6 +166,7 @@ export const {
     useGetConversationsQuery,
     useStartConversationMutation,
     useStartGroupConvMutation,
+    useAddGroupMembersMutation,
     useGetMessagesByConversationIdQuery,
     useClearChatHistoryMutation,
 } = chatApiSlice;

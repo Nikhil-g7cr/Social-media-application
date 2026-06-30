@@ -14,6 +14,7 @@ import {
   Play,
   Download,
   X,
+  UserPlus,
 } from "lucide-react";
 import { initializeSocket } from "../../utils/socket";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -26,13 +27,17 @@ import {
   type ChatMessage,
   type ChatAttachment,
   useStartGroupConvMutation,
+  useAddGroupMembersMutation,
 } from "../../redux/features/chat/chatApiSlice";
 import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
 import Avatar from "../../shared/shared-components/Avatar";
 import API from "../../config/axiosConfig";
 import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
-import { notification } from "antd";
+import { Modal, notification } from "antd";
 import CreateGroupFeature from "../../components/layout/CreateGroupChat";
+import UserSearch, {
+  type SearchedUser,
+} from "../../components/features/message/userSearchBar";
 import type {
   UIConversation,
   Conversation as ServerConversation,
@@ -46,6 +51,12 @@ import type {
 interface UIMessage {
   id: string;
   senderId: string;
+  sender?: {
+    id: string;
+    name: string;
+    username?: string;
+    avatarUrl?: string | null;
+  } | null;
   text: string;
   timestamp: string;
   attachments?: ChatAttachment[];
@@ -79,6 +90,10 @@ const MessagesPage: React.FC = () => {
   const [messages, setMessages] = useState<UIMessage[]>([]);
   const [messageDraft, setMessageDraft] = useState("");
   const [isMobileChatOpen, setIsMobileChatOpen] = useState(false);
+  const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+  const [selectedMembersToAdd, setSelectedMembersToAdd] = useState<
+    SearchedUser[]
+  >([]);
   // ===================== end of local UI state =====================
 
   // =====================================================================
@@ -139,6 +154,8 @@ const MessagesPage: React.FC = () => {
 
   const [startConversation] = useStartConversationMutation();
   const [clearChatHistory] = useClearChatHistoryMutation();
+  const [addGroupMembers, { isLoading: isAddingGroupMembers }] =
+    useAddGroupMembersMutation();
   // ===================== end of server data hooks =====================
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -177,6 +194,7 @@ const MessagesPage: React.FC = () => {
               {
                 id: newMsg.id,
                 senderId: newMsg.senderId,
+                sender: newMsg.sender,
                 text: newMsg.content,
                 timestamp: new Date(newMsg.createdAt).toLocaleTimeString([], {
                   hour: "2-digit",
@@ -222,12 +240,17 @@ const MessagesPage: React.FC = () => {
             : conv.participant?.name || "Unknown User",
 
         displayAvatar:
-          conv.type === "group" ? null : conv.participant?.avatarUrl,
+          conv.type === "group"
+            ? conv.displayAvatar || null
+            : conv.participant?.avatarUrl,
 
         // Keep these for backward compatibility
         participantName: conv.participant?.name || "",
         participantId: conv.participant?.id || "",
-        avatarUrl: conv.participant?.avatarUrl,
+        avatarUrl:
+          conv.type === "group"
+            ? conv.displayAvatar || null
+            : conv.participant?.avatarUrl,
 
         participants: conv.participants ?? [],
 
@@ -288,6 +311,7 @@ const MessagesPage: React.FC = () => {
     const formattedMessages: UIMessage[] = serverMessages.map((msg: any) => ({
       id: msg.id,
       senderId: msg.senderId,
+      sender: msg.sender,
       text: msg.content,
       timestamp: new Date(msg.createdAt).toLocaleTimeString([], {
         hour: "2-digit",
@@ -614,6 +638,60 @@ const MessagesPage: React.FC = () => {
   };
   // ===================== end of clear-chat handler =====================
 
+  const handleSelectMemberToAdd = (member: SearchedUser) => {
+    setSelectedMembersToAdd((prev) =>
+      prev.some((existing) => existing.id === member.id)
+        ? prev
+        : [...prev, member],
+    );
+  };
+
+  const handleRemoveMemberToAdd = (userId: string) => {
+    setSelectedMembersToAdd((prev) =>
+      prev.filter((member) => member.id !== userId),
+    );
+  };
+
+  const handleCloseAddMemberModal = () => {
+    setIsAddMemberModalOpen(false);
+    setSelectedMembersToAdd([]);
+  };
+
+  const handleAddGroupMembers = async () => {
+    if (!activeConversation || selectedMembersToAdd.length === 0) return;
+
+    try {
+      await addGroupMembers({
+        conversationId: activeConversation.id,
+        participants: selectedMembersToAdd.map((member) => member.id),
+      }).unwrap();
+
+      setActiveConversation((prev) =>
+        prev
+          ? {
+              ...prev,
+              participants: [
+                ...prev.participants,
+                ...selectedMembersToAdd.map((member) => ({
+                  id: member.id,
+                  name: member.name,
+                  username: member.username ?? "",
+                  avatarUrl: member.avatarUrl ?? null,
+                })),
+              ],
+            }
+          : prev,
+      );
+      notification.success({ message: "Members added" });
+      handleCloseAddMemberModal();
+    } catch (error: any) {
+      notification.error({
+        message: "Could not add members",
+        description: error?.data?.message || "Please try again.",
+      });
+    }
+  };
+
   // =======================Create GroupChat============================
 
   interface CreateGroupData {
@@ -645,6 +723,17 @@ const MessagesPage: React.FC = () => {
 
   // ===================================================================
 
+  const getMessageSenderName = (msg: UIMessage) => {
+    if (msg.sender?.name) return msg.sender.name;
+
+    const participant = activeConversation?.participants.find(
+      (member) =>
+        String(member.id).toLowerCase() === String(msg.senderId).toLowerCase(),
+    );
+
+    return participant?.name || msg.sender?.username || "Unknown user";
+  };
+
   if (isConversationsLoading) {
     return (
       <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50">
@@ -654,6 +743,7 @@ const MessagesPage: React.FC = () => {
   }
 
   return (
+    <>
     <div className="flex h-[calc(100vh-4rem)] bg-white overflow-hidden border-t border-gray-200">
       {/* ===================================================================== */}
       {/* ======= LEFT COLUMN: conversation list + "start new chat" search ===== */}
@@ -809,22 +899,37 @@ const MessagesPage: React.FC = () => {
                   <ArrowLeft className="h-5 w-5" />
                 </button>
                 <Avatar
-                  url={activeConversation.avatarUrl || undefined}
-                  name={activeConversation.participantName}
+                  url={
+                    activeConversation.displayAvatar ||
+                    activeConversation.avatarUrl ||
+                    undefined
+                  }
+                  name={activeConversation.displayName || undefined}
                   className="h-10 w-10 rounded-full object-cover"
                 />
                 <div>
                   <h3 className="text-md font-semibold text-gray-900">
-                    {activeConversation.participantName}
+                    {activeConversation.displayName}
                   </h3>
                   <p className="text-xs text-gray-500">
-                    {onlineUserIds.includes(activeConversation.participantId)
-                      ? "Active now"
-                      : "Offline"}
+                    {activeConversation.type === "group"
+                      ? `${activeConversation.participants.length + 1} members`
+                      : onlineUserIds.includes(activeConversation.participantId)
+                        ? "Active now"
+                        : "Offline"}
                   </p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-gray-500">
+                {activeConversation.type === "group" && (
+                  <button
+                    className="p-2 hover:bg-gray-100 rounded-full transition"
+                    onClick={() => setIsAddMemberModalOpen(true)}
+                    title="Add member"
+                  >
+                    <UserPlus className="h-5 w-5" />
+                  </button>
+                )}
                 <button
                   className="p-2 hover:bg-gray-100 rounded-full transition"
                   onClick={handleClearChat}
@@ -851,6 +956,8 @@ const MessagesPage: React.FC = () => {
                 const isSentByMe =
                   String(msg.senderId).toLowerCase() ===
                   String(CURRENT_USER_ID).toLowerCase();
+                const shouldShowSenderName =
+                  activeConversation.type === "group" && !isSentByMe;
                 return (
                   <div
                     key={msg.id}
@@ -859,6 +966,11 @@ const MessagesPage: React.FC = () => {
                     <div
                       className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isSentByMe ? "items-end" : "items-start"}`}
                     >
+                      {shouldShowSenderName && (
+                        <span className="text-xs font-medium text-gray-500 mb-1 mx-1">
+                          {getMessageSenderName(msg)}
+                        </span>
+                      )}
                       <div
                         className={`px-4 py-2 rounded-2xl ${
                           isSentByMe
@@ -1049,6 +1161,55 @@ const MessagesPage: React.FC = () => {
       </div>
       {/* ===================== end of RIGHT COLUMN ===================== */}
     </div>
+    <Modal
+      title="Add members"
+      open={isAddMemberModalOpen}
+      onOk={handleAddGroupMembers}
+      onCancel={handleCloseAddMemberModal}
+      okText="Add"
+      confirmLoading={isAddingGroupMembers}
+      okButtonProps={{ disabled: selectedMembersToAdd.length === 0 }}
+      destroyOnClose
+    >
+      <div className="space-y-4 pt-2">
+        <UserSearch
+          onSelect={handleSelectMemberToAdd}
+          placeholder="Search by name or username..."
+          excludeUserIds={[
+            CURRENT_USER_ID,
+            ...(activeConversation?.participants.map((member) => member.id) ??
+              []),
+            ...selectedMembersToAdd.map((member) => member.id),
+          ]}
+        />
+
+        {selectedMembersToAdd.length > 0 && (
+          <div className="flex flex-wrap gap-2">
+            {selectedMembersToAdd.map((member) => (
+              <div
+                key={member.id}
+                className="flex items-center bg-blue-50 text-blue-700 rounded-full pl-1 pr-2 py-1 text-sm border border-blue-100"
+              >
+                <Avatar
+                  url={member.avatarUrl}
+                  name={member.name}
+                  className="w-6 h-6 mr-2"
+                />
+                <span className="font-medium mr-2">{member.name}</span>
+                <button
+                  type="button"
+                  onClick={() => handleRemoveMemberToAdd(member.id)}
+                  className="text-blue-400 hover:text-blue-600 focus:outline-none p-0.5 rounded-full hover:bg-blue-100 transition-colors"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </Modal>
+    </>
   );
 };
 

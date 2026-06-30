@@ -2,6 +2,7 @@ import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { Message } from '../../databse/mssql/models/message.model';
 import { MessageAttachment } from '../../databse/mssql/models/messageAttachment.model';
 import { CP } from '../../databse/mssql/models/conversationParticipants.model';
+import { Users } from '../../databse/mssql/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
 import { NotificationService } from '../notification/notification.service';
 import { Op } from 'sequelize';
@@ -69,10 +70,29 @@ export class ChatService {
       id,
       conversationId: payload.conversationId,
       senderId: payload.senderId,
+      sender: null as null | {
+        id: string;
+        name: string;
+        username: string;
+        avatarUrl: string | null;
+      },
       content: payload.text,
       createdAt: now.toISOString(),
       attachments: savedAttachments,
     };
+
+    const sender = await Users.findByPk(payload.senderId, {
+      attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+    });
+
+    if (sender) {
+      normalizedMessage.sender = {
+        id: sender.ID,
+        name: sender.FullName,
+        username: sender.UserName,
+        avatarUrl: sender.ProfilePictureUrl || null,
+      };
+    }
 
     // Find other participants in the conversation to notify them
     const participants = await CP.findAll({
@@ -105,7 +125,14 @@ export class ChatService {
     }
     const messages = await Message.findAll({
       where: whereClause,
-      include: [{ model: MessageAttachment, as: 'attachments' }],
+      include: [
+        { model: MessageAttachment, as: 'attachments' },
+        {
+          model: Users,
+          as: 'Sender',
+          attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+        },
+      ],
       order: [['CreatedAt', 'ASC']],
     });
 
@@ -113,6 +140,14 @@ export class ChatService {
       id: m.ID,
       conversationId: m.ConversationID,
       senderId: m.SenderID,
+      sender: m.Sender
+        ? {
+            id: m.Sender.ID,
+            name: m.Sender.FullName,
+            username: m.Sender.UserName,
+            avatarUrl: m.Sender.ProfilePictureUrl || null,
+          }
+        : null,
       content: m.Message,
       createdAt: m.CreatedAt,
       attachments: m.attachments ? m.attachments.map((a: any) => ({

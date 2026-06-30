@@ -105,9 +105,15 @@ export class ConversationService {
           ? conv.Title
           : (mappedParticipants[0]?.name ?? '');
 
+      const groupAvatar =
+        (conv as any).AvatarUrl ||
+        (conv as any).AvatarURL ||
+        (conv as any).avatarUrl ||
+        null;
+
       const displayAvatar =
         conv.Type === 'group'
-          ? null
+          ? groupAvatar
           : (mappedParticipants[0]?.avatarUrl ?? null);
 
       result.push({
@@ -271,6 +277,63 @@ export class ConversationService {
     return {
       conversationId,
     };
+  }
+
+  async addGroupMembers(
+    currentUserId: string,
+    conversationId: string,
+    participants: string[],
+  ) {
+    const conversation = await Conversation.findByPk(conversationId);
+
+    if (!conversation || conversation.Type !== 'group') {
+      throw new BadRequestException('Group conversation not found.');
+    }
+
+    const currentParticipant = await CP.findOne({
+      where: { ConversationID: conversationId, UserID: currentUserId },
+    });
+
+    if (!currentParticipant) {
+      throw new ForbiddenException(
+        'You are not a participant of this conversation',
+      );
+    }
+
+    const uniqueParticipants = [...new Set(participants)].filter(
+      (id) => id !== currentUserId,
+    );
+
+    if (uniqueParticipants.length === 0) {
+      return { conversationId, addedCount: 0 };
+    }
+
+    const existingParticipants = await CP.findAll({
+      where: {
+        ConversationID: conversationId,
+        UserID: { [Op.in]: uniqueParticipants },
+      },
+      attributes: ['UserID'],
+    });
+    const existingUserIds = new Set(existingParticipants.map((cp) => cp.UserID));
+
+    const usersToAdd = uniqueParticipants.filter(
+      (userId) => !existingUserIds.has(userId),
+    );
+
+    await Promise.all(
+      usersToAdd.map((userId) =>
+        CP.create({
+          ID: uuidv4(),
+          ConversationID: conversationId,
+          UserID: userId,
+          Role: 'member',
+          JoinedAt: new Date(),
+        } as any),
+      ),
+    );
+
+    return { conversationId, addedCount: usersToAdd.length };
   }
 
   async clearHistory(conversationId: string, userId: string) {
