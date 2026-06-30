@@ -1,3 +1,4 @@
+import type { Conversation } from '../../../shared/interfaces/conversation';
 import { apiSlice } from '../../apiSlice';
 
 export interface ChatAttachment {
@@ -30,13 +31,14 @@ export interface ConversationParticipant {
     avatarUrl: string | null;
 }
 
-export interface Conversation {
-    id: string;
-    type: string;
-    participant: ConversationParticipant | null;
-    latestMessage: ChatMessage | null;
-    createdAt: string;
-}
+// export interface Conversation {
+//     title: any;
+//     id: string;
+//     type: string;
+//     participant: ConversationParticipant | null;
+//     latestMessage: ChatMessage | null;
+//     createdAt: string;
+// }
 
 export interface CreateGroupConversationRequest {
     title: string;

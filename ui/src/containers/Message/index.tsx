@@ -34,6 +34,7 @@ import API from "../../config/axiosConfig";
 import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
 import { notification } from "antd";
 import CreateGroupFeature from "../../components/layout/CreateGroupChat";
+import type { UIConversation } from "../../shared/interfaces/conversation";
 
 // =====================================================================
 // TYPES
@@ -48,17 +49,18 @@ interface UIMessage {
   attachments?: ChatAttachment[];
 }
 
+
 // UI-friendly shape of a conversation row shown in the left sidebar list.
-interface UIConversation {
-  id: string;
-  participantName: string;
-  avatarUrl?: string | null;
-  lastMessage: string;
-  time: string;
-  unreadCount: number;
-  isOnline: boolean;
-  participantId: string;
-}
+// interface UIConversation {
+//   id: string;
+//   participantName: string;
+//   avatarUrl?: string | null;
+//   lastMessage: string;
+//   time: string;
+//   unreadCount: number;
+//   isOnline: boolean;
+//   participantId: string;
+// }
 
 const NO_MESSAGES_PLACEHOLDER = "No messages yet";
 
@@ -218,18 +220,39 @@ const MessagesPage: React.FC = () => {
     const formattedConversations: UIConversation[] = serverConversations.map(
       (conv: ServerConversation) => ({
         id: conv.id,
-        participantName: conv.participant?.name || "Unknown User",
+
+        type: conv.type,
+        title: conv.title,
+
+        displayName:
+          conv.type === "group"
+            ? conv.title
+            : conv.participant?.name || "Unknown User",
+
+        displayAvatar:
+          conv.type === "group" ? null : conv.participant?.avatarUrl,
+
+        // Keep these for backward compatibility
+        participantName: conv.participant?.name || "",
+        participantId: conv.participant?.id || "",
         avatarUrl: conv.participant?.avatarUrl,
+
+        participants: conv.participants ?? [],
+
         lastMessage: conv.latestMessage?.content || NO_MESSAGES_PLACEHOLDER,
+
         time: conv.latestMessage?.createdAt
           ? new Date(conv.latestMessage.createdAt).toLocaleTimeString([], {
               hour: "2-digit",
               minute: "2-digit",
             })
           : "",
+
         unreadCount: 0,
+
         isOnline: false,
-        participantId: conv.participant?.id || "",
+
+        createdAt: conv.createdAt,
       }),
     );
     setConversations(formattedConversations);
@@ -306,7 +329,6 @@ const MessagesPage: React.FC = () => {
   // =====================================================================
   const handleSelectConversation = (conversation: UIConversation) => {
     setActiveConversation(conversation);
-    // setMessages([]); // clear old messages while the new ones load
     setIsMobileChatOpen(true);
   };
   // ===================== end of select-conversation handler =====================
@@ -327,13 +349,29 @@ const MessagesPage: React.FC = () => {
     // setMessages([]);
     setActiveConversation({
       id: res.conversationId,
-      participantName: targetUser.name,
-      avatarUrl: targetUser.avatarUrl,
-      lastMessage: NO_MESSAGES_PLACEHOLDER,
-      time: "",
-      unreadCount: 0,
-      isOnline: onlineUserIds.includes(targetUser.id),
+      type: "single",
+      title: "",
+      displayName: targetUser.name,
+      displayAvatar: targetUser.avatarUrl,
+      // Backward compatibility
       participantId: targetUser.id,
+      participantName: targetUser.name,
+      participantUsername: targetUser.username,
+      avatarUrl: targetUser.avatarUrl,
+
+      participants: [
+        {
+          id: targetUser.id,
+          name: targetUser.name,
+          username: targetUser.username ?? "",
+          avatarUrl: targetUser.avatarUrl,
+        },
+      ],
+
+      lastMessage: NO_MESSAGES_PLACEHOLDER,
+      unreadCount: 0,
+      time: "",
+      createdAt: new Date().toISOString(),
     });
     setIsMobileChatOpen(true);
   } catch (error: any) {
@@ -514,37 +552,36 @@ const MessagesPage: React.FC = () => {
   // =======    so we never show the "looks like a brand new empty chat"
   // =======    version when a real conversation with history exists.
   // =====================================================================
-  const uniqueConversations = useMemo(() => {
-    if (!conversations) return [];
+    const uniqueConversations = useMemo(() => {
+      if (!conversations) return [];
 
-    const validConversations = conversations.filter(
-      (conv) => conv.participantId && conv.participantName,
-    );
+      const groups = conversations.filter((c) => c.type === "group");
 
-    const conversationByParticipantId = new Map<string, UIConversation>();
+      const singles = conversations.filter((c) => c.type === "single");
 
-    for (const conv of validConversations) {
-      const existing = conversationByParticipantId.get(conv.participantId);
+      const conversationByParticipantId = new Map<string, UIConversation>();
 
-      if (!existing) {
-        conversationByParticipantId.set(conv.participantId, conv);
-        continue;
+      for (const conv of singles) {
+        const existing = conversationByParticipantId.get(conv.participantId!);
+
+        if (!existing) {
+          conversationByParticipantId.set(conv.participantId!, conv);
+          continue;
+        }
+
+        const candidateHasHistory =
+          conv.lastMessage !== NO_MESSAGES_PLACEHOLDER;
+
+        const existingHasHistory =
+          existing.lastMessage !== NO_MESSAGES_PLACEHOLDER;
+
+        if (candidateHasHistory && !existingHasHistory) {
+          conversationByParticipantId.set(conv.participantId!, conv);
+        }
       }
 
-      // If we already stored a duplicate for this participant, keep
-      // whichever one actually has messages instead of just keeping
-      // whichever happened to come first in the server's response.
-      const candidateHasHistory = conv.lastMessage !== NO_MESSAGES_PLACEHOLDER;
-      const existingHasHistory =
-        existing.lastMessage !== NO_MESSAGES_PLACEHOLDER;
-
-      if (candidateHasHistory && !existingHasHistory) {
-        conversationByParticipantId.set(conv.participantId, conv);
-      }
-    }
-
-    return Array.from(conversationByParticipantId.values());
-  }, [conversations]);
+      return [...Array.from(conversationByParticipantId.values()), ...groups];
+    }, [conversations]);
   // ===================== end of sidebar list de-duplication =====================
 
   // =====================================================================
@@ -618,10 +655,10 @@ const MessagesPage: React.FC = () => {
       >
         {/* Header & Search */}
         <div className="p-4 border-b border-gray-200" ref={searchWrapperRef}>
-        <div className="flex flex-row justify-between align-middle">
-          <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
-          <CreateGroupFeature onSubmit={handleCreateGroupChat}/>
-        </div>
+          <div className="flex flex-row justify-between align-middle">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Messages</h2>
+            <CreateGroupFeature onSubmit={handleCreateGroupChat} />
+          </div>
 
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
@@ -664,9 +701,7 @@ const MessagesPage: React.FC = () => {
                         {filteredResults.map((searchedUser) => (
                           <li
                             key={searchedUser.id}
-                            onClick={() =>
-                              handleStartNewChat(searchedUser)
-                            }
+                            onClick={() => handleStartNewChat(searchedUser)}
                             className="px-4 py-3 hover:bg-gray-50 flex items-center gap-3 cursor-pointer transition-colors"
                           >
                             <Avatar
@@ -710,19 +745,16 @@ const MessagesPage: React.FC = () => {
                 }`}
               >
                 <div className="relative shrink-0">
-                  <Avatar
-                    url={conv.avatarUrl || undefined}
-                    name={conv.participantName}
-                    className="h-12 w-12 rounded-full object-cover"
-                  />
-                  {onlineUserIds.includes(conv.participantId) && (
-                    <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>
-                  )}
+                  <Avatar url={conv.displayAvatar} name={conv.displayName} />
+                  {conv.type === "single" &&
+                    onlineUserIds.includes(conv.participantId) && (
+                      <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>
+                    )}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-baseline mb-1">
                     <h3 className="text-sm font-semibold text-gray-900 truncate">
-                      {conv.participantName}
+                      {conv.displayName}
                     </h3>
                     <span className="text-xs text-gray-500 shrink-0">
                       {conv.time}
@@ -822,7 +854,7 @@ const MessagesPage: React.FC = () => {
                       <div
                         className={`px-4 py-2 rounded-2xl ${
                           isSentByMe
-                            ? "bg-blue-600 text-white rounded-br-none"
+                            ? "bg-green-600 text-white rounded-br-none"
                             : "bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm"
                         }`}
                       >

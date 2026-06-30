@@ -93,29 +93,37 @@ export class ConversationService {
         continue;
       }
 
+      const mappedParticipants = participants.map((p: any) => ({
+        id: p.ID,
+        name: p.FullName,
+        username: p.UserName,
+        avatarUrl: p.ProfilePictureUrl || null,
+      }));
+
+      const displayName =
+        conv.Type === 'group'
+          ? conv.Title
+          : (mappedParticipants[0]?.name ?? '');
+
+      const displayAvatar =
+        conv.Type === 'group'
+          ? null
+          : (mappedParticipants[0]?.avatarUrl ?? null);
+
       result.push({
         id: conv.ID,
-        title: conv.Title,
+
         type: conv.Type,
 
-        // NEW
-        participants: participants.map((p: any) => ({
-          id: p.ID,
-          name: p.FullName,
-          username: p.UserName,
-          avatarUrl: p.ProfilePictureUrl || null,
-        })),
+        title: conv.Title,
 
-        // Keep this for backward compatibility with your current frontend
-        participant:
-          participants.length > 0
-            ? {
-                id: participants[0].ID,
-                name: participants[0].FullName,
-                username: participants[0].UserName,
-                avatarUrl: participants[0].ProfilePictureUrl || null,
-              }
-            : null,
+        displayName,
+
+        displayAvatar,
+
+        participants: mappedParticipants,
+
+        participant: conv.Type === 'single' ? mappedParticipants[0] : null,
 
         latestMessage: lm
           ? {
