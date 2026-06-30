@@ -1,5 +1,7 @@
 import type { ChatMessage } from "../../redux/features/chat/chatApiSlice";
 
+export type ConversationType = "single" | "group" | "broadcast";
+
 export interface UIConversationParticipant {
   id: string;
   name: string;
@@ -11,11 +13,11 @@ export interface UIConversation {
   id: string;
 
   // Conversation
-  type: "single" | "group";
-  title?: string;
+  type: ConversationType;
+  title?: string|null;
 
   // Common display properties
-  displayName: string;
+  displayName: string|null;
   displayAvatar?: string | null;
 
   // Single chat (kept for backward compatibility)
@@ -38,31 +40,29 @@ export interface UIConversation {
   createdAt: string;
 }
 
-export type ConversationType = "single" | "group" | "broadcast";
-
 export interface ConversationParticipant {
-    id: string;
-    name: string;
-    username: string;
-    avatarUrl?: string | null;
+  id: string;
+  name: string;
+  username: string;
+  avatarUrl?: string | null;
 }
 
 export interface Conversation {
-    id: string;
+  id: string;
 
-    title: string | null;
+  title: string | null;
 
-    type: ConversationType;
+  type: ConversationType;
 
-    participant: ConversationParticipant | null;
+  participant: ConversationParticipant | null;
 
-    participants: ConversationParticipant[];
+  participants: ConversationParticipant[];
 
-    displayName: string;
+  displayName: string;
 
-    displayAvatar?: string | null;
+  displayAvatar?: string | null;
 
-    latestMessage: ChatMessage | null;
+  latestMessage: ChatMessage | null;
 
-    createdAt: string;
+  createdAt: string;
 }

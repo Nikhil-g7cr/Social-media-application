@@ -112,7 +112,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
                   url={user.avatarUrl}
                   name={user.name}
                 //   size="sm"
-                  className="mr-3 flex-shrink-0"
+                  className="mr-3 shrink-0"
                 />
                 <div className="flex flex-col min-w-0">
                   <span className="block truncate font-medium text-gray-900">

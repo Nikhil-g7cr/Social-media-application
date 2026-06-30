@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import PostImage from '../PostImage';
 
 interface AvatarProps {
-  url?: string;
+  url?: string|null;
   name?: string;
   className?: string;
   fallbackBackground?: string;

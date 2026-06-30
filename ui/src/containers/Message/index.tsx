@@ -23,7 +23,6 @@ import {
   useGetMessagesByConversationIdQuery,
   useStartConversationMutation,
   useClearChatHistoryMutation,
-  type Conversation as ServerConversation,
   type ChatMessage,
   type ChatAttachment,
   useStartGroupConvMutation,
@@ -34,7 +33,10 @@ import API from "../../config/axiosConfig";
 import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
 import { notification } from "antd";
 import CreateGroupFeature from "../../components/layout/CreateGroupChat";
-import type { UIConversation } from "../../shared/interfaces/conversation";
+import type {
+  UIConversation,
+  Conversation as ServerConversation,
+} from "../../shared/interfaces/conversation";
 
 // =====================================================================
 // TYPES
@@ -48,19 +50,6 @@ interface UIMessage {
   timestamp: string;
   attachments?: ChatAttachment[];
 }
-
-
-// UI-friendly shape of a conversation row shown in the left sidebar list.
-// interface UIConversation {
-//   id: string;
-//   participantName: string;
-//   avatarUrl?: string | null;
-//   lastMessage: string;
-//   time: string;
-//   unreadCount: number;
-//   isOnline: boolean;
-//   participantId: string;
-// }
 
 const NO_MESSAGES_PLACEHOLDER = "No messages yet";
 
@@ -189,7 +178,10 @@ const MessagesPage: React.FC = () => {
                 id: newMsg.id,
                 senderId: newMsg.senderId,
                 text: newMsg.content,
-                timestamp: new Date(newMsg.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                timestamp: new Date(newMsg.createdAt).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
                 attachments: newMsg.attachments,
               },
             ];
@@ -339,46 +331,51 @@ const MessagesPage: React.FC = () => {
   // ======= (if you two already have one) or creates a new one — either
   // ======= way we just open whatever id comes back.
   // =====================================================================
-  const handleStartNewChat = async (targetUser: { id: string; name: string; username?: string; avatarUrl?: string }) => {
-  try {
-    const res = await startConversation(targetUser.id).unwrap();
-    if (!res.conversationId) return;
+  const handleStartNewChat = async (targetUser: {
+    id: string;
+    name: string;
+    username?: string;
+    avatarUrl?: string;
+  }) => {
+    try {
+      const res = await startConversation(targetUser.id).unwrap();
+      if (!res.conversationId) return;
 
-    setIsSearchOpen(false);
-    setSearchTerm("");
-    // setMessages([]);
-    setActiveConversation({
-      id: res.conversationId,
-      type: "single",
-      title: "",
-      displayName: targetUser.name,
-      displayAvatar: targetUser.avatarUrl,
-      // Backward compatibility
-      participantId: targetUser.id,
-      participantName: targetUser.name,
-      participantUsername: targetUser.username,
-      avatarUrl: targetUser.avatarUrl,
+      setIsSearchOpen(false);
+      setSearchTerm("");
+      // setMessages([]);
+      setActiveConversation({
+        id: res.conversationId,
+        type: "single",
+        title: "",
+        displayName: targetUser.name,
+        displayAvatar: targetUser.avatarUrl,
+        // Backward compatibility
+        participantId: targetUser.id,
+        participantName: targetUser.name,
+        participantUsername: targetUser.username,
+        avatarUrl: targetUser.avatarUrl,
 
-      participants: [
-        {
-          id: targetUser.id,
-          name: targetUser.name,
-          username: targetUser.username ?? "",
-          avatarUrl: targetUser.avatarUrl,
-        },
-      ],
+        participants: [
+          {
+            id: targetUser.id,
+            name: targetUser.name,
+            username: targetUser.username ?? "",
+            avatarUrl: targetUser.avatarUrl,
+          },
+        ],
 
-      lastMessage: NO_MESSAGES_PLACEHOLDER,
-      unreadCount: 0,
-      time: "",
-      createdAt: new Date().toISOString(),
-    });
-    setIsMobileChatOpen(true);
-  } catch (error: any) {
-    const msg = error?.data?.message || "Could not start this conversation.";
-    notification.error({ message: "Couldn't open chat", description: msg }); // use antd, like elsewhere in the app
-  }
-};
+        lastMessage: NO_MESSAGES_PLACEHOLDER,
+        unreadCount: 0,
+        time: "",
+        createdAt: new Date().toISOString(),
+      });
+      setIsMobileChatOpen(true);
+    } catch (error: any) {
+      const msg = error?.data?.message || "Could not start this conversation.";
+      notification.error({ message: "Couldn't open chat", description: msg }); // use antd, like elsewhere in the app
+    }
+  };
   // ===================== end of start-new-chat handler =====================
 
   // =====================================================================
@@ -449,7 +446,11 @@ const MessagesPage: React.FC = () => {
           uploadUrlResponse.data?.uploadUrl ||
           uploadUrlResponse.data?.data?.uploadUrl;
 
-        console.log("[upload] SAS url received:", uploadUrl ? "OK" : "MISSING", uploadUrlResponse.data);
+        console.log(
+          "[upload] SAS url received:",
+          uploadUrl ? "OK" : "MISSING",
+          uploadUrlResponse.data,
+        );
 
         if (!uploadUrl) throw new Error("Failed to get upload URL from server");
 
@@ -509,34 +510,42 @@ const MessagesPage: React.FC = () => {
     // the saved/normalized message back to everyone in the room.
     // Send via WebSocket
     const socket = initializeSocket();
-    socket.emit("sendMessage", {
-      conversationId: activeConversation.id,
-      text: textToSend,
-      attachments: uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
-    }, (response: { status?: string; data?: any; error?: string }) => {
-        
+    socket.emit(
+      "sendMessage",
+      {
+        conversationId: activeConversation.id,
+        text: textToSend,
+        attachments:
+          uploadedAttachments.length > 0 ? uploadedAttachments : undefined,
+      },
+      (response: { status?: string; data?: any; error?: string }) => {
         // ✅ Check for 'status === success' instead of 'event === messageSent'
-        if (response?.status === 'success' && response.data) {
+        if (response?.status === "success" && response.data) {
           setMessages((prev) => {
             if (prev.find((m) => m.id === response.data.id)) return prev;
 
-            return [...prev, {
+            return [
+              ...prev,
+              {
                 id: response.data.id,
                 senderId: response.data.senderId,
                 text: response.data.content, // Make sure to read 'content'
-                timestamp: new Date(response.data.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+                timestamp: new Date(response.data.createdAt).toLocaleTimeString(
+                  [],
+                  { hour: "2-digit", minute: "2-digit" },
+                ),
                 attachments: response.data.attachments,
               },
             ];
           });
           scrollToBottom();
         } else {
-          notification.error({ 
-            message: "Message failed to send", 
-            description: response?.error || "please try again." 
+          notification.error({
+            message: "Message failed to send",
+            description: response?.error || "please try again.",
           });
         }
-      }
+      },
     );
 
     setTimeout(scrollToBottom, 100);
@@ -552,36 +561,35 @@ const MessagesPage: React.FC = () => {
   // =======    so we never show the "looks like a brand new empty chat"
   // =======    version when a real conversation with history exists.
   // =====================================================================
-    const uniqueConversations = useMemo(() => {
-      if (!conversations) return [];
+  const uniqueConversations = useMemo(() => {
+    if (!conversations) return [];
 
-      const groups = conversations.filter((c) => c.type === "group");
+    const groups = conversations.filter((c) => c.type === "group");
 
-      const singles = conversations.filter((c) => c.type === "single");
+    const singles = conversations.filter((c) => c.type === "single");
 
-      const conversationByParticipantId = new Map<string, UIConversation>();
+    const conversationByParticipantId = new Map<string, UIConversation>();
 
-      for (const conv of singles) {
-        const existing = conversationByParticipantId.get(conv.participantId!);
+    for (const conv of singles) {
+      const existing = conversationByParticipantId.get(conv.participantId!);
 
-        if (!existing) {
-          conversationByParticipantId.set(conv.participantId!, conv);
-          continue;
-        }
-
-        const candidateHasHistory =
-          conv.lastMessage !== NO_MESSAGES_PLACEHOLDER;
-
-        const existingHasHistory =
-          existing.lastMessage !== NO_MESSAGES_PLACEHOLDER;
-
-        if (candidateHasHistory && !existingHasHistory) {
-          conversationByParticipantId.set(conv.participantId!, conv);
-        }
+      if (!existing) {
+        conversationByParticipantId.set(conv.participantId!, conv);
+        continue;
       }
 
-      return [...Array.from(conversationByParticipantId.values()), ...groups];
-    }, [conversations]);
+      const candidateHasHistory = conv.lastMessage !== NO_MESSAGES_PLACEHOLDER;
+
+      const existingHasHistory =
+        existing.lastMessage !== NO_MESSAGES_PLACEHOLDER;
+
+      if (candidateHasHistory && !existingHasHistory) {
+        conversationByParticipantId.set(conv.participantId!, conv);
+      }
+    }
+
+    return [...Array.from(conversationByParticipantId.values()), ...groups];
+  }, [conversations]);
   // ===================== end of sidebar list de-duplication =====================
 
   // =====================================================================
@@ -745,7 +753,7 @@ const MessagesPage: React.FC = () => {
                 }`}
               >
                 <div className="relative shrink-0">
-                  <Avatar url={conv.displayAvatar} name={conv.displayName} />
+                  <Avatar url={conv.displayAvatar} name={conv.displayName || "Unknown User"} />
                   {conv.type === "single" &&
                     onlineUserIds.includes(conv.participantId) && (
                       <span className="absolute bottom-0 right-0 block h-3 w-3 rounded-full bg-green-500 ring-2 ring-white"></span>

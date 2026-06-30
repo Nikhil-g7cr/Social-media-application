@@ -22,7 +22,7 @@ const Navbar: React.FC = () => {
           {/* ================= Desktop ================= */}
           <div className="hidden md:flex items-center justify-between w-full gap-6">
             {/* Logo */}
-            <Link to="/" className="flex-shrink-0">
+            <Link to="/" className="shrink-0">
               <div className="flex items-center space-x-3">
                 <img
                   src="/logo1.png"
@@ -77,7 +77,7 @@ const Navbar: React.FC = () => {
             {!showMobileSearch ? (
               <>
                 {/* Logo */}
-                <Link to="/" className="flex-shrink-0">
+                <Link to="/" className="shrink-0">
                   <img
                     src="/logo1.png"
                     alt="Logo"
