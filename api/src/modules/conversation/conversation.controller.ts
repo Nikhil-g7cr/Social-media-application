@@ -1,11 +1,12 @@
-import { Controller, Get, Post, Patch, Param, Req, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Param, Req, UseGuards, Body } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { CreateGroupDto } from './dto/create-group.dto';
 
 @Controller('conversation')
 @UseGuards(JwtAuthGuard)
 export class ConversationController {
-  constructor(private readonly conversationService: ConversationService) { }
+  constructor(private readonly conversationService: ConversationService) {}
 
   @Get()
   findAllForUser(@Req() req: any) {
@@ -14,7 +15,21 @@ export class ConversationController {
 
   @Post('start/:userId')
   startConversation(@Req() req: any, @Param('userId') targetUserId: string) {
-    return this.conversationService.startConversation(req.user.sub, targetUserId);
+    return this.conversationService.startConversation(
+      req.user.sub,
+      targetUserId,
+    );
+  }
+
+  // group converstaion
+  @Post('group')
+  createGroup(@Req() req: any, @Body() dto: CreateGroupDto) {
+    console.log("===== CREATE GROUP =====");
+    return this.conversationService.createGroupConv(
+      req.user.sub,
+      dto.title,
+      dto.participants,
+    );
   }
 
   @Patch(':id/clear')

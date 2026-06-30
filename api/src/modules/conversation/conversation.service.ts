@@ -1,4 +1,4 @@
-import { Injectable, Inject, ForbiddenException } from '@nestjs/common';
+import { Injectable, Inject, ForbiddenException, BadRequestException } from '@nestjs/common';
 import { Conversation } from '../../databse/mssql/models/conversation.model';
 import { CP } from '../../databse/mssql/models/conversationParticipants.model';
 import { Users } from '../../databse/mssql/models/user.model';
@@ -10,7 +10,8 @@ import { FollowAbstractSQLDao } from 'src/databse/mssql/abstract/follow.abstract
 @Injectable()
 export class ConversationService {
   constructor(
-    @Inject(FollowAbstractSQLDao) private readonly followDao: FollowAbstractSQLDao,
+    @Inject(FollowAbstractSQLDao)
+    private readonly followDao: FollowAbstractSQLDao,
   ) {}
 
   async findAllForUser(userId: string) {
@@ -20,7 +21,9 @@ export class ConversationService {
     });
 
     const conversationIds = userCps.map((cp) => cp.ConversationID);
-    const cpMap = new Map(userCps.map(cp => [cp.ConversationID, cp.HistoryClearedAt]));
+    const cpMap = new Map(
+      userCps.map((cp) => [cp.ConversationID, cp.HistoryClearedAt]),
+    );
 
     // Guard: return empty array if user has no conversations
     if (conversationIds.length === 0) {
@@ -43,43 +46,87 @@ export class ConversationService {
     const result: any[] = [];
 
     const otherCps = await CP.findAll({
-      where:{ ConversationID:{[Op.in]:conversationIds}, UserID:{[Op.ne]:userId}},
-      include:[{model:Users, as:'User', attributes:['ID', 'FullName', 'UserName', 'ProfilePictureUrl'] }]
-    })
-    const otherParticipentsByconv = new Map(otherCps.map(cp=>[cp.ConversationID, cp.User]))
-    for (const conv of conversations) {
-      const p:any  = otherParticipentsByconv.get(conv.ID);
-      let lm = conv.messages && conv.messages.length > 0 ? conv.messages[0] as any : null;
-      
-      const historyClearedAt = cpMap.get(conv.ID);
-      if (lm && historyClearedAt && new Date(lm.CreatedAt).getTime() <= new Date(historyClearedAt).getTime()) {
-        lm = null;
+      where: {
+        ConversationID: { [Op.in]: conversationIds },
+        UserID: { [Op.ne]: userId },
+      },
+      include: [
+        {
+          model: Users,
+          as: 'User',
+          attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+        },
+      ],
+    });
+
+    // const otherParticipentsByconv = new Map(otherCps.map(cp=>[cp.ConversationID, cp.User]))
+
+    const participantsByConv = new Map<string, any[]>();
+
+    for (const cp of otherCps) {
+      if (!participantsByConv.has(cp.ConversationID)) {
+        participantsByConv.set(cp.ConversationID, []);
       }
 
-      // g-changes
+      participantsByConv.get(cp.ConversationID)!.push(cp.User);
+    }
+
+    for (const conv of conversations) {
+      const participants = participantsByConv.get(conv.ID) ?? [];
+
+      let lm =
+        conv.messages && conv.messages.length > 0
+          ? (conv.messages[0] as any)
+          : null;
+
+      const historyClearedAt = cpMap.get(conv.ID);
+
+      if (
+        lm &&
+        historyClearedAt &&
+        new Date(lm.CreatedAt).getTime() <= new Date(historyClearedAt).getTime()
+      ) {
+        lm = null;
+      }
 
       if (!lm && historyClearedAt) {
         continue;
       }
-      // -----------
 
       result.push({
         id: conv.ID,
+        title: conv.Title,
         type: conv.Type,
-        // Serialize to camelCase for the frontend
-        participant: p ? {
+
+        // NEW
+        participants: participants.map((p: any) => ({
           id: p.ID,
           name: p.FullName,
           username: p.UserName,
           avatarUrl: p.ProfilePictureUrl || null,
-        } : null,
-        latestMessage: lm ? {
-          id: lm.ID,
-          conversationId: lm.ConversationID,
-          senderId: lm.SenderID,
-          content: lm.Message,
-          createdAt: lm.CreatedAt,
-        } : null,
+        })),
+
+        // Keep this for backward compatibility with your current frontend
+        participant:
+          participants.length > 0
+            ? {
+                id: participants[0].ID,
+                name: participants[0].FullName,
+                username: participants[0].UserName,
+                avatarUrl: participants[0].ProfilePictureUrl || null,
+              }
+            : null,
+
+        latestMessage: lm
+          ? {
+              id: lm.ID,
+              conversationId: lm.ConversationID,
+              senderId: lm.SenderID,
+              content: lm.Message,
+              createdAt: lm.CreatedAt,
+            }
+          : null,
+
         createdAt: conv.CreatedAt,
       });
     }
@@ -98,23 +145,35 @@ export class ConversationService {
     ]);
 
     if (!iFollowThem || !theyFollowMe) {
-      throw new ForbiddenException('You can only chat with people who mutually follow you.');
+      throw new ForbiddenException(
+        'You can only chat with people who mutually follow you.',
+      );
     }
 
-    const currentUserCps = await CP.findAll({ where: { UserID: currentUserId }, attributes: ['ConversationID'] });
-    const targetUserCps = await CP.findAll({ where: { UserID: targetUserId }, attributes: ['ConversationID'] });
+    const currentUserCps = await CP.findAll({
+      where: { UserID: currentUserId },
+      attributes: ['ConversationID'],
+    });
+    const targetUserCps = await CP.findAll({
+      where: { UserID: targetUserId },
+      attributes: ['ConversationID'],
+    });
 
     // Extract lowercase target IDs for safe JS comparison
-    const targetUserConvIdsLower = targetUserCps.map(cp => cp.ConversationID.toLowerCase());
+    const targetUserConvIdsLower = targetUserCps.map((cp) =>
+      cp.ConversationID.toLowerCase(),
+    );
 
     // Filter using lowercase for accuracy, but map back to the ORIGINAL case ID for the DB
     const sharedConvIds = currentUserCps
-      .filter(cp => targetUserConvIdsLower.includes(cp.ConversationID.toLowerCase()))
-      .map(cp => cp.ConversationID);
+      .filter((cp) =>
+        targetUserConvIdsLower.includes(cp.ConversationID.toLowerCase()),
+      )
+      .map((cp) => cp.ConversationID);
 
     if (sharedConvIds.length > 0) {
       const existingConv = await Conversation.findOne({
-        where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' }
+        where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' },
       });
       if (existingConv) {
         return { conversationId: existingConv.ID }; // Returns existing chat room!
@@ -123,11 +182,87 @@ export class ConversationService {
 
     // Only create if truly nothing found
     const newConvId = uuidv4();
-    await Conversation.create({ ID: newConvId, Type: 'single', CreatedBy: currentUserId, CreatedAt: new Date() } as any);
-    await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: currentUserId, Role: 'admin', JoinedAt: new Date() } as any);
-    await CP.create({ ID: uuidv4(), ConversationID: newConvId, UserID: targetUserId, Role: 'member', JoinedAt: new Date() } as any);
+    await Conversation.create({
+      ID: newConvId,
+      Type: 'single',
+      CreatedBy: currentUserId,
+      CreatedAt: new Date(),
+    } as any);
+    await CP.create({
+      ID: uuidv4(),
+      ConversationID: newConvId,
+      UserID: currentUserId,
+      Role: 'admin',
+      JoinedAt: new Date(),
+    } as any);
+    await CP.create({
+      ID: uuidv4(),
+      ConversationID: newConvId,
+      UserID: targetUserId,
+      Role: 'member',
+      JoinedAt: new Date(),
+    } as any);
 
     return { conversationId: newConvId };
+  }
+
+  async createGroupConv(
+    currUserID: string,
+    title: string,
+    participants: string[],
+  ) {
+    // Remove duplicates
+    const uniqueParticipants = [...new Set(participants)];
+
+    
+
+    // Don't allow creator to be passed again
+    const filteredParticipants = uniqueParticipants.filter(
+      (id) => id !== currUserID,
+    );
+
+    if (filteredParticipants.length < 1) {
+      throw new BadRequestException(
+        'A group must contain at least 2 members including yourself.',
+      );
+    }
+
+    // Create Conversation
+    const conversationId = uuidv4();
+
+    await Conversation.create({
+      ID: conversationId,
+      Title: title,
+      Type: 'group',
+      CreatedBy: currUserID,
+      CreatedAt: new Date(),
+    } as any);
+
+    // Add creator
+    await CP.create({
+      ID: uuidv4(),
+      ConversationID: conversationId,
+      UserID: currUserID,
+      Role: 'admin',
+      JoinedAt: new Date(),
+    } as any);
+
+    // Add all selected users
+    await Promise.all(
+      filteredParticipants.map((userId) =>
+        CP.create({
+          ID: uuidv4(),
+          ConversationID: conversationId,
+          UserID: userId,
+          Role: 'member',
+          JoinedAt: new Date(),
+        } as any),
+      ),
+    );
+
+    return {
+      conversationId,
+    };
   }
 
   async clearHistory(conversationId: string, userId: string) {
@@ -135,26 +270,32 @@ export class ConversationService {
       where: { ConversationID: conversationId, UserID: userId },
     });
     if (!cp) {
-      throw new ForbiddenException('You are not a participant of this conversation');
+      throw new ForbiddenException(
+        'You are not a participant of this conversation',
+      );
     }
 
     cp.HistoryClearedAt = new Date();
     await cp.save();
     // FIX: HARD DELETE LOGIC
     // Check if ALL participants in this conversation have cleared their history
-    const allCps = await CP.findAll({ where: { ConversationID: conversationId } });
-    const allCleared = allCps.every(p => p.HistoryClearedAt !== null);
+    const allCps = await CP.findAll({
+      where: { ConversationID: conversationId },
+    });
+    const allCleared = allCps.every((p) => p.HistoryClearedAt !== null);
 
     if (allCleared) {
       // Find the earliest cleared date among the users
-      const minClearedAt = new Date(Math.min(...allCps.map(p => new Date(p.HistoryClearedAt!).getTime())));
-      
+      const minClearedAt = new Date(
+        Math.min(...allCps.map((p) => new Date(p.HistoryClearedAt!).getTime())),
+      );
+
       // Permanently delete messages older than the earliest cleared date from the database
       await Message.destroy({
         where: {
           ConversationID: conversationId,
-          CreatedAt: { [Op.lte]: minClearedAt }
-        }
+          CreatedAt: { [Op.lte]: minClearedAt },
+        },
       });
     }
 
