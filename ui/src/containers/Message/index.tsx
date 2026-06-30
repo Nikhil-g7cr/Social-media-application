@@ -17,20 +17,20 @@ import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
 import API from "../../config/axiosConfig";
 import type { UIConversation } from "../../shared/interfaces/conversation";
 import type { SearchedUser } from "../../components/features/message/userSearchBar";
-import AddMembersModal from "./components/AddMembersModal";
-import ChatHeader from "./components/ChatHeader";
-import EmptyConversationState from "./components/EmptyConversationState";
-import LoadingState from "./components/LoadingState";
-import MessageComposer from "./components/MessageComposer";
-import MessageSidebar from "./components/MessageSidebar";
-import MessageThread from "./components/MessageThread";
+import AddMembersModal from "../../components/features/message/AddMembersModal";
+import ChatHeader from "../../components/features/message/ChatHeader";
+import EmptyConversationState from "../../components/features/message/EmptyConversationState";
+import LoadingState from "../../components/features/message/LoadingState";
+import MessageComposer from "../../components/features/message/MessageComposer";
+import MessageSidebar from "../../components/features/message/MessageSidebar";
+import MessageThread from "../../components/features/message/MessageThread";
 import {
   formatConversation,
   formatMessage,
   getUniqueConversations,
   NO_MESSAGES_PLACEHOLDER,
-} from "./messageUtils";
-import type { CreateGroupData, UIMessage } from "./types";
+} from "../../utils/messageUtils";
+import type { CreateGroupData, UIMessage } from "../../shared/interfaces/types";
 
 const MessagesPage: React.FC = () => {
   const location = useLocation();
@@ -569,4 +569,3 @@ const MessagesPage: React.FC = () => {
 };
 
 export default MessagesPage;
-

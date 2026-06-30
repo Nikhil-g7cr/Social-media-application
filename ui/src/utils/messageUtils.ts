@@ -1,9 +1,12 @@
-import type { ChatAttachment, ChatMessage } from "../../redux/features/chat/chatApiSlice";
+import type {
+  ChatAttachment,
+  ChatMessage,
+} from "../redux/features/chat/chatApiSlice";
 import type {
   Conversation as ServerConversation,
   UIConversation,
-} from "../../shared/interfaces/conversation";
-import type { UIMessage } from "./types";
+} from "../shared/interfaces/conversation";
+import type { UIMessage } from "../shared/interfaces/types";
 
 export const NO_MESSAGES_PLACEHOLDER = "No messages yet";
 
@@ -35,7 +38,9 @@ export const formatConversation = (
       : conv.participant?.avatarUrl,
   participants: conv.participants ?? [],
   lastMessage: conv.latestMessage?.content || NO_MESSAGES_PLACEHOLDER,
-  time: conv.latestMessage?.createdAt ? formatTime(conv.latestMessage.createdAt) : "",
+  time: conv.latestMessage?.createdAt
+    ? formatTime(conv.latestMessage.createdAt)
+    : "",
   unreadCount: 0,
   createdAt: conv.createdAt,
 });
@@ -88,4 +93,3 @@ export const getUniqueConversations = (
 
   return [...Array.from(conversationByParticipantId.values()), ...groups];
 };
-

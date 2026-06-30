@@ -1,8 +1,6 @@
 import { Modal } from "antd";
 import { X } from "lucide-react";
-import UserSearch, {
-  type SearchedUser,
-} from "../../../components/features/message/userSearchBar";
+import UserSearch, { type SearchedUser } from "./userSearchBar";
 import Avatar from "../../../shared/shared-components/Avatar";
 import type { UIConversation } from "../../../shared/interfaces/conversation";
 
@@ -80,4 +78,3 @@ const AddMembersModal = ({
 );
 
 export default AddMembersModal;
-

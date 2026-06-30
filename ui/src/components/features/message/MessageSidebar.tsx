@@ -1,10 +1,10 @@
 import type { RefObject } from "react";
 import { Search } from "lucide-react";
-import CreateGroupFeature from "../../../components/layout/CreateGroupChat";
+import CreateGroupFeature from "../../layout/CreateGroupChat";
 import Avatar from "../../../shared/shared-components/Avatar";
 import type { UIConversation } from "../../../shared/interfaces/conversation";
-import type { SearchedUser } from "../../../components/features/message/userSearchBar";
-import type { CreateGroupData } from "../types";
+import type { SearchedUser } from "./userSearchBar";
+import type { CreateGroupData } from "../../../shared/interfaces/types";
 
 interface MessageSidebarProps {
   activeConversation: UIConversation | null;

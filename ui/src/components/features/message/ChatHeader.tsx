@@ -1,4 +1,11 @@
-import { ArrowLeft, MoreVertical, Phone, Trash2, UserPlus, Video } from "lucide-react";
+import {
+  ArrowLeft,
+  MoreVertical,
+  Phone,
+  Trash2,
+  UserPlus,
+  Video,
+} from "lucide-react";
 import Avatar from "../../../shared/shared-components/Avatar";
 import type { UIConversation } from "../../../shared/interfaces/conversation";
 

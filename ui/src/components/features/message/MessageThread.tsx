@@ -1,7 +1,7 @@
 import type { RefObject } from "react";
 import { Download, File as FileIcon } from "lucide-react";
 import type { UIConversation } from "../../../shared/interfaces/conversation";
-import type { UIMessage } from "../types";
+import type { UIMessage } from "../../../shared/interfaces/types";
 
 interface MessageThreadProps {
   activeConversation: UIConversation;
@@ -109,4 +109,3 @@ const MessageThread = ({
 );
 
 export default MessageThread;
-
