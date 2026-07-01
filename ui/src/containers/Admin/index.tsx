@@ -251,7 +251,7 @@ const AdminDashboard = () => {
       key: 'content',
       label: 'Content',
       render: (val: string) => (
-        <span className="truncate max-w-[200px] block text-gray-600" title={val}>
+        <span className="truncate max-w-50 block text-gray-600" title={val}>
           {val}
         </span>
       ),
@@ -283,7 +283,7 @@ const AdminDashboard = () => {
       key: 'reason',
       label: 'Reason',
       render: (val: string) => (
-        <span className="text-gray-600 truncate max-w-[150px] block" title={val}>
+        <span className="text-gray-600 truncate max-w-37.5 block" title={val}>
           {val}
         </span>
       ),
@@ -462,7 +462,7 @@ const AdminDashboard = () => {
             {/* Deleted mode banner */}
             {showDeletedUsers && (
               <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
-                <FiEye className="w-4 h-4 flex-shrink-0" />
+                <FiEye className="w-4 h-4 shrink-0" />
                 <span>
                   Showing <strong>all users including soft-deleted</strong>. Restore a user to re-activate their
                   account, or permanently delete to remove all data.
