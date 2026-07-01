@@ -1,21 +1,7 @@
 import React, { useState } from "react";
-import {
-  Home,
-  Search,
-  MessageSquare,
-  User,
-  LogOut,
-  Image as ImageIcon,
-  Heart,
-  Share2,
-  MoreHorizontal,
-} from "lucide-react";
-import { Link } from "react-router-dom";
-import CommentSection from "../../components/features/Comment/CommentSection";
 import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import { useAppSelector } from "../../redux/hooks";
-import ExplorePage from "../Explore";
 import {
   useGetPostsQuery,
   useGetTrendingHashtagsQuery,
@@ -58,10 +44,10 @@ export default function HomePage() {
     (state: any) => state.onlineUsers?.onlineUserIds || [],
   );
 
-  const handleLogout = React.useCallback(() => {
-    sessionStorage.removeItem("accessToken");
-    window.location.href = "/login";
-  }, []);
+  // const handleLogout = React.useCallback(() => {
+  //   sessionStorage.removeItem("accessToken");
+  //   window.location.href = "/login";
+  // }, []);
 
   const toggleLike = React.useCallback(
     async (postId: string, isLikedByMe: boolean | undefined) => {
