@@ -88,7 +88,6 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <LeftSidebar
               isAuthenticated={isAuthenticated}
-              handleLogout={handleLogout}
             />
             {/* Feed */}
             <div className="md:col-span-2 space-y-6">
