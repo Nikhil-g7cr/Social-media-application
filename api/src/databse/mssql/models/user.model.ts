@@ -1,5 +1,4 @@
 import { Tables } from '../connection/tables.mssql';
-import { Schema } from '../connection/schemas.mssql';
 import {
   BelongsTo,
   Column,
@@ -102,7 +101,7 @@ class Users extends Model<Users> {
   [UserColumns.ProfilePictureUrl]?: string;
 
   @Column({
-    type: `${SQLDataType.VARCHAR}(2000)`,
+    type: `${SQLDataType.NVARCHAR}(500)`,
     allowNull: true,
   })
   [UserColumns.Bio]?: string;

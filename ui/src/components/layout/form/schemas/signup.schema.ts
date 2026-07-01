@@ -55,7 +55,7 @@ export const getSignupSchema = (
       Bio: z
         .string()
         .trim()
-        .max(250, "Bio cannot exceed 250 characters.")
+        .max(500, "Bio cannot exceed 500 characters.")
         .optional(),
 
       ProfilePictureUrl: z
