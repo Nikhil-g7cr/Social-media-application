@@ -156,7 +156,7 @@ const NotificationDropdown: React.FC = () => {
                     className={`flex items-start gap-4 p-4 hover:bg-gray-50 cursor-pointer transition ${!notification.isRead ? 'bg-blue-50/40' : ''}`}
                   >
                     {/* Avatar & Sub-Icon */}
-                    <div className="relative flex-shrink-0">
+                    <div className="relative shrink-0">
                       <Avatar
                         url={notification.actorAvatar}
                         name={notification.actorName}
@@ -193,7 +193,7 @@ const NotificationDropdown: React.FC = () => {
                     </div>
 
                     {/* Unread Indicator Dot & Delete Button */}
-                    <div className="flex-shrink-0 flex flex-col items-center gap-2">
+                    <div className="shrink-0 flex flex-col items-center gap-2">
                       {!notification.isRead && (
                         <div className="w-2.5 h-2.5 bg-blue-600 rounded-full mt-2"></div>
                       )}

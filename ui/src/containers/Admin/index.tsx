@@ -96,7 +96,7 @@ const AdminDashboard = () => {
   const handleToggleSuspend = async (userId: string, isActive: boolean) => {
     try {
       await updateUser({ id: userId, isActive: !isActive }).unwrap();
-      message.success(isActive ? 'User suspended' : 'User activated');
+      message.success(isActive ? 'User offline' : 'User activated');
     } catch {
       message.error('Failed to update user status');
     }
@@ -214,7 +214,7 @@ const AdminDashboard = () => {
             } ${row.isDeleted ? 'opacity-50' : ''}`}
         >
           <span className={`w-1.5 h-1.5 rounded-full ${val !== false ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-          <span>{val !== false ? 'Active' : 'Suspended'}</span>
+          <span>{val !== false ? 'Active' : 'Offline'}</span>
         </span>
       ),
     },
