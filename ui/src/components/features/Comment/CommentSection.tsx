@@ -3,18 +3,18 @@ import { MessageCircle, Heart, Send, MoreHorizontal } from "lucide-react";
 import {
   useGetCommentsByPostIdQuery,
   useCreatePostCommentMutation,
-} from "../../redux/features/post/postApiSlice";
-import { useGetUserByIdQuery } from "../../redux/features/user/userApiSlice";
+} from "../../../redux/features/post/postApiSlice";
+import { useGetUserByIdQuery } from "../../../redux/features/user/userApiSlice";
 import { useSelector } from "react-redux";
-import PostImage from "./PostImage";
-import Avatar from "./Avatar";
-import ErrorDisplay from "../../components/errors/ErrorDisplay";
+import PostImage from "../../../shared/shared-components/PostImage";
+import Avatar from "../../../shared/shared-components/Avatar";
+import ErrorDisplay from "../../errors/ErrorDisplay";
 
 interface CommentSectionProps {
   postId: string;
   initialCommentCount?: number;
-  isOpen?: boolean;        // NEW
-  hideTrigger?: boolean;   // NEW
+  isOpen?: boolean; // NEW
+  hideTrigger?: boolean; // NEW
 }
 
 const CommentSection: React.FC<CommentSectionProps> = ({
@@ -125,8 +125,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                       {/* Avatar */}
                       <div className="relative">
                         <Avatar
-                          url={userProfile?.avatarUrl}
-                          name={userProfile?.name}
+                          url={comment?.authorAvatar}
+                          name={comment?.name}
                           className="w-8 h-8 rounded-full object-cover flex-shrink-0"
                         />
                         {onlineUserIds.includes(comment.authorId) && (

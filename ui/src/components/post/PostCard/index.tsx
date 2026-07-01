@@ -1,6 +1,6 @@
 import React, { memo, useState } from "react";
 import { MoreHorizontal, Heart, Share2, MessageCircle } from "lucide-react";
-import CommentSection from "../../../shared/shared-components/CommentSection";
+import CommentSection from "../../features/Comment/CommentSection";
 import Avatar from "../../../shared/shared-components/Avatar";
 import MediaCarousel from "../../media/MediaCarousel";
 import { usePostPopup, PostPopupMode } from "../../layout/post-popup";
