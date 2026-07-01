@@ -87,7 +87,7 @@ const UpdatePostPage = () => {
 
                return combinedPreview.length > 0 ? (
                  <div className="relative w-full rounded-xl overflow-hidden">
-                   <MediaCarousel media={combinedPreview as any} preview={true} showDots={true} showArrows={true} className="h-[350px] sm:h-[400px] bg-black" />
+                   <MediaCarousel media={combinedPreview as any} preview={true} showDots={true} showArrows={true} className="h-87.5 sm:h-100 bg-black" />
                    <button 
                      onClick={clearAllMedia} 
                      className="absolute top-2 right-2 p-1.5 bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors shadow-lg z-20"

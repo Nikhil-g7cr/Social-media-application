@@ -127,7 +127,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                         <Avatar
                           url={comment?.authorAvatar}
                           name={comment?.name}
-                          className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                          className="w-8 h-8 rounded-full object-cover shrink-0"
                         />
                         {onlineUserIds.includes(comment.authorId) && (
                           <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-green-500 ring-2 ring-white"></span>
@@ -140,7 +140,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                           <span className="font-semibold text-sm text-gray-900 cursor-pointer hover:underline">
                             {comment.authorName}
                           </span>
-                          <p className="text-sm text-gray-800 break-words mt-0.5">
+                          <p className="text-sm text-gray-800 wrap-break-word mt-0.5">
                             {comment.content}
                           </p>
                         </div>
@@ -160,7 +160,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                       {/* Like Button for Comment */}
                       <button
                         onClick={() => toggleLike(comment.id)}
-                        className="flex flex-col items-center mt-2 flex-shrink-0"
+                        className="flex flex-col items-center mt-2 shrink-0"
                       >
                         <Heart
                           className={`w-3.5 h-3.5 transition ${comment.isLiked ? "fill-red-500 text-red-500" : "text-gray-400 hover:text-red-500"}`}
@@ -181,7 +181,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                 <Avatar
                   url={userProfile?.avatarUrl}
                   name={userProfile?.name}
-                  className="w-8 h-8 rounded-full object-cover flex-shrink-0"
+                  className="w-8 h-8 rounded-full object-cover shrink-0"
                 />
                 <form onSubmit={handleAddComment} className="flex-1 relative">
                   <input
