@@ -20,25 +20,32 @@ import AdminDashboard from "../containers/Admin";
 import ManagerDashboard from "../containers/Manager";
 import GalleryPage from "../containers/Gallery";
 import FileRequestsPage from "../containers/FileRequests";
+import LandingPage from "../containers/LandingPage";
+import { useAppSelector } from "../redux/hooks";
 
 // Create Reusable Role Arrays for cleaner code
 
+const RootPage = () => {
+  const { isAuthenticated } = useAppSelector((state: any) => state.auth);
+
+  return isAuthenticated ? <HomePage /> : <LandingPage />;
+};
+
 const Approutes = () => {
   const location = useLocation();
+  const { isAuthenticated } = useAppSelector((state: any) => state.auth);
 
-  const isAuthRoute =
-    location.pathname.startsWith("/login") ||
-    location.pathname.startsWith("/signup");
+  const isLandingRoute = location.pathname === "/" && !isAuthenticated;
 
   return (
     <div>
       {/* Topbar is now visible on all pages so you can always access the Cart */}
       {/* <Topbar /> */}
-      <Navbar />
+      {!isLandingRoute && <Navbar />}
       
       <Routes>
         {/* PUBLIC ROUTES */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<RootPage />} />
         <Route path="/explore" element={<ExplorePage/>}/>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupForm />} />

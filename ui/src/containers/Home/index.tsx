@@ -79,69 +79,60 @@ export default function HomePage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-full bg-gray-50">
       {/* Main Layout */}
       <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
           {/* Left Sidebar / Bottom Nav on Mobile */}
-          <LeftSidebar
-            isAuthenticated={isAuthenticated}
-            handleLogout={handleLogout}
-          />
 
-          {!isAuthenticated ? (
-            <div className="md:col-span-3">
-              {/* Show Explore instead of Feed when not logged in */}
-              <div className="bg-white rounded-2xl border shadow-sm overflow-hidden">
-                <ExplorePage />
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <LeftSidebar
+              isAuthenticated={isAuthenticated}
+              handleLogout={handleLogout}
+            />
+            {/* Feed */}
+            <div className="md:col-span-2 space-y-6">
+              <CreatePost />
+
+              {/* Posts */}
+              {isPostsLoading && page === 1 ? (
+                <div className="flex justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+                </div>
+              ) : isPostsError && page === 1 ? (
+                <ErrorDisplay
+                  title="Failed to load posts"
+                  error={postsError}
+                  onRetry={refetchPosts}
+                />
+              ) : (
+                <InfiniteScroll
+                  onLoadMore={() => setPage((prev) => prev + 1)}
+                  hasMore={hasMore}
+                  isLoading={isFetching}
+                >
+                  {posts.map((post: any) => (
+                    <PostCard
+                      key={post.id}
+                      post={post}
+                      user={user}
+                      onlineUserIds={onlineUserIds}
+                      toggleLike={toggleLike}
+                    />
+                  ))}
+                </InfiniteScroll>
+              )}
             </div>
-          ) : (
-            <>
-              {/* Feed */}
-              <div className="md:col-span-2 space-y-6">
-                <CreatePost />
 
-                {/* Posts */}
-                {isPostsLoading && page === 1 ? (
-                  <div className="flex justify-center p-8">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                  </div>
-                ) : isPostsError && page === 1 ? (
-                  <ErrorDisplay
-                    title="Failed to load posts"
-                    error={postsError}
-                    onRetry={refetchPosts}
-                  />
-                ) : (
-                  <InfiniteScroll
-                    onLoadMore={() => setPage((prev) => prev + 1)}
-                    hasMore={hasMore}
-                    isLoading={isFetching}
-                  >
-                    {posts.map((post: any) => (
-                      <PostCard
-                        key={post.id}
-                        post={post}
-                        user={user}
-                        onlineUserIds={onlineUserIds}
-                        toggleLike={toggleLike}
-                      />
-                    ))}
-                  </InfiniteScroll>
-                )}
-              </div>
-
-              {/* Right Sidebar */}
-              <RightSidebar
-                trendingHashtags={trendingHashtags}
-                isTrendingLoading={isTrendingLoading}
-                isTrendingError={isTrendingError}
-                trendingError={trendingError}
-                onRetry={refetchTrending}
-              />
-            </>
-          )}
+            {/* Right Sidebar */}
+            <RightSidebar
+              trendingHashtags={trendingHashtags}
+              isTrendingLoading={isTrendingLoading}
+              isTrendingError={isTrendingError}
+              trendingError={trendingError}
+              onRetry={refetchTrending}
+            />
+          </div>
         </div>
       </div>
     </div>
