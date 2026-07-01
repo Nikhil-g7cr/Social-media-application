@@ -108,7 +108,7 @@ const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10 mt-10">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-2xl bg-white shadow-lg rounded-2xl p-8">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold text-gray-900">
