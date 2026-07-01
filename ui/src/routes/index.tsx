@@ -22,6 +22,7 @@ import GalleryPage from "../containers/Gallery";
 import FileRequestsPage from "../containers/FileRequests";
 import LandingPage from "../containers/LandingPage";
 import { useAppSelector } from "../redux/hooks";
+import SettingsPage from "../components/features/Settings/Settings";
 
 // Create Reusable Role Arrays for cleaner code
 
@@ -42,66 +43,105 @@ const Approutes = () => {
       {/* Topbar is now visible on all pages so you can always access the Cart */}
       {/* <Topbar /> */}
       {!isLandingRoute && <Navbar />}
-      
+
       <Routes>
         {/* PUBLIC ROUTES */}
         <Route path="/" element={<RootPage />} />
-        <Route path="/explore" element={<ExplorePage/>}/>
+        <Route path="/explore" element={<ExplorePage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupForm />} />
         <Route path="/post/:postId" element={<PostDeepLink />} />
 
         {/* PROTECTED ROUTES */}
-        <Route path="/profile/update" element={
-          <PrivateRoute>
-            <UpdateProfilePage/>
-          </PrivateRoute>
-        }/>
-        <Route path="/post/update/:postId" element={
-          <PrivateRoute>
-            <UpdatePostPage/>
-          </PrivateRoute>
-        }/>
-        <Route path="/profile/:userId?" element={
-          <PrivateRoute>
-            <ProfilePage/>
-          </PrivateRoute>
-        }/>
-        <Route path="/message" element={
-          <PrivateRoute>
-            <MessagesPage/>
-          </PrivateRoute>
-        }/>
-        <Route path="/activity" element={
-          <PrivateRoute>
-            <ActivityPage/>
-          </PrivateRoute>
-        }/>
-        <Route path="/your-activity" element={
-          <PrivateRoute>
-            <YourActivityPage/>
-          </PrivateRoute>
-        }/>
-        <Route path="/admin" element={
-          <PrivateRoute allowedRoles={['ADMIN']}>
-            <AdminDashboard/>
-          </PrivateRoute>
-        }/>
-        <Route path="/manager" element={
-          <PrivateRoute allowedRoles={['MANAGER', 'ADMIN']}>
-            <ManagerDashboard/>
-          </PrivateRoute>
-        }/>
-        <Route path="/gallery" element={
-          <PrivateRoute allowedRoles={['MANAGER', 'ADMIN']}>
-            <GalleryPage/>
-          </PrivateRoute>
-        }/>
-        <Route path="/file-requests" element={
-          <PrivateRoute allowedRoles={['MANAGER', 'ADMIN']}>
-            <FileRequestsPage/>
-          </PrivateRoute>
-        }/>
+        <Route
+          path="/profile/update"
+          element={
+            <PrivateRoute>
+              <UpdateProfilePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/post/update/:postId"
+          element={
+            <PrivateRoute>
+              <UpdatePostPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/profile/:userId?"
+          element={
+            <PrivateRoute>
+              <ProfilePage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/message"
+          element={
+            <PrivateRoute>
+              <MessagesPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/activity"
+          element={
+            <PrivateRoute>
+              <ActivityPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/your-activity"
+          element={
+            <PrivateRoute>
+              <YourActivityPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin"
+          element={
+            <PrivateRoute allowedRoles={["ADMIN"]}>
+              <AdminDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/manager"
+          element={
+            <PrivateRoute allowedRoles={["MANAGER", "ADMIN"]}>
+              <ManagerDashboard />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/gallery"
+          element={
+            <PrivateRoute allowedRoles={["MANAGER", "ADMIN"]}>
+              <GalleryPage />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/file-requests"
+          element={
+            <PrivateRoute allowedRoles={["MANAGER", "ADMIN"]}>
+              <FileRequestsPage />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/settings"
+          element={
+            <PrivateRoute>
+              <SettingsPage />
+            </PrivateRoute>
+          }
+        />
 
         <Route path="*" element={<NotFoundPage />} />
       </Routes>

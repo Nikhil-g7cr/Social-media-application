@@ -51,7 +51,7 @@ export default function LeftSidebar({ isAuthenticated, handleLogout }: LeftSideb
               <Heart className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
               <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Activity</span>
             </Link>
-            <Link to="/profile" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
+            {/* <Link to="/profile" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
               <User className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
               <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Profile</span>
             </Link>
@@ -61,7 +61,7 @@ export default function LeftSidebar({ isAuthenticated, handleLogout }: LeftSideb
             >
               <LogOut className="h-6 w-6 md:h-5 md:w-5 md:mr-3" />
               <span className="text-xs mt-1 md:text-base md:mt-0">Logout</span>
-            </button>
+            </button> */}
           </>
         )}
       </div>
