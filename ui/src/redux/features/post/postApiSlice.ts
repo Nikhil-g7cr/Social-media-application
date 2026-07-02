@@ -405,17 +405,36 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 data: { commentText },
             }),
             invalidatesTags: (_result, _error, { postId }) => [{ type: 'Comment', id: postId }],
-            async onQueryStarted({ postId }, { dispatch, queryFulfilled }) {
-                const patches = [
-                    dispatch(postApiSlice.util.updateQueryData('getPosts', { page: 1, limit: 10 }, (draft) => {
-                        const post = draft.posts.find(p => p.id === postId);
-                        if (post) post.comments += 1;
-                    })),
-                    dispatch(postApiSlice.util.updateQueryData('getAllExplorePosts', { page: 1, limit: 10 }, (draft) => {
-                        const post = draft.posts.find(p => p.id === postId);
-                        if (post) post.comments += 1;
-                    })),
-                ];
+            async onQueryStarted({ postId }, { dispatch, queryFulfilled, getState }) {
+                const incrementPostCommentCount = (post: Post | undefined) => {
+                    if (post) post.comments += 1;
+                };
+                const incrementPostInList = (draft: PaginatedPosts) => {
+                    incrementPostCommentCount(draft.posts.find(p => p.id === postId));
+                };
+                const state = getState() as any;
+                const queries = state[apiSlice.reducerPath]?.queries || {};
+                const listEndpoints = new Set([
+                    'getPosts',
+                    'getAllExplorePosts',
+                    'getTrendingPosts',
+                    'getPostsByUserId',
+                    'getLikedPostsByUserId',
+                ]);
+                const patches = Object.values(queries)
+                    .filter((query: any) => listEndpoints.has(query?.endpointName))
+                    .map((query: any) =>
+                        dispatch(postApiSlice.util.updateQueryData(
+                            query.endpointName,
+                            query.originalArgs,
+                            incrementPostInList,
+                        ))
+                    );
+
+                patches.push(
+                    dispatch(postApiSlice.util.updateQueryData('getPostById', postId, incrementPostCommentCount))
+                );
+
                 try {
                     await queryFulfilled;
                 } catch {

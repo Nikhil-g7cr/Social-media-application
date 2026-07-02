@@ -207,6 +207,21 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         where: { ID: postId },
         include: [
           {
+            model: this.sequelize.models.Users,
+            as: 'User',
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
+          },
+          {
+            model: this.sequelize.models.Likes,
+            as: 'Likes',
+            attributes: ['UserID']
+          },
+          {
+            model: this.sequelize.models.Comments,
+            as: 'Comments',
+            attributes: ['ID']
+          },
+          {
             model: this.sequelize.models.PostMedia,
             as: 'Media',
           }
