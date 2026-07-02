@@ -1,9 +1,9 @@
-import { AppConfig } from "src/config/AppConfig";
+import { AppConfig } from "../config/AppConfig";
 import AppLogger from "./logger/app-logger";
-import {ConfigModule} from "@nestjs/config"
-import { DatabaseModule } from "src/databse/database.module";
-import { AbstractAuthSvc } from "src/modules/auth/auth.abstract";
-import { AuthService } from "src/modules/auth/auth.service";
+import { ConfigModule } from "@nestjs/config";
+import { DatabaseModule } from "../databse/database.module";
+import { AbstractAuthSvc } from "../modules/auth/auth.abstract";
+import { AuthService } from "../modules/auth/auth.service";
 import { JwtService } from "@nestjs/jwt";
 
 

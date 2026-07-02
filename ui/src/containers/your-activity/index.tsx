@@ -77,7 +77,7 @@ const YourActivityPage: React.FC = () => {
           </div>
 
           {/* Content */}
-          <div className="divide-y divide-gray-100 min-h-[400px]">
+          <div className="divide-y divide-gray-100 min-h-100">
             {/* LIKES TAB */}
             {activeTab === 'likes' && (
               <div>
@@ -153,7 +153,7 @@ const YourActivityPage: React.FC = () => {
                       >
                         <div className="flex items-start gap-4 flex-1">
                           {/* Post Thumbnail if available */}
-                          <div className="w-12 h-12 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
+                          <div className="w-12 h-12 shrink-0 bg-gray-100 rounded-md overflow-hidden flex items-center justify-center">
                              {comment.Post?.PostMedia && comment.Post.PostMedia.length > 0 ? (
                                 <img src={comment.Post.PostMedia[0].MediaUrl} alt="Post" className="w-full h-full object-cover" />
                              ) : (

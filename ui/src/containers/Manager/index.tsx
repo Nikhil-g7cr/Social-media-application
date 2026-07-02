@@ -79,7 +79,7 @@ const ManagerDashboard = () => {
 
   const postColumns = [
     { key: 'author', label: 'Author', render: (val: any) => <div className="flex flex-col"><span className="font-medium text-gray-800">{val?.name}</span><span className="text-xs text-gray-500">@{val?.username}</span></div> },
-    { key: 'content', label: 'Content', render: (val: string) => <span className="truncate max-w-[200px] block text-gray-600" title={val}>{val}</span> },
+    { key: 'content', label: 'Content', render: (val: string) => <span className="truncate max-w-50 block text-gray-600" title={val}>{val}</span> },
     { key: 'timestamp', label: 'Date', render: (val: string) => <span className="text-gray-500 text-sm">{val}</span> },
     // { key: 'likes', label: 'Engagement', render: (val: number, row: any) => <div className="flex space-x-3 text-xs text-gray-500"><span>👍 {val}</span><span>💬 {row.comments}</span></div> },
   ];
@@ -87,7 +87,7 @@ const ManagerDashboard = () => {
   const reportColumns = [
     { key: 'reporterName', label: 'Reported By', render: (val: string) => <span className="font-medium text-gray-800">{val}</span> },
     { key: 'targetType', label: 'Target Type', render: (val: string) => <span className="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-md text-xs font-semibold">{val}</span> },
-    { key: 'reason', label: 'Reason', render: (val: string) => <span className="text-gray-600 truncate max-w-[150px] block" title={val}>{val}</span> },
+    { key: 'reason', label: 'Reason', render: (val: string) => <span className="text-gray-600 truncate max-w-37.5 block" title={val}>{val}</span> },
     { key: 'status', label: 'Status', render: (val: string) => <span className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${val === 'PENDING' ? 'bg-amber-100 text-amber-700 border border-amber-200' : val === 'RESOLVED' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-gray-100 text-gray-700 border border-gray-200'}`}>{val}</span> },
     { key: 'createdAt', label: 'Date', render: (val: string) => <span className="text-gray-500 text-sm">{new Date(val).toLocaleDateString()}</span> },
   ];
@@ -97,7 +97,7 @@ const ManagerDashboard = () => {
       case 'users':
         return (
           <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 mb-6">Suspend Users</h2>
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">Suspend Users</h2>
             {isLoadingUsers ? (
               <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div></div>
             ) : isErrorUsers ? (
@@ -127,7 +127,7 @@ const ManagerDashboard = () => {
       case 'posts':
         return (
           <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 mb-6">Moderate Posts</h2>
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">Moderate Posts</h2>
             {isLoadingPosts ? (
               <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div></div>
             ) : isErrorPosts ? (
@@ -158,7 +158,7 @@ const ManagerDashboard = () => {
       case 'reports':
         return (
           <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 mb-6">User Complaints</h2>
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">User Complaints</h2>
             {isLoadingReports ? (
               <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div></div>
             ) : isErrorReports ? (
@@ -198,7 +198,7 @@ const ManagerDashboard = () => {
       case 'comments':
         return (
           <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-gray-800 to-gray-600 mb-6">Moderate Comments</h2>
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">Moderate Comments</h2>
             <div className="p-12 flex flex-col items-center justify-center text-gray-500 bg-white/50 backdrop-blur-sm rounded-2xl border border-dashed border-gray-300">
               <FiMessageSquare className="w-12 h-12 text-gray-300 mb-4" />
               <p className="text-lg font-medium text-gray-600">Comments Module</p>

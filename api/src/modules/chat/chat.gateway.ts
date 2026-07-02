@@ -12,8 +12,9 @@ import { Server, Socket } from 'socket.io';
 import { ChatService } from './chat.service';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { AppConfig } from 'src/config/AppConfig';
-import { CP } from 'src/databse/mssql/models';
+import { AppConfig } from '../../config/AppConfig';
+import { CP } from '../../databse/mssql/models';
+
 
 @WebSocketGateway({ cors: { origin: '*' } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {

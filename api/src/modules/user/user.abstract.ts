@@ -1,4 +1,4 @@
-import { AppResponse } from "src/shared/appresponse.shared";
+import { AppResponse } from "../../shared/appresponse.shared";
 import { UpdateUserDto } from "./dto/UpdateUser.dto";
 import { UsersDTO } from "./dto/users.dto";
 import { AtPayload, Tokens } from "./models/users.model";

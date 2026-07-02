@@ -1,19 +1,19 @@
-import { HttpStatus, Injectable } from "@nestjs/common";
-import { JwtService } from "@nestjs/jwt";
-import * as bcrypt from "bcrypt";
+import { HttpStatus, Injectable } from '@nestjs/common';
+import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
-import AppLogger from "src/core/logger/app-logger";
-import { AppConfig } from "src/config/AppConfig";
+import AppLogger from '../../core/logger/app-logger';
+import { AppConfig } from '../../config/AppConfig';
 
-import { AbstractAuthSvc } from "./auth.abstract";
-import { AuthAbstractSQLDao } from "src/databse/mssql/abstract/auth.abstract.mssql";
+import { AbstractAuthSvc } from './auth.abstract';
+import { AuthAbstractSQLDao } from '../../databse/mssql/abstract/auth.abstract.mssql';
 
-import { AppResponse, createResponse } from "src/shared/appresponse.shared";
-import { messageFactory, messages } from "src/shared/message.shared";
+import { AppResponse, createResponse } from '../../shared/appresponse.shared';
+import { messageFactory, messages } from '../../shared/message.shared';
 
-import { UsersDTO } from "../user/dto/users.dto";
-import { LoginDto } from "./dto/login.dto";
-import { JwtPayload } from "./models/jwt-payload.model";
+import { UsersDTO } from '../user/dto/users.dto';
+import { LoginDto } from './dto/login.dto';
+import { JwtPayload } from './models/jwt-payload.model';
 
 @Injectable()
 export class AuthService implements AbstractAuthSvc {
@@ -22,13 +22,17 @@ export class AuthService implements AbstractAuthSvc {
     private readonly jwtService: JwtService,
     private readonly appConfig: AppConfig,
     private readonly logger: AppLogger,
-  ) { }
+  ) {}
 
   // =====================================================
   // SIGNUP
   // =====================================================
 
-  async signup(userData: UsersDTO, ipAddress?: string, userAgent?: string): Promise<AppResponse> {
+  async signup(
+    userData: UsersDTO,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<AppResponse> {
     try {
       // Check if email already exists
       const existingUser = await this.authDao.fetchUserByEmail(
@@ -38,7 +42,7 @@ export class AuthService implements AbstractAuthSvc {
       if (existingUser.code === HttpStatus.OK) {
         return createResponse(
           HttpStatus.CONFLICT,
-          "User with this email already exists.",
+          'User with this email already exists.',
         );
       }
 
@@ -62,13 +66,13 @@ export class AuthService implements AbstractAuthSvc {
         };
 
         const accessToken = await this.jwtService.signAsync(payload, {
-          secret: this.appConfig.get("jwt").appAXTSecret,
-          expiresIn: this.appConfig.get("jwt").web.axt.expiresIn,
+          secret: this.appConfig.get('jwt').appAXTSecret,
+          expiresIn: this.appConfig.get('jwt').web.axt.expiresIn,
         });
 
         const refreshToken = await this.jwtService.signAsync(payload, {
-          secret: this.appConfig.get("jwt").appRFTSecret,
-          expiresIn: this.appConfig.get("jwt").web.rft.expiresIn,
+          secret: this.appConfig.get('jwt').appRFTSecret,
+          expiresIn: this.appConfig.get('jwt').web.rft.expiresIn,
         });
 
         const expiresAt = new Date();
@@ -87,7 +91,7 @@ export class AuthService implements AbstractAuthSvc {
 
         return createResponse(
           HttpStatus.CREATED,
-          "User created and logged in successfully.",
+          'User created and logged in successfully.',
           {
             accessToken,
             refreshToken,
@@ -113,7 +117,11 @@ export class AuthService implements AbstractAuthSvc {
   // LOGIN
   // =====================================================
 
-  async login(loginData: LoginDto, ipAddress?: string, userAgent?: string): Promise<AppResponse> {
+  async login(
+    loginData: LoginDto,
+    ipAddress?: string,
+    userAgent?: string,
+  ): Promise<AppResponse> {
     try {
       // Find user
       const userRes = await this.authDao.fetchUserByEmail(
@@ -123,7 +131,7 @@ export class AuthService implements AbstractAuthSvc {
       if (userRes.code !== HttpStatus.OK) {
         return createResponse(
           HttpStatus.UNAUTHORIZED,
-          "Invalid email or password.",
+          'Invalid email or password.',
         );
       }
 
@@ -138,7 +146,7 @@ export class AuthService implements AbstractAuthSvc {
       if (!isPasswordValid) {
         return createResponse(
           HttpStatus.UNAUTHORIZED,
-          "Invalid email or password.",
+          'Invalid email or password.',
         );
       }
 
@@ -153,13 +161,13 @@ export class AuthService implements AbstractAuthSvc {
 
       // Generate Tokens
       const accessToken = await this.jwtService.signAsync(payload, {
-        secret: this.appConfig.get("jwt").appAXTSecret,
-        expiresIn: this.appConfig.get("jwt").web.axt.expiresIn,
+        secret: this.appConfig.get('jwt').appAXTSecret,
+        expiresIn: this.appConfig.get('jwt').web.axt.expiresIn,
       });
 
       const refreshToken = await this.jwtService.signAsync(payload, {
-        secret: this.appConfig.get("jwt").appRFTSecret,
-        expiresIn: this.appConfig.get("jwt").web.rft.expiresIn,
+        secret: this.appConfig.get('jwt').appRFTSecret,
+        expiresIn: this.appConfig.get('jwt').web.rft.expiresIn,
       });
 
       // Remove password before returning
@@ -180,14 +188,10 @@ export class AuthService implements AbstractAuthSvc {
         IsRevoked: false,
       });
 
-      return createResponse(
-        HttpStatus.OK,
-        "Login successful.",
-        {
-          accessToken,
-          refreshToken,
-        },
-      );
+      return createResponse(HttpStatus.OK, 'Login successful.', {
+        accessToken,
+        refreshToken,
+      });
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -208,20 +212,16 @@ export class AuthService implements AbstractAuthSvc {
   async validateToken(token: string): Promise<AppResponse> {
     try {
       const payload = await this.jwtService.verifyAsync(token, {
-        secret: this.appConfig.get("jwt").appAXTSecret,
+        secret: this.appConfig.get('jwt').appAXTSecret,
       });
 
-      return createResponse(
-        HttpStatus.OK,
-        "Token is valid.",
-        payload,
-      );
+      return createResponse(HttpStatus.OK, 'Token is valid.', payload);
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.UNAUTHORIZED);
 
       return createResponse(
         HttpStatus.UNAUTHORIZED,
-        "Invalid or expired token.",
+        'Invalid or expired token.',
       );
     }
   }
@@ -235,15 +235,12 @@ export class AuthService implements AbstractAuthSvc {
       const payload = this.jwtService.decode(token);
 
       if (!payload) {
-        return createResponse(
-          HttpStatus.BAD_REQUEST,
-          "Invalid token.",
-        );
+        return createResponse(HttpStatus.BAD_REQUEST, 'Invalid token.');
       }
 
       return createResponse(
         HttpStatus.OK,
-        "Token parsed successfully.",
+        'Token parsed successfully.',
         payload,
       );
     } catch (error: any) {
@@ -263,7 +260,7 @@ export class AuthService implements AbstractAuthSvc {
   async refreshToken(refreshToken: string): Promise<AppResponse> {
     try {
       const verify = await this.jwtService.verifyAsync(refreshToken, {
-        secret: this.appConfig.get("jwt").appRFTSecret,
+        secret: this.appConfig.get('jwt').appRFTSecret,
       });
 
       const payload: JwtPayload = {
@@ -275,13 +272,13 @@ export class AuthService implements AbstractAuthSvc {
       };
 
       const accessToken = await this.jwtService.signAsync(payload, {
-        secret: this.appConfig.get("jwt").appAXTSecret,
-        expiresIn: this.appConfig.get("jwt").web.axt.expiresIn,
+        secret: this.appConfig.get('jwt').appAXTSecret,
+        expiresIn: this.appConfig.get('jwt').web.axt.expiresIn,
       });
 
       return createResponse(
         HttpStatus.OK,
-        "Access token refreshed successfully.",
+        'Access token refreshed successfully.',
         {
           accessToken,
         },
@@ -289,10 +286,7 @@ export class AuthService implements AbstractAuthSvc {
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.UNAUTHORIZED);
 
-      return createResponse(
-        HttpStatus.UNAUTHORIZED,
-        "Invalid refresh token.",
-      );
+      return createResponse(HttpStatus.UNAUTHORIZED, 'Invalid refresh token.');
     }
   }
 
@@ -322,9 +316,6 @@ export class AuthService implements AbstractAuthSvc {
 
   async logout(userId: string): Promise<AppResponse> {
     // Later you can revoke refresh token here.
-    return createResponse(
-      HttpStatus.OK,
-      "User logged out successfully.",
-    );
+    return createResponse(HttpStatus.OK, 'User logged out successfully.');
   }
 }
