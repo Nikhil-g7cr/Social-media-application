@@ -4,7 +4,7 @@ import CreateGroupFeature from "../../layout/CreateGroupChat";
 import Avatar from "../../../shared/shared-components/Avatar";
 import type { UIConversation } from "../../../shared/interfaces/conversation";
 import type { SearchedUser } from "./userSearchBar";
-import type { CreateGroupData } from "../../../shared/interfaces/types";
+import type { CreateGroupData } from "../../../shared/interfaces/message";
 
 interface MessageSidebarProps {
   activeConversation: UIConversation | null;

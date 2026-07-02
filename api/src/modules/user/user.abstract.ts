@@ -12,7 +12,6 @@ export abstract class UsersAbstractSvc {
     abstract softDeleteUser(userID: string, payload: AtPayload): Promise<AppResponse>
     abstract restoreUser(userID: string, payload: AtPayload): Promise<AppResponse>
     abstract hardDeleteUser(userID: string, payload: AtPayload): Promise<AppResponse>
-    /** @deprecated Use hardDeleteUser */
     abstract deleteUser(userID: string, payload: AtPayload): Promise<AppResponse>
     abstract findByUsername(userName:string):Promise<AppResponse>
 }

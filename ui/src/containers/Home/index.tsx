@@ -44,11 +44,6 @@ export default function HomePage() {
     (state: any) => state.onlineUsers?.onlineUserIds || [],
   );
 
-  // const handleLogout = React.useCallback(() => {
-  //   sessionStorage.removeItem("accessToken");
-  //   window.location.href = "/login";
-  // }, []);
-
   const toggleLike = React.useCallback(
     async (postId: string, isLikedByMe: boolean | undefined) => {
       try {

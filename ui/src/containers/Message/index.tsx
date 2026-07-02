@@ -30,7 +30,10 @@ import {
   getUniqueConversations,
   NO_MESSAGES_PLACEHOLDER,
 } from "../../utils/messageUtils";
-import type { CreateGroupData, UIMessage } from "../../shared/interfaces/types";
+import type {
+  CreateGroupData,
+  UIMessage,
+} from "../../shared/interfaces/message";
 
 const MessagesPage: React.FC = () => {
   const location = useLocation();
@@ -473,8 +476,6 @@ const MessagesPage: React.FC = () => {
         title: data.title,
         participants: data.participants,
       }).unwrap();
-
-      navigate(`/messages/${response.conversationId}`);
     } catch (error) {
       console.error("Failed to create group:", error);
     }

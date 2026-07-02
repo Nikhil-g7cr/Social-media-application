@@ -12,8 +12,6 @@ const getProviders = (): any[] => {
 		return [
 			AppConfig,
 			AppLogger,
-			// { provide: APP_GUARD, useClass: AuthGuard },
-			// { provide: APP_GUARD, useClass: RolesGuard },
 			{ provide: AbstractAuthSvc, useClass: AuthService },
 			JwtService
 		];

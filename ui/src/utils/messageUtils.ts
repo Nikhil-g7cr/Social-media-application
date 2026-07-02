@@ -6,7 +6,7 @@ import type {
   Conversation as ServerConversation,
   UIConversation,
 } from "../shared/interfaces/conversation";
-import type { UIMessage } from "../shared/interfaces/types";
+import type { UIMessage } from "../shared/interfaces/message";
 
 export const NO_MESSAGES_PLACEHOLDER = "No messages yet";
 
