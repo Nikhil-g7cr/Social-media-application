@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useAppSelector } from '../../redux/hooks';
 import { Navigate } from 'react-router-dom';
 import DataTable from '../../components/shared/DataTable';
@@ -22,6 +22,7 @@ import {
   FiEye,
   FiEyeOff,
   FiBarChart2,
+  FiMoreVertical,
 } from 'react-icons/fi';
 import ConfirmationModal from '../../components/shared/ConfirmationModal';
 import { message } from 'antd';
@@ -46,6 +47,19 @@ const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('analytics');
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [showDeletedUsers, setShowDeletedUsers] = useState(false);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setOpenDropdownId(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Modal states — each action gets its own independent modal
   const [softDeleteModal, setSoftDeleteModal] = useState<ModalState>(CLOSED_MODAL);
@@ -313,103 +327,127 @@ const AdminDashboard = () => {
     },
   ];
 
-  // ── User Action Buttons ────────────────────────────────────────────────────
+  // ── User Action Dropdown ───────────────────────────────────────────────────
 
   const renderUserActions = (row: any) => {
     const isSelf = row.id === user?.id;
     const isAdmin = row.role === 'ADMIN';
     const isDeleted = row.isDeleted;
+    const isOpen = openDropdownId === row.id;
+
+    // Build the list of menu items conditionally
+    const menuItems: React.ReactNode[] = [];
 
     if (isDeleted) {
-      // Soft-deleted user: show Restore + Hard Delete
-      return (
-        <div className="flex items-center justify-end gap-2 flex-wrap">
-          {/* Restore */}
-          <button
-            id={`restore-user-${row.id}`}
-            onClick={() => handleRestoreUser(row.id, row.name)}
-            disabled={isRestoring}
-            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-            title="Restore user account"
-          >
-            {isRestoring ? (
-              <div className="w-3.5 h-3.5 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <FiRefreshCw className="w-3.5 h-3.5" />
-            )}
-            Restore
-          </button>
-
-          {/* Hard Delete */}
-          {!isSelf && (
-            <button
-              id={`hard-delete-user-${row.id}`}
-              onClick={() => setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
-              disabled={isHardDeleting}
-              className="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-              title="Permanently delete this user"
-            >
-              <FiTrash2 className="w-3.5 h-3.5" />
-              Hard Delete
-            </button>
-          )}
-        </div>
-      );
-    }
-
-    // Active user: show Suspend/Activate, Role, Soft Delete, Hard Delete
-    return (
-      <div className="flex items-center justify-end gap-2 flex-wrap">
-        {/* Suspend / Activate */}
+      // ── Soft-deleted user ────────────────────────────────────────────────
+      menuItems.push(
         <button
-          id={`toggle-suspend-${row.id}`}
-          onClick={() => handleToggleSuspend(row.id, row.isActive)}
-          className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-colors ${row.isActive !== false
-              ? 'bg-red-50 text-red-600 hover:bg-red-100'
-              : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
-            }`}
+          key="restore"
+          id={`restore-user-${row.id}`}
+          onClick={() => { setOpenDropdownId(null); handleRestoreUser(row.id, row.name); }}
+          disabled={isRestoring}
+          className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition-colors disabled:opacity-50"
         >
-          {row.isActive !== false ? 'Suspend' : 'Activate'}
+          {isRestoring
+            ? <div className="w-3.5 h-3.5 border border-emerald-500 border-t-transparent rounded-full animate-spin" />
+            : <FiRefreshCw className="w-3.5 h-3.5" />}
+          Restore Account
         </button>
-
-        {/* Role Switch (not for Admins) */}
-        {!isAdmin && (
+      );
+      if (!isSelf) {
+        menuItems.push(
           <button
-            id={`role-switch-${row.id}`}
-            onClick={() => handleRoleSwitch(row.id, row.role)}
-            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+            key="hard-delete"
+            id={`hard-delete-user-${row.id}`}
+            onClick={() => { setOpenDropdownId(null); setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name }); }}
+            disabled={isHardDeleting}
+            className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
           >
-            {row.role === 'MANAGER' ? 'Demote' : 'Make Manager'}
+            <FiTrash2 className="w-3.5 h-3.5" />
+            Permanently Delete
           </button>
-        )}
-
-        {/* Soft Delete (not for self or other admins) */}
-        {!isSelf && !isAdmin && (
+        );
+      }
+    } else {
+      // ── Active user ──────────────────────────────────────────────────────
+      menuItems.push(
+        <button
+          key="suspend"
+          id={`toggle-suspend-${row.id}`}
+          onClick={() => { setOpenDropdownId(null); handleToggleSuspend(row.id, row.isActive); }}
+          className={`flex items-center gap-2 w-full px-3 py-2 text-xs font-medium transition-colors ${
+            row.isActive !== false
+              ? 'text-red-600 hover:bg-red-50'
+              : 'text-emerald-700 hover:bg-emerald-50'
+          }`}
+        >
+          <FiSlash className="w-3.5 h-3.5" />
+          {row.isActive !== false ? 'Suspend User' : 'Activate User'}
+        </button>
+      );
+      if (!isAdmin) {
+        menuItems.push(
           <button
+            key="role"
+            id={`role-switch-${row.id}`}
+            onClick={() => { setOpenDropdownId(null); handleRoleSwitch(row.id, row.role); }}
+            className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-indigo-600 hover:bg-indigo-50 transition-colors"
+          >
+            <FiRefreshCw className="w-3.5 h-3.5" />
+            {row.role === 'MANAGER' ? 'Demote to User' : 'Make Manager'}
+          </button>
+        );
+      }
+      if (!isSelf && !isAdmin) {
+        menuItems.push(
+          <div key="divider" className="my-1 border-t border-gray-100" />
+        );
+        menuItems.push(
+          <button
+            key="soft-delete"
             id={`soft-delete-user-${row.id}`}
-            onClick={() => setSoftDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
+            onClick={() => { setOpenDropdownId(null); setSoftDeleteModal({ isOpen: true, userId: row.id, userName: row.name }); }}
             disabled={isSoftDeleting}
-            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 hover:bg-amber-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-            title="Soft-delete this user (reversible)"
+            className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-amber-700 hover:bg-amber-50 transition-colors disabled:opacity-50"
           >
             <FiSlash className="w-3.5 h-3.5" />
             Soft Delete
           </button>
-        )}
-
-        {/* Hard Delete (not for self or other admins) */}
-        {!isSelf && !isAdmin && (
+        );
+        menuItems.push(
           <button
+            key="hard-delete"
             id={`hard-delete-user-${row.id}`}
-            onClick={() => setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name })}
+            onClick={() => { setOpenDropdownId(null); setHardDeleteModal({ isOpen: true, userId: row.id, userName: row.name }); }}
             disabled={isHardDeleting}
-            className="px-3 py-1.5 rounded-md text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-1.5 disabled:opacity-50"
-            title="Permanently delete this user (irreversible)"
+            className="flex items-center gap-2 w-full px-3 py-2 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
           >
             <FiTrash2 className="w-3.5 h-3.5" />
-            Hard Delete
+            Permanently Delete
           </button>
-        )}
+        );
+      }
+    }
+
+    return (
+      <div className="flex justify-end" ref={isOpen ? dropdownRef : undefined}>
+        <div className="relative">
+          {/* Trigger button */}
+          <button
+            onClick={() => setOpenDropdownId(isOpen ? null : row.id)}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100 transition-colors"
+          >
+            Actions
+            <FiMoreVertical className="w-3.5 h-3.5" />
+          </button>
+
+          {/* Dropdown menu */}
+          {isOpen && (
+            <div className="absolute right-0 z-50 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1 overflow-hidden">
+              {menuItems}
+            </div>
+          )}
+        </div>
       </div>
     );
   };
