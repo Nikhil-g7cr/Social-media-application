@@ -5,7 +5,14 @@ import {
   IsString,
   MinLength,
   Matches,
+  ValidateBy,
 } from "class-validator";
+import { Transform } from 'class-transformer';
+import {
+  EMAIL_VALIDATION_MESSAGE,
+  isValidAppEmail,
+  normalizeEmail,
+} from '../../../core/utils/email-validation';
 
 export class LoginDto {
   @ApiProperty({
@@ -20,6 +27,16 @@ export class LoginDto {
     {
       message: "Please provide a valid email address.",
     },
+  )
+  @ValidateBy({
+    name: 'isValidAppEmail',
+    validator: {
+      validate: (value: unknown) =>
+        typeof value === 'string' && isValidAppEmail(value),
+    },
+  }, { message: EMAIL_VALIDATION_MESSAGE })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? normalizeEmail(value) : value,
   )
   @Matches(/^[a-zA-Z0-9]/, { message: 'Email must start with a letter or number' })
   EmailAddress!: string;

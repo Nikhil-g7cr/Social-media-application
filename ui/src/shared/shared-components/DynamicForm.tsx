@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ZodType } from "zod";
+import { Eye, EyeOff } from "lucide-react";
 import type { FieldConfig } from "../../components/layout/form/types";
 
 
@@ -27,6 +28,8 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
   mode = "onChange",
   onSubmit,
 }) => {
+  const [visiblePasswordFields, setVisiblePasswordFields] = useState<Record<string, boolean>>({});
+
   const {
     register,
     handleSubmit,
@@ -115,16 +118,49 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
     ),
 
     // A fallback for standard inputs (text, password, email, number, etc.)
-    default: (field) => (
-      <input
-        type={field.type || "text"}
-        id={field.name}
-        placeholder={field.placeholder}
-        disabled={disabled || field.disabled}
-        {...register(field.name)}
-        className="w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
-      />
-    ),
+    default: (field) => {
+      const isPasswordField = field.type === "password";
+      const isPasswordVisible = !!visiblePasswordFields[field.name];
+
+      return (
+        <div className="relative">
+          <input
+            type={
+              isPasswordField
+                ? isPasswordVisible
+                  ? "text"
+                  : "password"
+                : field.type || "text"
+            }
+            id={field.name}
+            placeholder={field.placeholder}
+            disabled={disabled || field.disabled}
+            {...register(field.name)}
+            className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${isPasswordField ? "pr-11" : ""}`}
+          />
+          {isPasswordField && (
+            <button
+              type="button"
+              aria-label={isPasswordVisible ? "Hide password" : "Show password"}
+              onClick={() =>
+                setVisiblePasswordFields((current) => ({
+                  ...current,
+                  [field.name]: !current[field.name],
+                }))
+              }
+              className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 disabled:pointer-events-none"
+              disabled={disabled || field.disabled}
+            >
+              {isPasswordVisible ? (
+                <Eye className="h-5 w-5" />
+              ) : (
+                <EyeOff className="h-5 w-5" />
+              )}
+            </button>
+          )}
+        </div>
+      );
+    },
   };
 
   return (

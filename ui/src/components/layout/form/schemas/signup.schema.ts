@@ -1,4 +1,9 @@
 import { z } from "zod";
+import {
+  EMAIL_VALIDATION_MESSAGE,
+  isValidAppEmail,
+  normalizeEmail,
+} from "../../../../utils/email.util";
 
 // 1. Wrap the schema in a function so we can pass the API checker to it
 export const getSignupSchema = (
@@ -32,10 +37,9 @@ export const getSignupSchema = (
 
       EmailAddress: z
         .string()
-        .trim()
-        .toLowerCase()
-        .email("Please enter a valid email address.")
-        .max(255, "Email address is too long."),
+        .max(255, "Email address is too long.")
+        .transform(normalizeEmail)
+        .refine(isValidAppEmail, EMAIL_VALIDATION_MESSAGE),
 
       Password: z
         .string()

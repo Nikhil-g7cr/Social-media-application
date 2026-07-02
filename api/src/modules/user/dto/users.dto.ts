@@ -9,7 +9,14 @@ import {
   Matches,
   MaxLength,
   MinLength,
+  ValidateBy,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
+import {
+  EMAIL_VALIDATION_MESSAGE,
+  isValidAppEmail,
+  normalizeEmail,
+} from '../../../core/utils/email-validation';
 
 export enum Gender {
   Male = 'Male',
@@ -44,6 +51,16 @@ export class UsersDTO {
   UserName!: string;
 
   @IsEmail({}, { message: 'Please enter a valid email address.' })
+  @ValidateBy({
+    name: 'isValidAppEmail',
+    validator: {
+      validate: (value: unknown) =>
+        typeof value === 'string' && isValidAppEmail(value),
+    },
+  }, { message: EMAIL_VALIDATION_MESSAGE })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? normalizeEmail(value) : value,
+  )
   @IsNotEmpty()
   @MaxLength(255)
   EmailAddress!: string;
