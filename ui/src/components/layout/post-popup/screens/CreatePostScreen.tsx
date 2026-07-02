@@ -6,6 +6,7 @@ import { useAppSelector } from '../../../../redux/hooks';
 import { useGetUserByIdQuery } from '../../../../redux/features/user/userApiSlice';
 import Avatar from '../../../../shared/shared-components/Avatar';
 import CreatePostPreview from '../../../post/CreatePostPreview';
+import ErrorDisplay from '../../../errors/ErrorDisplay';
 
 interface CreatePostScreenProps {
   payload?: PopupPayload;
@@ -24,6 +25,8 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onClose }) => {
     videoWarning,
     isUploading,
     isSubmitting,
+    submitError,
+    maxContentLength,
     fileInputRef,
     handleImageChange,
     removeAllImages,
@@ -54,6 +57,10 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onClose }) => {
             className="w-full bg-gray-50 rounded-xl p-4 resize-none focus:ring-2 focus:ring-indigo-500 focus:outline-none text-lg"
           />
 
+          <div className={`mt-1 text-xs text-right ${newPostContent.length > maxContentLength ? "text-red-500" : "text-gray-400"}`}>
+            {newPostContent.length}/{maxContentLength}
+          </div>
+
           <div className="mt-4">
             <CreatePostPreview files={selectedFiles} onRemove={removeAllImages} />
           </div>
@@ -63,6 +70,15 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onClose }) => {
               {imageWarning && <p>{imageWarning}</p>}
               {videoWarning && <p>{videoWarning}</p>}
             </div>
+          )}
+
+          {submitError && (
+            <ErrorDisplay
+              title="Post failed"
+              error={submitError}
+              compact
+              className="mt-3"
+            />
           )}
 
           <div className="flex justify-between items-center mt-6 pt-4 border-t border-gray-100">
@@ -92,7 +108,7 @@ const CreatePostScreen: React.FC<CreatePostScreenProps> = ({ onClose }) => {
               </button>
               <button
                 type="submit"
-                disabled={isSubmitting || isUploading || (!newPostContent.trim() && selectedFiles.length === 0)}
+                disabled={isSubmitting || isUploading || newPostContent.length > maxContentLength || (!newPostContent.trim() && selectedFiles.length === 0)}
                 className="px-8 py-2 rounded-full bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50 transition font-medium flex items-center"
               >
                 {isSubmitting || isUploading ? (

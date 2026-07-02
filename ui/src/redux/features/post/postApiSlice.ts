@@ -40,6 +40,7 @@ export interface Post {
 export interface PaginatedPosts {
     posts: Post[];
     hasMore: boolean;
+    totalRecords?: number;
 }
 
 export const postApiSlice = apiSlice.injectEndpoints({
@@ -252,6 +253,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
             transformResponse: (response: any) => {
                 const rawPosts = response?.data?.posts || [];
                 const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const totalRecords = response?.data?.pagination?.totalRecords || 0;
                 const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
@@ -270,7 +272,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     mediaUrl: p.MediaURL,
                     media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
-                return { posts, hasMore };
+                return { posts, hasMore, totalRecords };
             },
             serializeQueryArgs: ({ endpointName, queryArgs }) => `${endpointName}-${queryArgs.userId}`,
             merge: (currentCache, newItems, { arg }) => {
@@ -282,6 +284,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     currentCache.posts.push(...uniqueNewItems);
                 }
                 currentCache.hasMore = newItems.hasMore;
+                currentCache.totalRecords = newItems.totalRecords;
             },
             forceRefetch({ currentArg, previousArg }) {
                 return currentArg?.page !== previousArg?.page || currentArg?.userId !== previousArg?.userId;
@@ -427,7 +430,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         dispatch(postApiSlice.util.updateQueryData(
                             query.endpointName,
                             query.originalArgs,
-                            incrementPostInList,
+                            incrementPostInList as any,
                         ))
                     );
 

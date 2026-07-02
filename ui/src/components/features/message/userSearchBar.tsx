@@ -30,7 +30,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
   clearOnSelect = true,
 }) => {
   // Destructure the internal state and debounced value from your custom hook
-  const { searchTerm, setSearchTerm, debouncedTerm } = useDebouncedSearch("", 500);
+  const { searchTerm, setSearchTerm, debouncedTerm, maxLength } = useDebouncedSearch("", 500);
   const currentUserId = useAppSelector((state) => state.auth.user?.id);
   
   const [isOpen, setIsOpen] = useState(false);
@@ -92,6 +92,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
           className="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg leading-5 bg-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition duration-150 ease-in-out"
           placeholder={placeholder}
           value={searchTerm}
+          maxLength={maxLength}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setIsOpen(true);

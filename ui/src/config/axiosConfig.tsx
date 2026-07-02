@@ -41,9 +41,15 @@ API.interceptors.response.use(
     (response) => response,
     async (error: any) => {
         const originalRequest = error.config;
+        const requestUrl = String(originalRequest?.url || '');
+        const isAuthRequest = /auth\/(login|signup|refresh-token)/.test(requestUrl);
 
         // If the error is 401 (Unauthorized) and we haven't already retried this request
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 401 && !originalRequest?._retry && !isAuthRequest) {
+            const refreshToken = sessionStorage.getItem('refreshToken');
+            if (!refreshToken) {
+                return Promise.reject(error);
+            }
             
             // If a refresh is already happening, queue this request to wait for the new token
             if (isRefreshing) {
@@ -59,11 +65,6 @@ API.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                const refreshToken = sessionStorage.getItem('refreshToken');
-                if (!refreshToken) {
-                    throw new Error("No refresh token available");
-                }
-
                 // Call your refresh endpoint. 
                 // Make sure to use basic axios (not the interceptor API instance) to avoid infinite loops
                 const result = await axios.post(`${environment.APP_API_URL}auth/refresh-token`, {
@@ -93,14 +94,16 @@ API.interceptors.response.use(
                 processQueue(refreshError, null);
                 sessionStorage.clear();
                 
-                notification.warning({
-                    message: 'Session Expired',
-                    description: 'Please login again.',
-                    duration: 3,
-                    onClose: () => {
-                        window.location.href = '/login';
-                    },
-                });
+                if (!['/login', '/signup'].includes(window.location.pathname)) {
+                    notification.warning({
+                        message: 'Session Expired',
+                        description: 'Please login again.',
+                        duration: 3,
+                        onClose: () => {
+                            window.location.href = '/login';
+                        },
+                    });
+                }
                 
                 return Promise.reject(refreshError);
             } finally {

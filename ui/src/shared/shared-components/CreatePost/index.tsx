@@ -6,6 +6,7 @@ import { useMediaUpload } from "../../../hooks/useMediaUpload";
 import { useCreatePost } from "../../../components/layout/post-popup/hooks/useCreatePost";
 import Avatar from "../Avatar";
 import CreatePostPreview from "../../../components/post/CreatePostPreview";
+import ErrorDisplay from "../../../components/errors/ErrorDisplay";
 
 export default function CreatePost() {
   const { user } = useAppSelector((state: any) => state.auth);
@@ -18,6 +19,8 @@ export default function CreatePost() {
     videoWarning,
     isUploading,
     isSubmitting,
+    submitError,
+    maxContentLength,
     fileInputRef,
     handleImageChange,
     removeAllImages,
@@ -42,6 +45,10 @@ export default function CreatePost() {
             className="w-full bg-gray-50 rounded-xl p-3 resize-none focus:ring-2 focus:ring-blue-500 focus:outline-none"
           />
 
+          <div className={`mt-1 text-xs text-right ${newPostContent.length > maxContentLength ? "text-red-500" : "text-gray-400"}`}>
+            {newPostContent.length}/{maxContentLength}
+          </div>
+
           <CreatePostPreview files={selectedFiles} onRemove={removeAllImages} />
           
           {(imageWarning || videoWarning) && (
@@ -49,6 +56,15 @@ export default function CreatePost() {
               {imageWarning && <p>{imageWarning}</p>}
               {videoWarning && <p>{videoWarning}</p>}
             </div>
+          )}
+
+          {submitError && (
+            <ErrorDisplay
+              title="Post failed"
+              error={submitError}
+              compact
+              className="mt-2"
+            />
           )}
 
           <div className="flex justify-between items-center mt-3">
@@ -70,7 +86,7 @@ export default function CreatePost() {
 
             <button
               type="submit"
-              disabled={isSubmitting || isUploading || (!newPostContent.trim() && selectedFiles.length === 0)}
+              disabled={isSubmitting || isUploading || newPostContent.length > maxContentLength || (!newPostContent.trim() && selectedFiles.length === 0)}
               className="px-6 py-2 rounded-full bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition flex items-center"
             >
               {isSubmitting || isUploading ? "Posting..." : "Post"}

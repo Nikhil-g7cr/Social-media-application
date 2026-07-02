@@ -2,6 +2,8 @@ import { useState, useRef, useCallback } from "react";
 import { useCreatePostMutation } from "../../../../redux/features/post/postApiSlice";
 import { useMediaUpload } from "../../../../hooks/useMediaUpload";
 
+export const POST_CONTENT_MAX_LENGTH = 3000;
+
 export const useCreatePost = (onSuccess?: () => void) => {
   const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
   const { uploadFiles } = useMediaUpload();
@@ -10,8 +12,18 @@ export const useCreatePost = (onSuccess?: () => void) => {
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [imageWarning, setImageWarning] = useState("");
   const [videoWarning, setVideoWarning] = useState("");
+  const [submitError, setSubmitError] = useState<any>(null);
   const [isUploading, setIsUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const updatePostContent = useCallback((value: string) => {
+    setNewPostContent(value);
+    if (value.length > POST_CONTENT_MAX_LENGTH) {
+      setSubmitError(`Post content cannot exceed ${POST_CONTENT_MAX_LENGTH} characters.`);
+    } else {
+      setSubmitError(null);
+    }
+  }, []);
 
   const handleImageChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -58,8 +70,13 @@ export const useCreatePost = (onSuccess?: () => void) => {
   const handleCreatePost = useCallback(async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!newPostContent.trim() && selectedFiles.length === 0) return;
+    if (newPostContent.length > POST_CONTENT_MAX_LENGTH) {
+      setSubmitError(`Post content cannot exceed ${POST_CONTENT_MAX_LENGTH} characters.`);
+      return;
+    }
 
     try {
+      setSubmitError(null);
       setIsUploading(true);
       let mediaPayload: any[] | undefined = undefined;
       let type = 'TEXT';
@@ -84,6 +101,7 @@ export const useCreatePost = (onSuccess?: () => void) => {
       if (onSuccess) onSuccess();
     } catch (error) {
       console.error("Failed to create post", error);
+      setSubmitError(error);
     } finally {
       setIsUploading(false);
     }
@@ -91,7 +109,9 @@ export const useCreatePost = (onSuccess?: () => void) => {
 
   return {
     newPostContent,
-    setNewPostContent,
+    setNewPostContent: updatePostContent,
+    submitError,
+    maxContentLength: POST_CONTENT_MAX_LENGTH,
     selectedFiles,
     imageWarning,
     videoWarning,

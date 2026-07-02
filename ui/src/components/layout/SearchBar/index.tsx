@@ -10,7 +10,7 @@ const SearchBar: React.FC = () => {
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Debounce the search input
-  const { searchTerm, setSearchTerm, debouncedTerm } = useDebouncedSearch("",500,);
+  const { searchTerm, setSearchTerm, debouncedTerm, maxLength } = useDebouncedSearch("",500,);
 
   const { data: searchResults = [], isFetching } = useSearchUsersQuery(debouncedTerm.trim(), {skip: debouncedTerm.trim().length < 2,});
 
@@ -41,6 +41,7 @@ const SearchBar: React.FC = () => {
           className="block w-full pl-10 pr-3 py-2 border border-gray-200 rounded-full leading-5 bg-gray-50 placeholder-gray-500 focus:outline-none focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-all duration-200"
           placeholder="Search users..."
           value={searchTerm}
+          maxLength={maxLength}
           onChange={(e) => {
             setSearchTerm(e.target.value);
             setIsOpen(true);

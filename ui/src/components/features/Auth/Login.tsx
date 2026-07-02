@@ -7,6 +7,8 @@ import { loginSchema } from "../../layout/form/schemas/login.schema";
 import { useLoginMutation } from "../../../redux/features/auth/authApiSlice";
 import { useAppDispatch } from "../../../redux/hooks";
 import { login } from "../../../redux/features/auth/AuthSlice";
+import ErrorDisplay from "../../errors/ErrorDisplay";
+import { getErrorMessage } from "../../../utils/error.util";
 
 interface LoginFormValues {
   email: string;
@@ -17,9 +19,11 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [loginApi, { isLoading }] = useLoginMutation();
+  const [submitError, setSubmitError] = useState<any>(null);
 
   const handleLogin = async (values: LoginFormValues) => {
     try {
+      setSubmitError(null);
       const response = await loginApi({
         EmailAddress: values.email,
         Password: values.password,
@@ -47,10 +51,9 @@ export const LoginPage = () => {
       navigate("/");
     } catch (error: any) {
       console.error("Login Error:", error);
+      setSubmitError(error);
 
-      const errorMsg = Array.isArray(error?.data?.description) 
-        ? error.data.description.join(', ') 
-        : error?.data?.message || "Invalid credentials. Please try again.";
+      const errorMsg = getErrorMessage(error, "Invalid credentials. Please try again.");
 
       notification.error({
         message: "Login Failed",
@@ -79,6 +82,15 @@ export const LoginPage = () => {
           disabled={isLoading}
           onSubmit={handleLogin}
         />
+
+        {submitError && (
+          <ErrorDisplay
+            title="Login failed"
+            error={submitError}
+            compact
+            className="mt-4"
+          />
+        )}
 
         <p className="text-center mt-6 text-sm text-gray-600">
           Don't have an account?{" "}

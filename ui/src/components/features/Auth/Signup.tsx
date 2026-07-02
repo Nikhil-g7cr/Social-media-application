@@ -10,6 +10,8 @@ import { getSignupSchema } from "../../layout/form/schemas/signup.schema";
 import { useSignupMutation } from "../../../redux/features/auth/authApiSlice";
 import { useMediaUpload } from "../../../hooks/useMediaUpload";
 import { useLazyCheckUsernameAvailabilityQuery } from "../../../redux/features/user/userApiSlice";
+import ErrorDisplay from "../../errors/ErrorDisplay";
+import { getErrorMessage } from "../../../utils/error.util";
 
 interface SignupFormData {
   FullName: string;
@@ -29,6 +31,7 @@ const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const {
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [submitError, setSubmitError] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const checkUsernameAvailability = async (username: string) => {
@@ -63,6 +66,7 @@ const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const {
 
   const handleSignup = async (values: SignupFormData) => {
     try {
+      setSubmitError(null);
       setIsUploading(true);
       let profilePictureUrl = "";
 
@@ -92,10 +96,9 @@ const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const {
       navigate("/login");
     } catch (error: any) {
       console.error("Signup Error:", error);
+      setSubmitError(error);
 
-      const errorMsg = Array.isArray(error?.data?.description)
-        ? error.data.description.join(', ')
-        : error?.data?.message || error?.message || "Something went wrong while creating your account.";
+      const errorMsg = getErrorMessage(error, "Something went wrong while creating your account.");
 
       notification.error({
         message: "Signup Failed",
@@ -155,6 +158,15 @@ const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const {
           disabled={isLoading || isUploading}
           onSubmit={handleSignup}
         />
+
+        {submitError && (
+          <ErrorDisplay
+            title="Signup failed"
+            error={submitError}
+            compact
+            className="mt-4"
+          />
+        )}
 
         <p className="text-center mt-6 text-sm text-gray-600">
           Already have an account?{" "}

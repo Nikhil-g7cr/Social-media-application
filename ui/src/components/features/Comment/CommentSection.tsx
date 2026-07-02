@@ -10,6 +10,8 @@ import PostImage from "../../../shared/shared-components/PostImage";
 import Avatar from "../../../shared/shared-components/Avatar";
 import ErrorDisplay from "../../errors/ErrorDisplay";
 
+const COMMENT_MAX_LENGTH = 2000;
+
 interface CommentSectionProps {
   postId: string;
   initialCommentCount?: number;
@@ -25,6 +27,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 }) => {
   // const [isOpen, setIsOpen] = useState(false);
   const [newComment, setNewComment] = useState("");
+  const [createError, setCreateError] = useState<any>(null);
 
   const [internalOpen, setInternalOpen] = useState(false);
   const isOpen = hideTrigger ? !!controlledOpen : internalOpen;
@@ -62,12 +65,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     async (e: React.FormEvent) => {
       e.preventDefault();
       if (!newComment.trim() || isCreating) return;
+      if (newComment.length > COMMENT_MAX_LENGTH) {
+        setCreateError(`Comment cannot exceed ${COMMENT_MAX_LENGTH} characters.`);
+        return;
+      }
 
       try {
+        setCreateError(null);
         await createComment({ postId, commentText: newComment }).unwrap();
         setNewComment("");
       } catch (err) {
         console.error("Failed to create comment:", err);
+        setCreateError(err);
       }
     },
     [newComment, isCreating, createComment, postId],
@@ -187,14 +196,19 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                   <input
                     type="text"
                     value={newComment}
-                    onChange={(e) => setNewComment(e.target.value)}
+                    onChange={(e) => {
+                      setNewComment(e.target.value);
+                      if (e.target.value.length <= COMMENT_MAX_LENGTH) {
+                        setCreateError(null);
+                      }
+                    }}
                     placeholder="Add a comment..."
                     className="w-full bg-gray-100 text-sm border-transparent rounded-full pl-4 pr-10 py-2 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none transition"
                     disabled={isCreating}
                   />
                   <button
                     type="submit"
-                    disabled={!newComment.trim() || isCreating}
+                    disabled={!newComment.trim() || newComment.length > COMMENT_MAX_LENGTH || isCreating}
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-blue-600 disabled:text-gray-300 hover:bg-blue-50 rounded-full transition"
                   >
                     {isCreating ? (
@@ -205,6 +219,16 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                   </button>
                 </form>
               </div>
+              <div className={`text-xs text-right ${newComment.length > COMMENT_MAX_LENGTH ? "text-red-500" : "text-gray-400"}`}>
+                {newComment.length}/{COMMENT_MAX_LENGTH}
+              </div>
+              {createError && (
+                <ErrorDisplay
+                  title="Comment failed"
+                  error={createError}
+                  compact
+                />
+              )}
             </>
           )}
         </div>

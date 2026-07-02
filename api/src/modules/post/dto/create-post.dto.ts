@@ -40,12 +40,12 @@ export class CreatePostDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(3000)
+  @MaxLength(3000, { message: 'Post content cannot exceed 3000 characters.' })
   content?: string;
 
   @IsOptional()
   @IsString()
-  @MaxLength(1000)
+  @MaxLength(1000, { message: 'Media URL cannot exceed 1000 characters.' })
   mediaURL?: string;
 
   @IsOptional()

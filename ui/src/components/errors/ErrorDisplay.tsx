@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, RefreshCcw } from 'lucide-react';
+import { getErrorMessage } from '../../utils/error.util';
 
 interface ErrorDisplayProps {
   title?: string;
@@ -18,22 +19,7 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   className = "",
   compact = false
 }) => {
-  // Extract error message from RTK Query error or standard Error
-  let errorMessage = message || "An unexpected error occurred. Please try again later.";
-  
-  if (error) {
-    if (typeof error === 'string') {
-      errorMessage = error;
-    } else if (error.data && typeof error.data.message === 'string') {
-      errorMessage = error.data.message;
-    } else if (error.data && typeof error.data === 'string') {
-      errorMessage = error.data;
-    } else if (error.message) {
-      errorMessage = error.message;
-    } else if (error.error) {
-      errorMessage = error.error;
-    }
-  }
+  const errorMessage = message || getErrorMessage(error);
 
   if (compact) {
     return (

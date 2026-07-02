@@ -81,12 +81,14 @@ const ProfilePage: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'posts' | 'liked' | 'saved'>('posts');
   const [page, setPage] = useState(1);
+  const likedPostsPage = activeTab === 'liked' ? page : 1;
 
   const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
-  const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'liked' });
+  const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page: likedPostsPage, limit: 10 }, { skip: !targetUserId });
 
   const userPosts = userPostsData?.posts || [];
   const likedPosts = likedPostsData?.posts || [];
+  const likedPostsCount = likedPostsData?.totalRecords ?? likedPosts.length;
   const hasMore = activeTab === 'posts' ? (userPostsData?.hasMore || false) : (likedPostsData?.hasMore || false);
   const isFetching = activeTab === 'posts' ? isPostsFetching : isLikedPostsFetching;
 
@@ -198,7 +200,7 @@ const ProfilePage: React.FC = () => {
             <span className="text-sm text-gray-500">Posts</span>
           </div>
           <div className="flex flex-col items-center sm:flex-row sm:gap-2">
-            <span className="font-bold text-gray-900">{likedPosts?.length || 0}</span>
+            <span className="font-bold text-gray-900">{likedPostsCount}</span>
             <span className="text-sm text-gray-500">Liked</span>
           </div>
           <div
