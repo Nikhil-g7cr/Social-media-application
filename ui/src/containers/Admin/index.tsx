@@ -107,15 +107,6 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleToggleSuspend = async (userId: string, isActive: boolean) => {
-    try {
-      await updateUser({ id: userId, isActive: !isActive }).unwrap();
-      message.success(isActive ? 'User offline' : 'User activated');
-    } catch {
-      message.error('Failed to update user status');
-    }
-  };
-
   const handleSoftDeleteConfirm = async () => {
     if (!softDeleteModal.userId) return;
     try {
@@ -217,21 +208,7 @@ const AdminDashboard = () => {
         </span>
       ),
     },
-    {
-      key: 'isActive',
-      label: 'Activity',
-      render: (val: boolean, row: any) => (
-        <span
-          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold flex items-center w-max space-x-1 ${val !== false
-              ? 'bg-emerald-100 text-emerald-700 border border-emerald-200'
-              : 'bg-rose-100 text-rose-700 border border-rose-200'
-            } ${row.isDeleted ? 'opacity-50' : ''}`}
-        >
-          <span className={`w-1.5 h-1.5 rounded-full ${val !== false ? 'bg-emerald-500' : 'bg-rose-500'}`} />
-          <span>{val !== false ? 'Active' : 'Offline'}</span>
-        </span>
-      ),
-    },
+
     {
       key: 'isDeleted',
       label: 'Account',
@@ -370,21 +347,6 @@ const AdminDashboard = () => {
       }
     } else {
       // ── Active user ──────────────────────────────────────────────────────
-      menuItems.push(
-        <button
-          key="suspend"
-          id={`toggle-suspend-${row.id}`}
-          onClick={() => { setOpenDropdownId(null); handleToggleSuspend(row.id, row.isActive); }}
-          className={`flex items-center gap-2 w-full px-3 py-2 text-xs font-medium transition-colors ${
-            row.isActive !== false
-              ? 'text-red-600 hover:bg-red-50'
-              : 'text-emerald-700 hover:bg-emerald-50'
-          }`}
-        >
-          <FiSlash className="w-3.5 h-3.5" />
-          {row.isActive !== false ? 'Suspend User' : 'Activate User'}
-        </button>
-      );
       if (!isAdmin) {
         menuItems.push(
           <button
