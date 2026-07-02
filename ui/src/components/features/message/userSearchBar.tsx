@@ -1,8 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
 import { Search, X } from "lucide-react";
-import { useSearchUsersQuery } from "../../../redux/features/user/userApiSlice";
+import {
+  useGetFollowersQuery,
+  useGetFollowingQuery,
+  useSearchUsersQuery,
+} from "../../../redux/features/user/userApiSlice";
 import { useDebouncedSearch } from "../../../hooks/useDebouncedSearch";
 import Avatar from "../../../shared/shared-components/Avatar";
+import { useAppSelector } from "../../../redux/hooks";
 
 export interface SearchedUser {
   id: string;
@@ -26,6 +31,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
 }) => {
   // Destructure the internal state and debounced value from your custom hook
   const { searchTerm, setSearchTerm, debouncedTerm } = useDebouncedSearch("", 500);
+  const currentUserId = useAppSelector((state) => state.auth.user?.id);
   
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -35,6 +41,12 @@ const UserSearch: React.FC<UserSearchProps> = ({
     debouncedTerm,
     { skip: debouncedTerm.length < 2 }
   );
+  const { data: followers = [] } = useGetFollowersQuery(currentUserId || "", {
+    skip: !currentUserId,
+  });
+  const { data: following = [] } = useGetFollowingQuery(currentUserId || "", {
+    skip: !currentUserId,
+  });
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -58,9 +70,15 @@ const UserSearch: React.FC<UserSearchProps> = ({
     }
   };
 
-  // Filter out users that are already selected
+  const followerIds = new Set(followers.map((user) => user.id));
+  const followingIds = new Set(following.map((user) => user.id));
+
+  // Filter out users that are already selected and keep only mutual follows.
   const filteredResults = searchResults?.filter(
-    (user: any) => !excludeUserIds.includes(user.id)
+    (user: any) =>
+      !excludeUserIds.includes(user.id) &&
+      followerIds.has(user.id) &&
+      followingIds.has(user.id)
   );
 
   return (

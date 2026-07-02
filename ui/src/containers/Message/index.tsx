@@ -12,7 +12,11 @@ import {
   useStartGroupConvMutation,
   type ChatAttachment,
 } from "../../redux/features/chat/chatApiSlice";
-import { useSearchUsersQuery } from "../../redux/features/user/userApiSlice";
+import {
+  useGetFollowersQuery,
+  useGetFollowingQuery,
+  useSearchUsersQuery,
+} from "../../redux/features/user/userApiSlice";
 import { useDebouncedSearch } from "../../hooks/useDebouncedSearch";
 import API from "../../config/axiosConfig";
 import type { UIConversation } from "../../shared/interfaces/conversation";
@@ -77,6 +81,12 @@ const MessagesPage: React.FC = () => {
 
   const { data: userSearchResults = [], isFetching: isSearchFetching } =
     useSearchUsersQuery(debouncedTerm, { skip: !debouncedTerm.trim() });
+  const { data: followers = [] } = useGetFollowersQuery(CURRENT_USER_ID, {
+    skip: !CURRENT_USER_ID,
+  });
+  const { data: following = [] } = useGetFollowingQuery(CURRENT_USER_ID, {
+    skip: !CURRENT_USER_ID,
+  });
 
   const { data: serverConversations, isLoading: isConversationsLoading } =
     useGetConversationsQuery();
@@ -192,6 +202,15 @@ const MessagesPage: React.FC = () => {
     () => getUniqueConversations(conversations),
     [conversations],
   );
+  const mutualUserSearchResults = useMemo(() => {
+    const followerIds = new Set(followers.map((friend) => friend.id));
+    const followingIds = new Set(following.map((friend) => friend.id));
+
+    return userSearchResults.filter(
+      (searchedUser) =>
+        followerIds.has(searchedUser.id) && followingIds.has(searchedUser.id),
+    );
+  }, [followers, following, userSearchResults]);
 
   const handleSelectConversation = (conversation: UIConversation) => {
     setActiveConversation(conversation);
@@ -510,7 +529,7 @@ const MessagesPage: React.FC = () => {
           onlineUserIds={onlineUserIds}
           searchTerm={searchTerm}
           searchWrapperRef={searchWrapperRef}
-          userSearchResults={userSearchResults}
+          userSearchResults={mutualUserSearchResults}
           onCreateGroupChat={handleCreateGroupChat}
           onSearchFocus={() => setIsSearchOpen(true)}
           onSearchTermChange={handleSearchTermChange}
