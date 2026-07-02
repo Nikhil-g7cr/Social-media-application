@@ -20,13 +20,13 @@ import {
   Session,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
-import AppLogger from 'src/core/logger/app-logger';
-import { UsersDTO } from 'src/modules/user/dto/users.dto';
-import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
+import AppLogger from '../../../core/logger/app-logger';
+import { UsersDTO } from '../../../modules/user/dto/users.dto';
+import { AppResponse, createResponse } from '../../../shared/appresponse.shared';
 import { UserAbsSQLDAO } from '../abstract/user.abstract.mssql';
-import { messageFactory, messages } from 'src/shared/message.shared';
+import { messageFactory, messages } from '../../../shared/message.shared';
 import { randomUUID } from 'crypto';
-import { UpdateUserDto } from 'src/modules/user/dto/UpdateUser.dto';
+import { UpdateUserDto } from '../../../modules/user/dto/UpdateUser.dto';
 
 @Injectable()
 export class UserSQLDao implements UserAbsSQLDAO {
@@ -183,6 +183,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
           ProfilePictureUrl: UserInfo.ProfilePictureUrl,
           Bio: UserInfo.Bio,
           Gender: UserInfo.Gender,
+          // CreatedBy: UserInfo.CreatedBy,
           //   CreatedAt: new Date(),
         } as any,
         { transaction },
@@ -192,10 +193,6 @@ export class UserSQLDao implements UserAbsSQLDAO {
       const successMsg = messageFactory(messages.S6);
       return createResponse(201, successMsg, newUser);
     } catch (error: any) {
-      console.log('========== ORIGINAL ERROR ==========');
-      console.log(error);
-      console.log('====================================');
-
       try {
         await transaction.rollback();
       } catch (rollbackError) {
@@ -214,13 +211,6 @@ export class UserSQLDao implements UserAbsSQLDAO {
         description: error.original?.message || error.message,
       };
     }
-    // } catch (error: any) {
-    //     await transaction.rollback();
-    //     console.error("🔥 DATABASE ERROR:", error.original ? error.original.message : error.message);
-    //     this.logger.error(error.stack, 500);
-    //     const errorMsg = messageFactory(messages.E2);
-    //     return { ...createResponse(500, errorMsg), description: error.message };
-    // }
   }
 
   async updateUser(
@@ -375,14 +365,12 @@ export class UserSQLDao implements UserAbsSQLDAO {
   async hardDeleteUser(UserId: string): Promise<AppResponse> {
     const transaction = await this.sequelize.transaction();
     try {
-      // 0. Delete Sessions and Refresh Tokens
       await this._session.destroy({ where: { UserID: UserId }, transaction });
       await this._refreshToken.destroy({
         where: { UserID: UserId },
         transaction,
       });
 
-      // 1. Delete Notifications where user is recipient or actor
       await this._notification.destroy({
         where: { [Op.or]: [{ UserID: UserId }, { ActorUserID: UserId }] },
         transaction,

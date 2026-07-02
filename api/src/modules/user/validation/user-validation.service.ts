@@ -1,55 +1,30 @@
-import { ConflictException, Injectable } from "@nestjs/common";
-import { UserAbsSQLDAO } from "src/databse/mssql/abstract/user.abstract.mssql";
-import { UsersDTO } from "../dto/users.dto";
-import { RESERVED_USERNAMES } from "src/core/utils/reserved-usernames";
+import { ConflictException, Injectable } from '@nestjs/common';
+import { UsersDTO } from '../dto/users.dto';
+import { RESERVED_USERNAMES } from '../../../core/utils/reserved-usernames';
+import { UserAbsSQLDAO } from '../../../databse/mssql/abstract/user.abstract.mssql';
 
 @Injectable()
 export class UserValidationService {
+  constructor(private readonly userDAO: UserAbsSQLDAO) {}
 
-    constructor(
-        private readonly userDAO: UserAbsSQLDAO,
-    ) {}
+  private normalize(dto: UsersDTO) {
+    dto.FullName = dto.FullName.trim().replace(/\s+/g, ' ');
 
-    private normalize(dto: UsersDTO) {
-    dto.FullName = dto.FullName
-        .trim()
-        .replace(/\s+/g, ' ');
+    dto.UserName = dto.UserName.trim().toLowerCase();
 
-    dto.UserName = dto.UserName
-        .trim()
-        .toLowerCase();
-
-    dto.EmailAddress = dto.EmailAddress
-        .trim()
-        .toLowerCase();
-}
-private checkReservedUsername(username: string) {
-
-    if (
-        RESERVED_USERNAMES.includes(
-            username.toLowerCase()
-        )
-    ) {
-        throw new ConflictException(
-            'Username is reserved.'
-        );
+    dto.EmailAddress = dto.EmailAddress.trim().toLowerCase();
+  }
+  private checkReservedUsername(username: string) {
+    if (RESERVED_USERNAMES.includes(username.toLowerCase())) {
+      throw new ConflictException('Username is reserved.');
     }
+  }
 
-}
+  private async checkUsernameExists(username: string) {
+    const user = await this.userDAO.findByUsername(username);
 
-private async checkUsernameExists(username:string){
-
-    const user =
-        await this.userDAO.findByUsername(username);
-
-    if(user){
-
-        throw new ConflictException(
-            "Username already exists."
-        );
-
+    if (user) {
+      throw new ConflictException('Username already exists.');
     }
-
-}
-
+  }
 }

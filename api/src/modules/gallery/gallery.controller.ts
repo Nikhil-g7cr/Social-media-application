@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { GalleryService } from './gallery.service';
 import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
-import { AtPayload } from '../user/models/users.model';
+import { AtPayload } from '../user/interface/users.interface';
 import { AppResponse } from 'src/shared/appresponse.shared';
 
 @Controller('gallery')
@@ -19,7 +19,10 @@ export class GalleryController {
   constructor(private readonly galleryService: GalleryService) {}
 
   @Post('requests')
-  async createRequest(@Body() body: any, @Req() req: any): Promise<AppResponse> {
+  async createRequest(
+    @Body() body: any,
+    @Req() req: any,
+  ): Promise<AppResponse> {
     const payload: AtPayload = req.user;
     return await this.galleryService.createRequest(body, payload);
   }

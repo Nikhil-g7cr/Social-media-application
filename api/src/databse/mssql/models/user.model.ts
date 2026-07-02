@@ -8,11 +8,11 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript';
-import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Posts } from './post.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
-import { UserRoles } from 'src/core/enums/user.enums';
+import { UserRoles } from '../../../core/enums/user.enums';
 import { Follow } from './follow.model';
 import { RefreshToken } from './refreshToken.model';
 

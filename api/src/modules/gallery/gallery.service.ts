@@ -1,6 +1,6 @@
 import { Injectable, HttpStatus, Inject } from '@nestjs/common';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
-import { AtPayload } from '../user/models/users.model';
+import { AtPayload } from '../user/interface/users.interface';
 import { UserRoles } from 'src/core/enums/user.enums';
 import { FileDeleteRequest } from 'src/databse/mssql/models/fileDeleteRequest.model';
 import { Users } from 'src/databse/mssql/models/user.model';
@@ -11,7 +11,8 @@ import * as crypto from 'crypto';
 @Injectable()
 export class GalleryService {
   constructor(
-    @Inject(MsSqlConstants.FILE_DELETE_REQUEST) private readonly requestModel: typeof FileDeleteRequest,
+    @Inject(MsSqlConstants.FILE_DELETE_REQUEST)
+    private readonly requestModel: typeof FileDeleteRequest,
     private readonly fileService: FileService,
   ) {}
 
@@ -24,12 +25,19 @@ export class GalleryService {
         FileUrl: body.fileUrl,
         RequestReason: body.reason,
         Status: 'PENDING',
-      }as any);
+      } as any);
 
-      return createResponse(HttpStatus.CREATED, 'Delete request created successfully', request);
+      return createResponse(
+        HttpStatus.CREATED,
+        'Delete request created successfully',
+        request,
+      );
     } catch (error: any) {
       console.error('Error creating delete request:', error);
-      return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Error creating delete request');
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error creating delete request',
+      );
     }
   }
 
@@ -49,16 +57,30 @@ export class GalleryService {
         order: [['CreatedAt', 'DESC']],
       });
 
-      return createResponse(HttpStatus.OK, 'Requests fetched successfully', requests);
+      return createResponse(
+        HttpStatus.OK,
+        'Requests fetched successfully',
+        requests,
+      );
     } catch (error: any) {
-      return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Error fetching requests');
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error fetching requests',
+      );
     }
   }
 
-  async updateRequestStatus(requestId: string, body: any, payload: AtPayload): Promise<AppResponse> {
+  async updateRequestStatus(
+    requestId: string,
+    body: any,
+    payload: AtPayload,
+  ): Promise<AppResponse> {
     try {
       if (!payload.roles.includes(UserRoles.ADMIN)) {
-        return createResponse(HttpStatus.FORBIDDEN, 'Access Denied: Only Admins can update status.');
+        return createResponse(
+          HttpStatus.FORBIDDEN,
+          'Access Denied: Only Admins can update status.',
+        );
       }
 
       const request = await this.requestModel.findByPk(requestId);
@@ -67,7 +89,7 @@ export class GalleryService {
       }
 
       const { status } = body;
-      
+
       if (status === 'APPROVED') {
         // Delete the file from Azure Blob Storage
         await this.fileService.deleteFile(request.FileUrl);
@@ -77,9 +99,16 @@ export class GalleryService {
       request.updatedAt = new Date();
       await request.save();
 
-      return createResponse(HttpStatus.OK, `Request ${status.toLowerCase()} successfully`, request);
+      return createResponse(
+        HttpStatus.OK,
+        `Request ${status.toLowerCase()} successfully`,
+        request,
+      );
     } catch (error: any) {
-      return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Error updating request status');
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error updating request status',
+      );
     }
   }
 
@@ -93,9 +122,16 @@ export class GalleryService {
         where: { Status: 'PENDING' },
       });
 
-      return createResponse(HttpStatus.OK, 'Pending count fetched successfully', { count });
+      return createResponse(
+        HttpStatus.OK,
+        'Pending count fetched successfully',
+        { count },
+      );
     } catch (error: any) {
-      return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Error fetching pending count');
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error fetching pending count',
+      );
     }
   }
 }

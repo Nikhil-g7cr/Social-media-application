@@ -17,6 +17,11 @@ export enum Gender {
   Other = 'Other',
 }
 
+// export enum createdBy {
+//   USER = 'USER',
+//   ADMIN = 'ADMIN'
+// }
+
 export class UsersDTO {
   @IsString()
   @IsNotEmpty()
@@ -75,6 +80,11 @@ export class UsersDTO {
     message: 'Gender must be Male, Female or Other.',
   })
   Gender?: Gender;
+
+  // @IsEnum(createdBy,{})
+  // @IsString()
+  // CreatedBy!:string
+
 
   /* ============================================================================================
       Including Role or IsActive in a public signup DTO is risky because attackers can

@@ -1,6 +1,6 @@
 import { Injectable, HttpStatus, Inject } from '@nestjs/common';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
-import { AtPayload } from '../user/models/users.model';
+import { AtPayload } from '../user/interface/users.interface';
 import { UserRoles } from 'src/core/enums/user.enums';
 import { Reports } from 'src/databse/mssql/models';
 import { Users } from 'src/databse/mssql/models/user.model';
@@ -24,35 +24,65 @@ export class ReportService {
         Status: 'PENDING',
       } as any);
 
-      return createResponse(HttpStatus.CREATED, 'Report created successfully', report);
+      return createResponse(
+        HttpStatus.CREATED,
+        'Report created successfully',
+        report,
+      );
     } catch (error: any) {
-      return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Error creating report');
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error creating report',
+      );
     }
   }
 
   async getAllReports(payload: AtPayload): Promise<AppResponse> {
     try {
-      if (!payload.roles.includes(UserRoles.ADMIN) && !payload.roles.includes(UserRoles.MANAGER)) {
-        return createResponse(HttpStatus.FORBIDDEN, 'Access Denied: Only Admins or Managers can view reports.');
+      if (
+        !payload.roles.includes(UserRoles.ADMIN) &&
+        !payload.roles.includes(UserRoles.MANAGER)
+      ) {
+        return createResponse(
+          HttpStatus.FORBIDDEN,
+          'Access Denied: Only Admins or Managers can view reports.',
+        );
       }
 
       const reports = await this.reportModel.findAll({
         include: [
           { model: Users, as: 'Reporter' },
-          { model: Users, as: 'Resolver' }
-        ]
+          { model: Users, as: 'Resolver' },
+        ],
       });
 
-      return createResponse(HttpStatus.OK, 'Reports fetched successfully', reports);
+      return createResponse(
+        HttpStatus.OK,
+        'Reports fetched successfully',
+        reports,
+      );
     } catch (error: any) {
-      return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Error fetching reports');
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error fetching reports',
+      );
     }
   }
 
-  async resolveReport(reportId: string, status: string, payload: AtPayload): Promise<AppResponse> {
+  async resolveReport(
+    reportId: string,
+    status: string,
+    payload: AtPayload,
+  ): Promise<AppResponse> {
     try {
-      if (!payload.roles.includes(UserRoles.ADMIN) && !payload.roles.includes(UserRoles.MANAGER)) {
-        return createResponse(HttpStatus.FORBIDDEN, 'Access Denied: Only Admins or Managers can resolve reports.');
+      if (
+        !payload.roles.includes(UserRoles.ADMIN) &&
+        !payload.roles.includes(UserRoles.MANAGER)
+      ) {
+        return createResponse(
+          HttpStatus.FORBIDDEN,
+          'Access Denied: Only Admins or Managers can resolve reports.',
+        );
       }
 
       const report = await this.reportModel.findByPk(reportId);
@@ -64,9 +94,16 @@ export class ReportService {
       report.ResolvedBy = payload.sub;
       await report.save();
 
-      return createResponse(HttpStatus.OK, 'Report resolved successfully', report);
+      return createResponse(
+        HttpStatus.OK,
+        'Report resolved successfully',
+        report,
+      );
     } catch (error: any) {
-      return createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Error resolving report');
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error resolving report',
+      );
     }
   }
 }

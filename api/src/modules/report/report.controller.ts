@@ -1,13 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Patch,
-  Param,
-  Body,
-  Req,
-} from '@nestjs/common';
-import { AtPayload } from '../user/models/users.model';
+import { Controller, Get, Post, Patch, Param, Body, Req } from '@nestjs/common';
+import { AtPayload } from '../user/interface/users.interface';
 import { AppResponse } from 'src/shared/appresponse.shared';
 import { ReportService } from './report.service';
 
@@ -17,7 +9,7 @@ import { UseGuards } from '@nestjs/common';
 @Controller('report')
 @UseGuards(JwtAuthGuard)
 export class ReportController {
-  constructor(private readonly reportService: ReportService) { }
+  constructor(private readonly reportService: ReportService) {}
 
   @Post()
   async createReport(@Body() body: any, @Req() req: any): Promise<AppResponse> {

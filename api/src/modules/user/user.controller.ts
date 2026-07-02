@@ -12,13 +12,13 @@ import {
 } from '@nestjs/common';
 import { UsersDTO } from './dto/users.dto';
 import { UpdateUserDto } from './dto/UpdateUser.dto';
-import { AppResponse } from 'src/shared/appresponse.shared';
-import { AtPayload } from './models/users.model';
+import { AppResponse } from '../../shared/appresponse.shared';
+import { AtPayload } from './interface/users.interface';
 import { UsersAbstractSvc } from './user.abstract';
-import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
-import { RolesGuard } from 'src/core/guards/role.guard';
-import { Roles } from 'src/core/decorators/roles.decorator';
-import { UserRoles } from 'src/core/enums/user.enums';
+import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
+import { RolesGuard } from '../../core/guards/role.guard';
+import { Roles } from '../../core/decorators/roles.decorator';
+import { UserRoles } from '../../core/enums/user.enums';
 
 @Controller('user')
 export class UserController {
@@ -70,8 +70,6 @@ export class UserController {
   }
 
   // GET/username/:username
-
-  
 
   /**
    * POST /user
