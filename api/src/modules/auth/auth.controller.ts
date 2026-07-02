@@ -14,7 +14,7 @@ import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
 import { AbstractAuthSvc } from "./auth.abstract";
 import { LoginDto } from "./dto/login.dto";
 import { UsersDTO } from "../user/dto/users.dto";
-import { JwtAuthGuard } from "src/core/guards/jwt-auth.guard";
+import { JwtAuthGuard } from "../../core/guards/jwt-auth.guard";
 
 @Controller("auth")
 @ApiTags("Authentication")

@@ -9,9 +9,9 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { GalleryService } from './gallery.service';
-import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { AtPayload } from '../user/interface/users.interface';
-import { AppResponse } from 'src/shared/appresponse.shared';
+import { AppResponse } from '../../shared/appresponse.shared';
 
 @Controller('gallery')
 @UseGuards(JwtAuthGuard)

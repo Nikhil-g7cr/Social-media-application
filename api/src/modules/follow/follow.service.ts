@@ -4,9 +4,9 @@ import {
     NotFoundException,
     Inject,
 } from '@nestjs/common';
-import { UserAbsSQLDAO } from 'src/databse/mssql/abstract/user.abstract.mssql';
-import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
-import { UserSQLDao } from 'src/databse/mssql/dao/user.dao';
+import { UserAbsSQLDAO } from '../../databse/mssql/abstract/user.abstract.mssql';
+import { FollowSQLDao } from '../../databse/mssql/dao/follow.dao';
+import { UserSQLDao } from '../../databse/mssql/dao/user.dao';
 import { ServiceBusService } from '../azure/service-bus.service';
 
 

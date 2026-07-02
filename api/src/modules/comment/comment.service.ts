@@ -1,9 +1,9 @@
 import { Injectable, HttpStatus } from '@nestjs/common';
-import { AppResponse } from 'src/shared/appresponse.shared';
-import { CommentSQLDAO } from 'src/databse/mssql/dao/comment.dao'; // Adjust path if needed
+import { AppResponse } from '../../shared/appresponse.shared';
+import { CommentSQLDAO } from '../../databse/mssql/dao/comment.dao'; // Adjust path if needed
 import { CommentAbstractSvc } from './comment.abstract';
-import { CommentsAbstractSQLDAO } from 'src/databse/mssql/abstract/comment.abstract.mssql';
-import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
+import { CommentsAbstractSQLDAO } from '../../databse/mssql/abstract/comment.abstract.mssql';
+import { PostAbstractSQLDao } from '../../databse/mssql/abstract/posts.abstract.mssql';
 import { ServiceBusService } from '../azure/service-bus.service';
 
 @Injectable()

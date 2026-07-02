@@ -9,7 +9,7 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Sequelize } from 'sequelize';
-import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Posts } from './post.model';
 

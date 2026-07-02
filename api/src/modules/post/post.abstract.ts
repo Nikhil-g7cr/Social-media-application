@@ -1,7 +1,7 @@
-import { AppResponse } from 'src/shared/appresponse.shared';
+import { AppResponse } from '../../shared/appresponse.shared';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { PaginationDto } from 'src/core/dto/pagination.dto';
+import { PaginationDto } from '../../core/dto/pagination.dto';
 
 export abstract class PostAbstractSvc {
   abstract createPost(createPostDto: CreatePostDto,userId:string): Promise<AppResponse>;

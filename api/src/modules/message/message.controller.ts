@@ -1,8 +1,8 @@
 import { Controller, Get, Param, Req, UseGuards } from '@nestjs/common';
 import { MessageService } from './message.service';
-import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
-import { CurrentUser } from 'src/core/decorators/current-user.decorator';
+import { CurrentUser } from '../../core/decorators/current-user.decorator';
 
 @ApiTags('Messages')
 @ApiBearerAuth() // 👈 Tells Swagger to show the "Authorize" padlock for these endpoints

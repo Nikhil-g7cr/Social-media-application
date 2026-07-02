@@ -8,7 +8,7 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Sequelize } from 'sequelize';
-import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 
 export const enum RefreshTokenColumns {

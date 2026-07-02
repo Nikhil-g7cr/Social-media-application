@@ -1,16 +1,16 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 
-import { AppConfig } from 'src/config/AppConfig';
-import AppLogger from 'src/core/logger/app-logger';
-import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
-import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
+import { AppConfig } from '../../config/AppConfig';
+import AppLogger from '../../core/logger/app-logger';
+import { PostAbstractSQLDao } from '../../databse/mssql/abstract/posts.abstract.mssql';
+import { AppResponse, createResponse } from '../../shared/appresponse.shared';
 
 import { PostAbstractSvc } from './post.abstract';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { FileService } from '../azure/azure.service';
 import { ServiceBusService } from '../azure/service-bus.service';
-import { PaginationDto } from 'src/core/dto/pagination.dto';
+import { PaginationDto } from '../../core/dto/pagination.dto';
 
 @Injectable()
 export class PostService implements PostAbstractSvc {

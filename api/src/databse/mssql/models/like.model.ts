@@ -1,7 +1,7 @@
 import { BelongsTo, Column, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { Sequelize } from 'sequelize';
 import { Tables } from '../connection/tables.mssql';
-import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
 

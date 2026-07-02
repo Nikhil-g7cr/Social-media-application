@@ -1,4 +1,4 @@
-import { AppResponse } from "src/shared/appresponse.shared";
+import { AppResponse } from "../../shared/appresponse.shared";
 import { UsersDTO } from "../user/dto/users.dto";
 import { LoginDto } from "./dto/login.dto";
 import { JwtPayload } from "./models/jwt-payload.model";

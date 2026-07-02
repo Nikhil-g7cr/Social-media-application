@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { FileService } from './azure.service';
 import { UploadUrlDto } from './dto/create-azure.dto';
-import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { AtPayload } from '../user/interface/users.interface';
 
 @Controller('files')

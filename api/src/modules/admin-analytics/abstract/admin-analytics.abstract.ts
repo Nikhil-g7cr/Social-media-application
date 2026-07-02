@@ -1,4 +1,4 @@
-import { AppResponse } from 'src/shared/appresponse.shared';
+import { AppResponse } from '../../../shared/appresponse.shared';
 
 export abstract class AdminAnalyticsAbstractSvc {
     abstract getDashboardSummary(): Promise<AppResponse>;

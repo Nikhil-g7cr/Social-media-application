@@ -1,8 +1,8 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { AppConfig } from 'src/config/AppConfig';
+import { AppConfig } from '../../config/AppConfig';
 import { ServiceBusClient, ServiceBusSender, ServiceBusReceiver } from '@azure/service-bus';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import AppLogger from 'src/core/logger/app-logger';
+import AppLogger from '../../core/logger/app-logger';
 
 @Injectable()
 export class ServiceBusService implements OnModuleInit, OnModuleDestroy {

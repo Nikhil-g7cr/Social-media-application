@@ -5,7 +5,7 @@ import { Users } from '../../databse/mssql/models/user.model';
 import { Message } from '../../databse/mssql/models/message.model';
 import { v4 as uuidv4 } from 'uuid';
 import { Op } from 'sequelize';
-import { FollowAbstractSQLDao } from 'src/databse/mssql/abstract/follow.abstract.mssql';
+import { FollowAbstractSQLDao } from '../../databse/mssql/abstract/follow.abstract.mssql';
 
 @Injectable()
 export class ConversationService {

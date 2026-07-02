@@ -1,6 +1,6 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { NotificationAbsSQLDAO } from 'src/databse/mssql/abstract/notification.abstract.mssql';
+import { NotificationAbsSQLDAO } from '../../databse/mssql/abstract/notification.abstract.mssql';
 import { ChatGateway } from '../chat/chat.gateway';
 
 @Injectable()

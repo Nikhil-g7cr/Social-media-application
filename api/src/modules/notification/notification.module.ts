@@ -1,9 +1,9 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { NotificationController } from './notification.controller';
 import { NotificationService } from './notification.service';
-import { DatabaseModule } from 'src/databse/database.module';
-import { NotificationAbsSQLDAO } from 'src/databse/mssql/abstract/notification.abstract.mssql';
-import { NotificationSQLDao } from 'src/databse/mssql/dao/notification.dao';
+import { DatabaseModule } from '../../databse/database.module';
+import { NotificationAbsSQLDAO } from '../../databse/mssql/abstract/notification.abstract.mssql';
+import { NotificationSQLDao } from '../../databse/mssql/dao/notification.dao';
 import { ChatModule } from '../chat/chat.module';
 
 @Module({

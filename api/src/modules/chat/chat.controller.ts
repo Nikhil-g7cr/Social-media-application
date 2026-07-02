@@ -1,6 +1,6 @@
 import { Controller, Get, Param, Req } from '@nestjs/common';
 import { ChatService } from './chat.service';
-import { CurrentUser } from 'src/core/decorators/current-user.decorator';
+import { CurrentUser } from '../../core/decorators/current-user.decorator';
 
 @Controller('chat')
 export class ChatController {

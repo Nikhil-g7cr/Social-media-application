@@ -7,7 +7,7 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { DataType } from 'sequelize-typescript';
-import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 
 import { Users, UserColumns } from './user.model';

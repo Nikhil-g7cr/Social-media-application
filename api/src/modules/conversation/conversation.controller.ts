@@ -1,6 +1,6 @@
 import { Controller, Get, Post, Patch, Param, Req, UseGuards, Body } from '@nestjs/common';
 import { ConversationService } from './conversation.service';
-import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddGroupMembersDto } from './dto/add-group-members.dto';
 

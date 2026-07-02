@@ -1,27 +1,27 @@
-import { Module } from "@nestjs/common";
-import { JwtModule } from "@nestjs/jwt";
-import { PassportModule } from "@nestjs/passport";
+import { Module } from '@nestjs/common';
+import { JwtModule } from '@nestjs/jwt';
+import { PassportModule } from '@nestjs/passport';
 
-import { AuthController, TestErrorsController } from "./auth.controller";
-import { AuthService } from "./auth.service";
-import { AbstractAuthSvc } from "./auth.abstract";
+import { AuthController, TestErrorsController } from './auth.controller';
+import { AuthService } from './auth.service';
+import { AbstractAuthSvc } from './auth.abstract';
 
-import { AuthAbstractSQLDao } from "src/databse/mssql/abstract/auth.abstract.mssql";
-import { AuthSQLDao } from "src/databse/mssql/dao/auth.dao";
+import { AuthAbstractSQLDao } from '../../databse/mssql/abstract/auth.abstract.mssql';
+import { AuthSQLDao } from '../../databse/mssql/dao/auth.dao';
 
-import { DatabaseModule } from "src/databse/database.module";
+import { DatabaseModule } from '../../databse/database.module';
 
-import AppLogger from "src/core/logger/app-logger";
-import { AppConfig } from "src/config/AppConfig";
+import AppLogger from '../../core/logger/app-logger';
+import { AppConfig } from '../../config/AppConfig';
 
-import { JwtStrategy } from "./models/jwt.strategy";
+import { JwtStrategy } from './models/jwt.strategy';
 
 @Module({
   imports: [
     DatabaseModule,
 
     PassportModule.register({
-      defaultStrategy: "jwt",
+      defaultStrategy: 'jwt',
     }),
 
     JwtModule.register({}),
@@ -49,10 +49,6 @@ import { JwtStrategy } from "./models/jwt.strategy";
     },
   ],
 
-  exports: [
-    AbstractAuthSvc,
-    PassportModule,
-    JwtModule,
-  ],
+  exports: [AbstractAuthSvc, PassportModule, JwtModule],
 })
-export class AuthModule { }
+export class AuthModule {}

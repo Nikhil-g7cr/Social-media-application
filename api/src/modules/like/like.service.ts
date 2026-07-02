@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { AppResponse } from 'src/shared/appresponse.shared';
-import { LikeAbstractSQLDAO } from 'src/databse/mssql/abstract/like.abstract.mssql';
-import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
+import { AppResponse } from '../../shared/appresponse.shared';
+import { LikeAbstractSQLDAO } from '../../databse/mssql/abstract/like.abstract.mssql';
+import { PostAbstractSQLDao } from '../../databse/mssql/abstract/posts.abstract.mssql';
 import { ServiceBusService } from '../azure/service-bus.service';
 import { HttpStatus } from '@nestjs/common';
 import { LikeAbstractSvc } from './like.abstract';

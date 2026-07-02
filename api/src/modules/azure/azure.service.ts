@@ -6,7 +6,7 @@ import {
   BlobSASPermissions,
 } from '@azure/storage-blob';
 
-import { AppConfig } from 'src/config/AppConfig';
+import { AppConfig } from '../../config/AppConfig';
 import { v4 as uuidv4 } from 'uuid';
 import { UploadUrlDto } from './dto/create-azure.dto';
 

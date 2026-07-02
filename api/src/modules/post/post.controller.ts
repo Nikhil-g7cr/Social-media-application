@@ -11,14 +11,14 @@ import {
   UseGuards,
 } from '@nestjs/common';
 
-import { AppResponse } from 'src/shared/appresponse.shared';
+import { AppResponse } from '../../shared/appresponse.shared';
 import { PostAbstractSvc } from './post.abstract';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
-import { JwtAuthGuard } from 'src/core/guards/jwt-auth.guard';
+import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { ApiBearerAuth } from '@nestjs/swagger';
-import { CurrentUser } from 'src/core/decorators/current-user.decorator';
-import { PaginationDto } from 'src/core/dto/pagination.dto';
+import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import { PaginationDto } from '../../core/dto/pagination.dto';
 
 @Controller('posts')
 @ApiBearerAuth()

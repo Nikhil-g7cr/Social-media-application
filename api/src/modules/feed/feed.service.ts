@@ -1,10 +1,10 @@
 import { HttpStatus, Injectable } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import AppLogger from 'src/core/logger/app-logger';
-import { PostAbstractSQLDao } from 'src/databse/mssql/abstract/posts.abstract.mssql';
-import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
-import { PaginationDto } from 'src/core/dto/pagination.dto';
-import { FollowSQLDao } from 'src/databse/mssql/dao/follow.dao';
+import AppLogger from '../../core/logger/app-logger';
+import { PostAbstractSQLDao } from '../../databse/mssql/abstract/posts.abstract.mssql';
+import { AppResponse, createResponse } from '../../shared/appresponse.shared';
+import { PaginationDto } from '../../core/dto/pagination.dto';
+import { FollowSQLDao } from '../../databse/mssql/dao/follow.dao';
 import { FileService } from '../azure/azure.service';
 import { ChatGateway } from '../chat/chat.gateway';
 

@@ -1,7 +1,7 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { AdminAnalyticsAbstractSvc } from './abstract/admin-analytics.abstract';
-import { AdminAnalyticsAbsSQLDAO } from 'src/databse/mssql/abstract/admin-analytics.abstract.mssql';
-import { AppResponse } from 'src/shared/appresponse.shared';
+import { AdminAnalyticsAbsSQLDAO } from '../../databse/mssql/abstract/admin-analytics.abstract.mssql';
+import { AppResponse } from '../../shared/appresponse.shared';
 
 @Injectable()
 export class AdminAnalyticsService implements AdminAnalyticsAbstractSvc {

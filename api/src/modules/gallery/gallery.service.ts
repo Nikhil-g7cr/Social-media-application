@@ -1,10 +1,10 @@
 import { Injectable, HttpStatus, Inject } from '@nestjs/common';
-import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
+import { AppResponse, createResponse } from '../../shared/appresponse.shared';
 import { AtPayload } from '../user/interface/users.interface';
-import { UserRoles } from 'src/core/enums/user.enums';
-import { FileDeleteRequest } from 'src/databse/mssql/models/fileDeleteRequest.model';
-import { Users } from 'src/databse/mssql/models/user.model';
-import { MsSqlConstants } from 'src/databse/mssql/connection/constant.mssql';
+import { UserRoles } from '../../core/enums/user.enums';
+import { FileDeleteRequest } from '../../databse/mssql/models/fileDeleteRequest.model';
+import { Users } from '../../databse/mssql/models/user.model';
+import { MsSqlConstants } from '../../databse/mssql/connection/constant.mssql';
 import { FileService } from '../azure/azure.service';
 import * as crypto from 'crypto';
 
