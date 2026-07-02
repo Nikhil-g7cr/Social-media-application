@@ -81,6 +81,9 @@ export class UsersDTO {
   @Matches(/^\S*$/, {
     message: 'Password cannot contain spaces.',
   })
+  @MaxLength(128, {
+    message: 'Password cannot exceed 128 characters.',
+  })
   Password!: string;
 
   @IsOptional()

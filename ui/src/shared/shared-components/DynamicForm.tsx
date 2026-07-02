@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { ZodType } from "zod";
 import { Eye, EyeOff } from "lucide-react";
 import type { FieldConfig } from "../../components/layout/form/types";
+import ErrorDisplay from "../../components/errors/ErrorDisplay";
 
 
 
@@ -50,6 +51,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         {...register(field.name)}
         placeholder={field.placeholder}
         disabled={disabled || field.disabled}
+        maxLength={field.maxLength}
         rows={4}
         className="w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
       />
@@ -135,6 +137,7 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             id={field.name}
             placeholder={field.placeholder}
             disabled={disabled || field.disabled}
+            maxLength={field.maxLength}
             {...register(field.name)}
             className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${isPasswordField ? "pr-11" : ""}`}
           />
@@ -182,9 +185,10 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             {renderFn(field)}
 
             {errors[field.name] && (
-              <p className="mt-1 text-sm text-red-500">
-                {String(errors[field.name]?.message)}
-              </p>
+              <ErrorDisplay
+                field
+                message={String(errors[field.name]?.message)}
+              />
             )}
           </div>
         );

@@ -5,6 +5,7 @@ import {
   IsString,
   MinLength,
   Matches,
+  MaxLength,
   ValidateBy,
 } from "class-validator";
 import { Transform } from 'class-transformer';
@@ -39,6 +40,7 @@ export class LoginDto {
     typeof value === 'string' ? normalizeEmail(value) : value,
   )
   @Matches(/^[a-zA-Z0-9]/, { message: 'Email must start with a letter or number' })
+  @MaxLength(255, { message: 'Email address is too long.' })
   EmailAddress!: string;
 
   @ApiProperty({
@@ -54,6 +56,7 @@ export class LoginDto {
   @MinLength(8, {
     message: "Password must be at least 8 characters long.",
   })
+  @MaxLength(128, { message: 'Password cannot exceed 128 characters.' })
   @Matches(/^\S*$/, { message: 'Password must not contain spaces' })
   Password!: string;
 }

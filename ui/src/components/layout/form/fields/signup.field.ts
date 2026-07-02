@@ -1,3 +1,5 @@
+import { AUTH_FIELD_MAX_LENGTHS } from "../constants/authFieldLimits";
+
 export const signupFields = [
   {
     name: "FullName",
@@ -5,6 +7,7 @@ export const signupFields = [
     type: "text",
     placeholder: "Enter your full name",
     required: true,
+    maxLength: AUTH_FIELD_MAX_LENGTHS.fullName,
   },
   {
     name: "UserName",
@@ -13,6 +16,7 @@ export const signupFields = [
     placeholder: "Choose a username",
     asyncValidator:undefined,
     required: true,
+    maxLength: AUTH_FIELD_MAX_LENGTHS.username,
   },
   {
     name: "EmailAddress",
@@ -20,6 +24,7 @@ export const signupFields = [
     type: "email",
     placeholder: "Enter your email",
     required: true,
+    maxLength: AUTH_FIELD_MAX_LENGTHS.email,
   },
   {
     name: "Password",
@@ -27,6 +32,7 @@ export const signupFields = [
     type: "password",
     placeholder: "Enter your password",
     required: true,
+    maxLength: AUTH_FIELD_MAX_LENGTHS.password,
   },
   {
     name: "ConfirmPassword",
@@ -34,12 +40,14 @@ export const signupFields = [
     type: "password",
     placeholder: "Confirm your password",
     required: true,
+    maxLength: AUTH_FIELD_MAX_LENGTHS.password,
   },
   {
     name: "Bio",
     label: "Bio",
     type: "textarea",
     placeholder: "Tell us about yourself",
+    maxLength: AUTH_FIELD_MAX_LENGTHS.bio,
   },
   {
     name: "Gender",

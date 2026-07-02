@@ -25,6 +25,7 @@ export interface FieldConfig {
   placeholder?: string;
   required?: boolean;
   disabled?: boolean;
+  maxLength?: number;
 
   options?: FieldOption[];
 }

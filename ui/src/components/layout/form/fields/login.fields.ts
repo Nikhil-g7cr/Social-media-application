@@ -1,4 +1,5 @@
 import type { FieldConfig } from "../types";
+import { AUTH_FIELD_MAX_LENGTHS } from "../constants/authFieldLimits";
 
 export const loginFields: FieldConfig[] = [
   {
@@ -9,6 +10,7 @@ export const loginFields: FieldConfig[] = [
       accept: undefined,
       rows: 0,
       required: true,
+      maxLength: AUTH_FIELD_MAX_LENGTHS.email,
   },
   {
       name: "password",
@@ -18,5 +20,6 @@ export const loginFields: FieldConfig[] = [
       accept: undefined,
       rows: 0,
       required: true,
+      maxLength: AUTH_FIELD_MAX_LENGTHS.password,
   },
 ];

@@ -9,6 +9,7 @@ interface ErrorDisplayProps {
   onRetry?: () => void;
   className?: string;
   compact?: boolean;
+  field?: boolean;
 }
 
 const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ 
@@ -17,9 +18,19 @@ const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
   message, 
   onRetry, 
   className = "",
-  compact = false
+  compact = false,
+  field = false
 }) => {
   const errorMessage = message || getErrorMessage(error);
+
+  if (field) {
+    return (
+      <p className={`mt-1 flex items-start gap-1.5 text-sm text-red-500 ${className}`}>
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+        <span>{errorMessage}</span>
+      </p>
+    );
+  }
 
   if (compact) {
     return (

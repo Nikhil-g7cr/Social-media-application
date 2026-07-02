@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { AUTH_FIELD_MAX_LENGTHS } from "../constants/authFieldLimits";
 import {
   EMAIL_VALIDATION_MESSAGE,
   isValidAppEmail,
@@ -13,7 +14,7 @@ export const getSignupSchema = (
         .string()
         .trim()
         .min(3, "Full name must be at least 3 characters.")
-        .max(50, "Full name cannot exceed 50 characters.")
+        .max(AUTH_FIELD_MAX_LENGTHS.fullName, "Full name cannot exceed 50 characters.")
         .regex(
           /^[\p{L}]+(?:[ '-][\p{L}]+)*$/u,
           "Full name may only contain letters, spaces, apostrophes, and hyphens.",
@@ -24,7 +25,7 @@ export const getSignupSchema = (
         .trim()
         .toLowerCase()
         .min(3, "Username must be at least 3 characters.")
-        .max(30, "Username cannot exceed 30 characters.")
+        .max(AUTH_FIELD_MAX_LENGTHS.username, "Username cannot exceed 30 characters.")
         .regex(
           /^(?!.*[._]{2})(?![._])[a-zA-Z0-9._]+(?<![._])$/,
           "Username may contain letters, numbers, periods (.) and underscores (_). It cannot start/end with '.' or '_' or contain consecutive '.' or '_'.",
@@ -37,14 +38,14 @@ export const getSignupSchema = (
 
       EmailAddress: z
         .string()
-        .max(255, "Email address is too long.")
+        .max(AUTH_FIELD_MAX_LENGTHS.email, "Email address is too long.")
         .transform(normalizeEmail)
         .refine(isValidAppEmail, EMAIL_VALIDATION_MESSAGE),
 
       Password: z
         .string()
         .min(8, "Password must be at least 8 characters.")
-        .max(128, "Password cannot exceed 128 characters.")
+        .max(AUTH_FIELD_MAX_LENGTHS.password, "Password cannot exceed 128 characters.")
         .regex(/[A-Z]/, "Password must contain at least one uppercase letter.")
         .regex(/[a-z]/, "Password must contain at least one lowercase letter.")
         .regex(/[0-9]/, "Password must contain at least one number.")
@@ -54,12 +55,14 @@ export const getSignupSchema = (
         )
         .regex(/^\S*$/, "Password cannot contain spaces."),
 
-      ConfirmPassword: z.string(),
+      ConfirmPassword: z
+        .string()
+        .max(AUTH_FIELD_MAX_LENGTHS.password, "Confirm password cannot exceed 128 characters."),
 
       Bio: z
         .string()
         .trim()
-        .max(500, "Bio cannot exceed 500 characters.")
+        .max(AUTH_FIELD_MAX_LENGTHS.bio, "Bio cannot exceed 250 characters.")
         .optional(),
 
       ProfilePictureUrl: z
@@ -68,7 +71,9 @@ export const getSignupSchema = (
         .optional()
         .or(z.literal("")),
 
-      Gender: z.enum(["Male", "Female", "Other"]),
+      Gender: z.enum(["Male", "Female", "Other"], {
+        error: "Please select a gender.",
+      }),
     })
     .refine((data) => data.Password === data.ConfirmPassword, {
       message: "Passwords do not match.",
