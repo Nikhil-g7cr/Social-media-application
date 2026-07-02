@@ -479,13 +479,11 @@ const AdminDashboard = () => {
                 Error loading users data. Please try again later.
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <DataTable
-                  columns={userColumns}
-                  data={usersData}
-                  actions={renderUserActions}
-                />
-              </div>
+              <DataTable
+                columns={userColumns}
+                data={usersData}
+                actions={renderUserActions}
+              />
             )}
           </div>
         );
@@ -505,22 +503,20 @@ const AdminDashboard = () => {
                 Error loading posts data. Please try again later.
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <DataTable
-                  columns={postColumns}
-                  data={postsData?.posts || []}
-                  actions={(row) => (
-                    <div className="flex justify-end">
-                      <button
-                        onClick={() => setDeletePostModal({ isOpen: true, userId: row.id })}
-                        className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-sm transition-all duration-200"
-                      >
-                        Delete Post
-                      </button>
-                    </div>
-                  )}
-                />
-              </div>
+              <DataTable
+                columns={postColumns}
+                data={postsData?.posts || []}
+                actions={(row) => (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setDeletePostModal({ isOpen: true, userId: row.id })}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-sm transition-all duration-200"
+                    >
+                      Delete Post
+                    </button>
+                  </div>
+                )}
+              />
             )}
           </div>
         );
@@ -540,34 +536,32 @@ const AdminDashboard = () => {
                 Error loading reports data. Please try again later.
               </div>
             ) : (
-              <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-                <DataTable
-                  columns={reportColumns}
-                  data={reportsData}
-                  actions={(row) => (
-                    <div className="space-x-2 flex justify-end">
-                      {row.status === 'PENDING' ? (
-                        <>
-                          <button
-                            onClick={() => resolveReport({ id: row.id, status: 'RESOLVED' })}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm transition-all duration-200"
-                          >
-                            Resolve
-                          </button>
-                          <button
-                            onClick={() => resolveReport({ id: row.id, status: 'DISMISSED' })}
-                            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-sm transition-all duration-200"
-                          >
-                            Dismiss
-                          </button>
-                        </>
-                      ) : (
-                        <span className="text-xs text-gray-400 italic px-2 py-1">Actioned</span>
-                      )}
-                    </div>
-                  )}
-                />
-              </div>
+              <DataTable
+                columns={reportColumns}
+                data={reportsData}
+                actions={(row) => (
+                  <div className="space-x-2 flex justify-end">
+                    {row.status === 'PENDING' ? (
+                      <>
+                        <button
+                          onClick={() => resolveReport({ id: row.id, status: 'RESOLVED' })}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm transition-all duration-200"
+                        >
+                          Resolve
+                        </button>
+                        <button
+                          onClick={() => resolveReport({ id: row.id, status: 'DISMISSED' })}
+                          className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-sm transition-all duration-200"
+                        >
+                          Dismiss
+                        </button>
+                      </>
+                    ) : (
+                      <span className="text-xs text-gray-400 italic px-2 py-1">Actioned</span>
+                    )}
+                  </div>
+                )}
+              />
             )}
           </div>
         );
