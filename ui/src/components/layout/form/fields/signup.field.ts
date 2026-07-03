@@ -32,7 +32,6 @@ export const signupFields = [
     type: "password",
     placeholder: "Enter your password",
     required: true,
-    maxLength: AUTH_FIELD_MAX_LENGTHS.password,
   },
   {
     name: "ConfirmPassword",
@@ -40,7 +39,6 @@ export const signupFields = [
     type: "password",
     placeholder: "Confirm your password",
     required: true,
-    maxLength: AUTH_FIELD_MAX_LENGTHS.password,
   },
   {
     name: "Bio",

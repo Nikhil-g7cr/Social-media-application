@@ -20,6 +20,5 @@ export const loginFields: FieldConfig[] = [
       accept: undefined,
       rows: 0,
       required: true,
-      maxLength: AUTH_FIELD_MAX_LENGTHS.password,
   },
 ];
