@@ -128,4 +128,14 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
             include: ['Follower'],
         });
     }
+
+    async getSentRequests(userId: string): Promise<Follow[]> {
+        return this.followModel.findAll({
+            where: {
+                FollowerID: userId,
+                Status: 'PENDING',
+            },
+            include: ['Following'],
+        });
+    }
 }

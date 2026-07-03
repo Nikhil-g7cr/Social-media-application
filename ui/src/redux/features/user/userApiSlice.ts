@@ -308,14 +308,14 @@ export const userApiSlice = apiSlice.injectEndpoints({
         url: `follow/accept/${followerId}`,
         method: "POST",
       }),
-      invalidatesTags: ["User", "Profile"],
+      invalidatesTags: ["User", "Profile", "Notification"],
     }),
     rejectFollowRequest: builder.mutation<{ success: boolean }, string>({
       query: (followerId) => ({
         url: `follow/reject/${followerId}`,
         method: "POST",
       }),
-      invalidatesTags: ["User", "Profile"],
+      invalidatesTags: ["User", "Profile", "Notification"],
     }),
     getPendingRequests: builder.query<User[], void>({
       query: () => ({ url: "follow/requests" }),
@@ -332,6 +332,54 @@ export const userApiSlice = apiSlice.injectEndpoints({
             u.avatarUrl ||
             `https://ui-avatars.com/api/?name=${u.Follower?.FullName || u.FullName || u.name || "User"}&background=random`,
           bio: u.Follower?.Bio || u.Bio || u.bio,
+        }));
+      },
+      providesTags: ["User"],
+      async onCacheEntryAdded(arg, { updateCachedData, cacheDataLoaded, cacheEntryRemoved }) {
+        const { initializeSocket } = await import("../../../utils/socket");
+        const socket = initializeSocket();
+        try {
+          await cacheDataLoaded;
+          const listener = (newNotification: any) => {
+            if (newNotification && newNotification.NotificationType === "FOLLOW_REQUEST") {
+              const newUser: User = {
+                id: newNotification.ActorUserID || newNotification.Actor?.ID,
+                username: newNotification.Actor?.UserName || "user",
+                name: newNotification.Actor?.UserName || "User",
+                email: "",
+                avatarUrl:
+                  newNotification.Actor?.ProfilePictureUrl ||
+                  newNotification.Actor?.avatarUrl ||
+                  `https://ui-avatars.com/api/?name=${newNotification.Actor?.UserName || "User"}&background=random`,
+                bio: "",
+              };
+              updateCachedData((draft) => {
+                if (!draft.find((u) => u.id === newUser.id)) {
+                  draft.unshift(newUser);
+                }
+              });
+            }
+          };
+          socket.on("newNotification", listener);
+        } catch {}
+        await cacheEntryRemoved;
+      },
+    }),
+    getSentRequests: builder.query<User[], void>({
+      query: () => ({ url: "follow/sent-requests" }),
+      transformResponse: (response: any) => {
+        const rawUsers = response?.data || response || [];
+        return rawUsers.map((u: any) => ({
+          id: u.FollowingID || u.ID || u.id,
+          username: u.Following?.UserName || u.UserName || u.username,
+          name: u.Following?.FullName || u.FullName || u.name,
+          email: u.Following?.Email || u.Email || u.email || "",
+          avatarUrl:
+            u.Following?.ProfilePictureUrl ||
+            u.ProfilePictureUrl ||
+            u.avatarUrl ||
+            `https://ui-avatars.com/api/?name=${u.Following?.FullName || u.FullName || u.name || "User"}&background=random`,
+          bio: u.Following?.Bio || u.Bio || u.bio,
         }));
       },
       providesTags: ["User"],
@@ -358,4 +406,5 @@ export const {
   useAcceptFollowRequestMutation,
   useRejectFollowRequestMutation,
   useGetPendingRequestsQuery,
+  useGetSentRequestsQuery,
 } = userApiSlice;

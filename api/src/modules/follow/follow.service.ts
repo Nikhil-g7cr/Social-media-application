@@ -160,6 +160,10 @@ export class FollowService {
         return this.followDao.getPendingRequests(userId);
     }
 
+    async getSentRequests(userId: string) {
+        return this.followDao.getSentRequests(userId);
+    }
+
     async getProfileFollowInfo(
     currentUserId: string,
     profileUserId: string,

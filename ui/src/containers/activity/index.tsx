@@ -8,9 +8,11 @@ import {
   type Notification as ApiNotification
 } from '../../redux/features/notification/notificationApiSlice';
 import { 
-  useGetPendingRequestsQuery, 
+  useGetPendingRequestsQuery,
+  useGetSentRequestsQuery, 
   useAcceptFollowRequestMutation, 
-  useRejectFollowRequestMutation 
+  useRejectFollowRequestMutation,
+  useUnfollowUserMutation
 } from '../../redux/features/user/userApiSlice';
 import { Bell, Heart, MessageCircle, UserPlus, Info, Check, Trash2 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
@@ -19,7 +21,7 @@ import Avatar from '../../shared/shared-components/Avatar';
 import { useNavigate } from 'react-router-dom';
 
 const ActivityPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'requests' | 'notifications'>('requests');
+  const [activeTab, setActiveTab] = useState<'requests' | 'sent' | 'notifications'>('requests');
   const navigate = useNavigate();
 
   // Notifications
@@ -33,6 +35,15 @@ const ActivityPage: React.FC = () => {
   const { data: pendingRequests = [], isLoading: requestsLoading } = useGetPendingRequestsQuery();
   const [acceptRequest] = useAcceptFollowRequestMutation();
   const [rejectRequest] = useRejectFollowRequestMutation();
+
+  // Sent Requests
+  const { data: sentRequests = [], isLoading: sentLoading } = useGetSentRequestsQuery();
+  const [unfollowUser] = useUnfollowUserMutation();
+
+  const handleCancelRequest = async (e: React.MouseEvent, userId: string) => {
+    e.stopPropagation();
+    await unfollowUser(userId).unwrap();
+  };
 
   const notifications = serverNotifications.map((n: ApiNotification) => ({
     id: n.ID,
@@ -106,6 +117,21 @@ const ActivityPage: React.FC = () => {
               )}
             </button>
             <button
+              onClick={() => setActiveTab('sent')}
+              className={`flex items-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition ${
+                activeTab === 'sent' 
+                  ? 'border-blue-600 text-blue-600' 
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              }`}
+            >
+              Sent Requests
+              {sentRequests.length > 0 && (
+                <span className="bg-gray-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {sentRequests.length}
+                </span>
+              )}
+            </button>
+            <button
               onClick={() => setActiveTab('notifications')}
               className={`flex items-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition ${
                 activeTab === 'notifications' 
@@ -168,6 +194,52 @@ const ActivityPage: React.FC = () => {
                           className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-1.5 px-4 rounded-full transition"
                         >
                           Reject
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+
+            {/* SENT REQUESTS TAB */}
+            {activeTab === 'sent' && (
+              <div className="min-h-[400px]">
+                {sentLoading ? (
+                  <div className="flex justify-center items-center h-40">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  </div>
+                ) : sentRequests.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-64 text-gray-500">
+                    <UserPlus className="w-12 h-12 text-gray-300 mb-4" />
+                    <p className="text-lg font-medium text-gray-900">No sent follow requests</p>
+                    <p className="text-sm">When you request to follow someone, they'll show up here.</p>
+                  </div>
+                ) : (
+                  sentRequests.map((request) => (
+                    <div 
+                      key={request.id} 
+                      className="flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition cursor-pointer"
+                      onClick={() => navigate(`/profile/${request.id}`)}
+                    >
+                      <div className="flex items-center gap-4">
+                        <Avatar
+                          url={request.avatarUrl}
+                          name={request.name}
+                          className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                        />
+                        <div>
+                          <div className="font-semibold text-gray-900">{request.name}</div>
+                          <div className="text-sm text-gray-500">@{request.username || request.name.toLowerCase().replace(/\s+/g, '')}</div>
+                          <div className="text-xs text-gray-400 mt-0.5">Follow request sent</div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                        <button
+                          onClick={(e) => handleCancelRequest(e, request.id)}
+                          className="bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 hover:border-red-200 text-sm font-medium py-1.5 px-4 rounded-full transition"
+                        >
+                          Cancel
                         </button>
                       </div>
                     </div>

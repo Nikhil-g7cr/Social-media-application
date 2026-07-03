@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Heart, MessageCircle, UserPlus, Info, Check } from 'lucide-react';
 import { useGetNotificationsQuery, useMarkAsReadMutation, useMarkAllAsReadMutation, useDeleteNotificationMutation, useClearAllNotificationsMutation, type Notification as ApiNotification } from '../../redux/features/notification/notificationApiSlice';
-import { useAcceptFollowRequestMutation, useRejectFollowRequestMutation } from '../../redux/features/user/userApiSlice';
+import { useAcceptFollowRequestMutation, useRejectFollowRequestMutation, useGetPendingRequestsQuery } from '../../redux/features/user/userApiSlice';
 import { formatDistanceToNow } from 'date-fns';
 import { initializeSocket } from '../../utils/socket';
 import { useDispatch } from 'react-redux';
@@ -17,6 +17,7 @@ import ErrorDisplay from '../../components/errors/ErrorDisplay';
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { data: serverNotifications = [], refetch, isError, error } = useGetNotificationsQuery();
+  const { data: pendingRequests = [] } = useGetPendingRequestsQuery();
   const [markAsReadMutation] = useMarkAsReadMutation();
   const [markAllAsReadMutation] = useMarkAllAsReadMutation();
   const [deleteNotification] = useDeleteNotificationMutation();
@@ -29,7 +30,7 @@ const NotificationDropdown: React.FC = () => {
 
   // Socket listening is now handled entirely within notificationApiSlice
 
-  const notifications = serverNotifications.map((n: ApiNotification) => ({
+  const dbNotifications = serverNotifications.map((n: ApiNotification) => ({
     id: n.ID,
     type: n.NotificationType,
     actorId: n.ActorUserID,
@@ -38,7 +39,24 @@ const NotificationDropdown: React.FC = () => {
     content: n.NotificationType === 'LIKE' ? 'liked your post.' : n.NotificationType === 'FOLLOW' ? 'started following you.' : n.NotificationType === 'FOLLOW_REQUEST' ? 'sent you a follow request.' : n.NotificationType === 'FOLLOW_ACCEPTED' ? 'accepted your follow request.' : n.NotificationType === 'MESSAGE' ? 'sent you a message.' : 'system notification.',
     time: formatDistanceToNow(new Date(n.CreatedAt), { addSuffix: true }),
     isRead: n.IsRead,
+    isFallbackRequest: false,
   }));
+
+  const requestNotifications = pendingRequests
+    .filter((req: any) => !dbNotifications.some((n) => n.type === 'FOLLOW_REQUEST' && n.actorId === req.id))
+    .map((req: any) => ({
+      id: `req_${req.id}`,
+      type: 'FOLLOW_REQUEST',
+      actorId: req.id,
+      actorName: req.name || req.username || 'Someone',
+      actorAvatar: req.avatarUrl,
+      content: 'sent you a follow request.',
+      time: 'Pending',
+      isRead: false,
+      isFallbackRequest: true,
+    }));
+
+  const notifications = [...requestNotifications, ...dbNotifications];
 
   // --- Click Outside to Close ---
   useEffect(() => {
@@ -53,14 +71,17 @@ const NotificationDropdown: React.FC = () => {
   }, []);
 
   // --- Handlers ---
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  const unreadCount = dbNotifications.filter(n => !n.isRead).length;
+  const badgeCount = unreadCount + pendingRequests.length;
 
   const markAllAsRead = async () => {
     await markAllAsReadMutation().unwrap();
   };
 
   const markAsRead = async (id: string) => {
-    await markAsReadMutation(id).unwrap();
+    if (!id.startsWith('req_')) {
+      await markAsReadMutation(id).unwrap();
+    }
   };
 
   const handleClearAll = async () => {
@@ -69,19 +90,25 @@ const NotificationDropdown: React.FC = () => {
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    await deleteNotification(id).unwrap();
+    if (!id.startsWith('req_')) {
+      await deleteNotification(id).unwrap();
+    }
   };
 
   const handleAcceptRequest = async (e: React.MouseEvent, followerId: string, notificationId: string) => {
     e.stopPropagation();
     await acceptFollowRequest(followerId).unwrap();
-    await deleteNotification(notificationId).unwrap();
+    if (!notificationId.startsWith('req_')) {
+      await deleteNotification(notificationId).unwrap();
+    }
   };
 
   const handleRejectRequest = async (e: React.MouseEvent, followerId: string, notificationId: string) => {
     e.stopPropagation();
     await rejectFollowRequest(followerId).unwrap();
-    await deleteNotification(notificationId).unwrap();
+    if (!notificationId.startsWith('req_')) {
+      await deleteNotification(notificationId).unwrap();
+    }
   };
 
   // --- Helper to get contextual icons ---
@@ -108,9 +135,9 @@ const NotificationDropdown: React.FC = () => {
         className="relative p-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-full transition duration-200 focus:outline-none"
       >
         <Bell className="w-6 h-6" />
-        {unreadCount > 0 && (
+        {badgeCount > 0 && (
           <span className="absolute top-1.5 right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white border-2 border-white">
-            {unreadCount}
+            {badgeCount}
           </span>
         )}
       </button>
@@ -197,13 +224,15 @@ const NotificationDropdown: React.FC = () => {
                       {!notification.isRead && (
                         <div className="w-2.5 h-2.5 bg-blue-600 rounded-full mt-2"></div>
                       )}
-                      <button 
-                        onClick={(e) => handleDelete(e, notification.id)}
-                        className="text-gray-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100 mt-1"
-                        title="Clear notification"
-                      >
-                        <span className="text-xs font-bold">X</span>
-                      </button>
+                      {!notification.id.startsWith('req_') && (
+                        <button 
+                          onClick={(e) => handleDelete(e, notification.id)}
+                          className="text-gray-400 hover:text-red-500 transition opacity-0 group-hover:opacity-100 mt-1"
+                          title="Clear notification"
+                        >
+                          <span className="text-xs font-bold">X</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

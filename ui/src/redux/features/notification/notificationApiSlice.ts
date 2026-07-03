@@ -39,10 +39,17 @@ export const notificationApiSlice = apiSlice.injectEndpoints({
                 const socket = initializeSocket();
                 try {
                     await cacheDataLoaded;
-                    const listener = (newNotification: Notification) => {
+                    const listener = (newNotification: any) => {
+                        const normalized: Notification = {
+                            ...newNotification,
+                            Actor: newNotification.Actor ? {
+                                ...newNotification.Actor,
+                                avatarUrl: newNotification.Actor.ProfilePictureUrl || newNotification.Actor.avatarUrl
+                            } : undefined
+                        };
                         updateCachedData((draft) => {
-                            if (!draft.find(n => n.ID === newNotification.ID)) {
-                                draft.unshift(newNotification);
+                            if (!draft.find(n => n.ID === normalized.ID)) {
+                                draft.unshift(normalized);
                             }
                         });
                     };

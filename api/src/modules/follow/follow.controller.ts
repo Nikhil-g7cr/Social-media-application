@@ -114,4 +114,13 @@ console.log('Target User:', userId);
             req.user.sub,
         );
     }
+
+    @Get('sent-requests')
+    async getSentRequests(
+        @Req() req,
+    ) {
+        return this.followService.getSentRequests(
+            req.user.sub,
+        );
+    }
 }
