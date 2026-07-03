@@ -60,7 +60,7 @@ const EMAIL_FORMAT_PATTERN =
   /^[a-z0-9][a-z0-9._%+-]*@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/;
 
 export const EMAIL_VALIDATION_MESSAGE =
-  "Please enter a valid email address with a supported domain ending.";
+  "Please enter a valid email address";
 
 export const normalizeEmail = (email: string) => email.trim().toLowerCase();
 
