@@ -25,7 +25,8 @@ interface SignupFormData {
 
 const SignupPage = () => {
   const [signup, { isLoading }] = useSignupMutation();
-const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const { uploadFiles } = useMediaUpload();
+  const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();
+  const { uploadFiles } = useMediaUpload();
   const navigate = useNavigate();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
@@ -33,16 +34,43 @@ const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const {
   const [isUploading, setIsUploading] = useState(false);
   const [submitError, setSubmitError] = useState<any>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const usernameCacheRef = useRef<Record<string, boolean>>({});
+  const debounceTimerRef = useRef<any>(null);
+  const cancelActiveCheckRef = useRef<(() => void) | null>(null);
 
-  const checkUsernameAvailability = async (username: string) => {
-    try {
-      const response = await triggerCheckUsername(username).unwrap();
-      // Adjust this based on your API response. Example assumes { isAvailable: true }
-      return response.available === true; 
-    } catch (error) {
-      console.error("Failed to check username", error);
-      return false; // If API fails, block the username to be safe
+  const checkUsernameAvailability = async (username: string): Promise<boolean> => {
+    // 1. Return immediately if we already checked this exact username
+    if (username in usernameCacheRef.current) {
+      return usernameCacheRef.current[username];
     }
+
+    // 2. Clear any pending debounce timer from previous keystrokes
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    // 3. Resolve previous unfinished promise as true so stale validation doesn't block the UI
+    if (cancelActiveCheckRef.current) {
+      cancelActiveCheckRef.current();
+    }
+
+    return new Promise((resolve) => {
+      cancelActiveCheckRef.current = () => resolve(true);
+
+      debounceTimerRef.current = setTimeout(async () => {
+        try {
+          const response = await triggerCheckUsername(username).unwrap();
+          const isAvailable = response.available === true;
+          usernameCacheRef.current[username] = isAvailable;
+          resolve(isAvailable);
+        } catch (error) {
+          console.error("Failed to check username", error);
+          resolve(false);
+        } finally {
+          cancelActiveCheckRef.current = null;
+        }
+      }, 500); // 500ms debounce delay
+    });
   };
 
   // Generate the dynamic schema that includes the API check
@@ -150,9 +178,9 @@ const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();  const {
 
         <DynamicForm
           fields={signupFields as any}
-          // FIX 2: Pass the dynamically generated 'schema' and add mode="onBlur"
+          // Pass the dynamically generated 'schema' and use mode="onChange" for real-time validation
           validationSchema={schema} 
-          mode="onBlur"
+          mode="onChange"
           submitButtonText={isUploading ? "Uploading..." : "Create Account"}
           loading={isLoading || isUploading}
           disabled={isLoading || isUploading}
