@@ -4,6 +4,7 @@ import { useSearchUsersQuery } from "../../../redux/features/user/userApiSlice";
 import FollowButton from "../../features/Social/FollowButton";
 import Avatar from "../../../shared/shared-components/Avatar";
 import { useDebouncedSearch } from "../../../hooks/useDebouncedSearch";
+import { useNavigate } from "react-router-dom";
 
 const SearchBar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -15,6 +16,14 @@ const SearchBar: React.FC = () => {
   const { data: searchResults = [], isFetching } = useSearchUsersQuery(debouncedTerm.trim(), {skip: debouncedTerm.trim().length < 2,});
 
   // ---------------end----------------------
+
+  // =======================================
+  const navigate = useNavigate();
+  const handleProfileclick = (user: any) => {
+    navigate(`/profile/${user.id}`);
+  };
+
+  // =============end========================
 
   // Handle click outside to close dropdown
   useEffect(() => {
@@ -60,6 +69,7 @@ const SearchBar: React.FC = () => {
             <ul className="py-2">
               {searchResults.map((user) => (
                 <li
+                onClick={() => handleProfileclick(user)}
                   key={user.id}
                   className="px-4 py-3 hover:bg-gray-50 flex items-center justify-between group transition-colors"
                 >
