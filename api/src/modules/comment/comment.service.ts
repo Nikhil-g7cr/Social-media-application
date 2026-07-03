@@ -4,14 +4,14 @@ import { CommentSQLDAO } from '../../databse/mssql/dao/comment.dao'; // Adjust p
 import { CommentAbstractSvc } from './comment.abstract';
 import { CommentsAbstractSQLDAO } from '../../databse/mssql/abstract/comment.abstract.mssql';
 import { PostAbstractSQLDao } from '../../databse/mssql/abstract/posts.abstract.mssql';
-import { ServiceBusService } from '../azure/service-bus.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 @Injectable()
 export class CommentService implements CommentAbstractSvc{
   constructor(
     private readonly commentDao: CommentsAbstractSQLDAO,
     private readonly postDao: PostAbstractSQLDao,
-    private readonly serviceBus: ServiceBusService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async getUserComments(userId: string): Promise<AppResponse> {
@@ -30,7 +30,7 @@ export class CommentService implements CommentAbstractSvc{
         if (postRes.code === HttpStatus.OK && postRes.data) {
             const postAuthorId = postRes.data.UserID;
             if (postAuthorId !== userId) {
-                await this.serviceBus.publishEvent('ContentEvents', 'comment.added', {
+                this.eventEmitter.emit('comment.added', {
                     userId: postAuthorId,
                     actorUserId: userId,
                     postId: postId,
@@ -45,4 +45,4 @@ export class CommentService implements CommentAbstractSvc{
   async getCommentsByPostId(postId: string): Promise<AppResponse> {
     return await this.commentDao.getCommentsByPostId(postId);
   }
-}
+}

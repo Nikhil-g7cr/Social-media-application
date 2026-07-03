@@ -9,7 +9,7 @@ import { PostAbstractSvc } from './post.abstract';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { FileService } from '../azure/azure.service';
-import { ServiceBusService } from '../azure/service-bus.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { PaginationDto } from '../../core/dto/pagination.dto';
 
 @Injectable()
@@ -19,7 +19,7 @@ export class PostService implements PostAbstractSvc {
     private readonly appConfig: AppConfig,
     private readonly postDao: PostAbstractSQLDao,
     private readonly fileService: FileService,
-    private readonly serviceBus: ServiceBusService
+    private readonly eventEmitter: EventEmitter2
   ) {}
 
   async createPost(
@@ -46,8 +46,8 @@ export class PostService implements PostAbstractSvc {
           }
         }
         
-        // Emit domain event for decoupling via Service Bus wrapper
-        await this.serviceBus.publishEvent('ContentEvents', 'post.created', {
+        // Emit domain event
+        this.eventEmitter.emit('post.created', {
           postData,
           userId
         });

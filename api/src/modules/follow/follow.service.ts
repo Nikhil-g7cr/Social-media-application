@@ -7,7 +7,7 @@ import {
 import { UserAbsSQLDAO } from '../../databse/mssql/abstract/user.abstract.mssql';
 import { FollowSQLDao } from '../../databse/mssql/dao/follow.dao';
 import { UserSQLDao } from '../../databse/mssql/dao/user.dao';
-import { ServiceBusService } from '../azure/service-bus.service';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 
 
 @Injectable()
@@ -15,7 +15,7 @@ export class FollowService {
     constructor(
         private readonly followDao: FollowSQLDao,
         @Inject(UserAbsSQLDAO)private readonly userDao: UserSQLDao,
-        private readonly serviceBus: ServiceBusService,
+        private readonly eventEmitter: EventEmitter2,
     ) {}
 
     async followUser(
@@ -56,7 +56,7 @@ export class FollowService {
         });
 
         // Notify the followed user via event
-        await this.serviceBus.publishEvent('SocialEvents', 'follow.requested', {
+        this.eventEmitter.emit('follow.requested', {
             userId: followingId,
             actorUserId: followerId,
         });
@@ -137,7 +137,7 @@ export class FollowService {
         await this.followDao.updateStatus(followerId, followingId, 'ACCEPTED');
 
         // Notify the user who sent the request via event
-        await this.serviceBus.publishEvent('SocialEvents', 'follow.accepted', {
+        this.eventEmitter.emit('follow.accepted', {
             userId: followerId,
             actorUserId: followingId,
         });
