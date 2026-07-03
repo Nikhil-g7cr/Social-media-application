@@ -367,13 +367,11 @@ const MessagesPage: React.FC = () => {
     const uploadedAttachments = uploadResults.filter(
       (attachment): attachment is ChatAttachment => Boolean(attachment),
     );
+    
     const textToSend = messageDraft;
-
-    setMessageDraft("");
-    setSelectedFiles([]);
-    setUploadProgress({});
+    const filesToSend = selectedFiles;
     setIsUploading(false);
-
+    
     const socket = initializeSocket();
     socket.emit(
       "sendMessage",
@@ -385,6 +383,10 @@ const MessagesPage: React.FC = () => {
       },
       (response: { status?: string; data?: any; error?: string }) => {
         if (response?.status === "success" && response.data) {
+          setMessageDraft("");
+          setSelectedFiles([]);
+          setUploadProgress({});
+          
           setMessages((prev) => {
             if (prev.find((m) => m.id === response.data.id)) return prev;
 
@@ -406,7 +408,7 @@ const MessagesPage: React.FC = () => {
         } else {
           notification.error({
             message: "Message failed to send",
-            description: response?.error || "please try again.",
+            description: response?.error || "Your session may be refreshing. Please try clicking send again.",
           });
         }
       },
@@ -495,6 +497,9 @@ const MessagesPage: React.FC = () => {
         title: data.title,
         participants: data.participants,
       }).unwrap();
+      if (response?.conversationId) {
+        pendingNewConversationIdRef.current = response.conversationId;
+      }
     } catch (error) {
       console.error("Failed to create group:", error);
     }

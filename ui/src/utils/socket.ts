@@ -36,6 +36,19 @@ export const initializeSocket = (): Socket => {
   return socket;
 };
 
+export const updateSocketToken = (newToken: string) => {
+  if (socket) {
+    socket.auth = { token: `Bearer ${newToken}` };
+    // Force disconnect and reconnect so the server verifies the new JWT handshake
+    if (socket.connected) {
+      socket.disconnect().connect();
+    } else {
+      socket.connect();
+    }
+    console.log('🔄 WebSocket handshake updated with new Access Token');
+  }
+};
+
 export const getSocket = (): Socket | null => {
   return socket;
 };

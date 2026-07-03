@@ -1,6 +1,7 @@
 import axios from "axios";
 import { environment } from "../environment/environment";
 import { notification } from 'antd';
+import { updateSocketToken } from "../utils/socket";
 // Note: Removed react-jwt and manual date-fns checks. 
 // It is safer to let the backend tell us (via a 401) when a token is expired.
 
@@ -82,6 +83,8 @@ API.interceptors.response.use(
 
                 // Update sessionStorage with the new token
                 sessionStorage.setItem('accessToken', newAccessToken);
+
+                updateSocketToken(newAccessToken);
 
                 // Update the failed request with the new token and retry it
                 originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
