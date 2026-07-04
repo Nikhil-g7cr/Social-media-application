@@ -35,10 +35,10 @@ export class AppConfig {
       appRFTSecret: process.env.JWT_REFRESH_TOKEN_SECRET,
       web: {
         axt: {
-          expiresIn: process.env.JWT_WEB_AXT_EXPIRES_IN || '15m',
+          expiresIn: process.env.JWT_WEB_AXT_EXPIRES_IN,
         },
         rft: {
-          expiresIn: process.env.JWT_WEB_RFT_EXPIRES_IN || '7d',
+          expiresIn: process.env.JWT_WEB_RFT_EXPIRES_IN,
           maxTtl: process.env.JWT_WEB_RFT_MAX_TTL || '30d',
         },
       },

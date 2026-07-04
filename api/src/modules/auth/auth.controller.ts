@@ -8,26 +8,24 @@ import {
   Req,
   Ip,
   UseGuards,
-} from "@nestjs/common";
-import { ApiBearerAuth, ApiBody, ApiTags } from "@nestjs/swagger";
+} from '@nestjs/common';
+import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
 
-import { AbstractAuthSvc } from "./auth.abstract";
-import { LoginDto } from "./dto/login.dto";
-import { UsersDTO } from "../user/dto/users.dto";
-import { JwtAuthGuard } from "../../core/guards/jwt-auth.guard";
+import { AbstractAuthSvc } from './auth.abstract';
+import { LoginDto } from './dto/login.dto';
+import { UsersDTO } from '../user/dto/users.dto';
+import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 
-@Controller("auth")
-@ApiTags("Authentication")
+@Controller('auth')
+@ApiTags('Authentication')
 export class AuthController {
-  constructor(
-    private readonly authService: AbstractAuthSvc,
-  ) {}
+  constructor(private readonly authService: AbstractAuthSvc) {}
 
   // =====================================================
   // SIGNUP
   // =====================================================
 
-  @Post("signup")
+  @Post('signup')
   @ApiBody({
     type: UsersDTO,
   })
@@ -43,7 +41,7 @@ export class AuthController {
   // LOGIN
   // =====================================================
 
-  @Post("login")
+  @Post('login')
   @ApiBody({
     type: LoginDto,
   })
@@ -59,27 +57,21 @@ export class AuthController {
   // REFRESH ACCESS TOKEN
   // =====================================================
 
-  @Post("refresh-token")
-  async refreshToken(
-    @Body("refreshToken") refreshToken: string,
-  ) {
-    return await this.authService.refreshToken(
-      refreshToken,
-    );
+  @Post('refresh-token')
+  async refreshToken(@Body('refreshToken') refreshToken: string) {
+    return await this.authService.refreshToken(refreshToken);
   }
 
   // =====================================================
   // VALIDATE TOKEN
   // =====================================================
 
-  @Post("validate-token")
-  async validateToken(
-    @Headers("authorization") authorization: string,
-  ) {
+  @Post('validate-token')
+  async validateToken(@Headers('authorization') authorization: string) {
     if (!authorization) {
-      return { code: 401, message: "Authorization header missing" };
+      return { code: 401, message: 'Authorization header missing' };
     }
-    const token = authorization.split(" ")[1]; // Safely extracts token
+    const token = authorization.split(' ')[1]; // Safely extracts token
     return await this.authService.validateToken(token);
   }
 
@@ -88,14 +80,12 @@ export class AuthController {
   // =====================================================
 
   // REMOVED: @UseGuards(JwtAuthGuard) - Parsing should work even if token is expired!
-  @Post("parse-token")
-  async parseToken(
-    @Headers("authorization") authorization: string,
-  ) {
+  @Post('parse-token')
+  async parseToken(@Headers('authorization') authorization: string) {
     if (!authorization) {
-      return { code: 401, message: "Authorization header missing" };
+      return { code: 401, message: 'Authorization header missing' };
     }
-    const token = authorization.split(" ")[1];
+    const token = authorization.split(' ')[1];
     return await this.authService.parseToken(token);
   }
 
@@ -106,13 +96,9 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   // @Authorize()   <-- Enable after JwtAuthGuard is ready
-  @Get("profile")
-  async getProfile(
-    @Req() req: any,
-  ) {
-    return await this.authService.getProfile(
-      req.user,
-    );
+  @Get('profile')
+  async getProfile(@Req() req: any) {
+    return await this.authService.getProfile(req.user);
   }
 
   // =====================================================
@@ -122,21 +108,14 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
   // @Authorize()   <-- Enable after JwtAuthGuard is ready
-  @Post("logout")
-  async logout(
-    @Req() req: any,
-  ) {
-    return await this.authService.logout(
-      req.user?.sub,
-    );
+  @Post('logout')
+  async logout(@Req() req: any) {
+    return await this.authService.logout(req.user?.sub);
   }
-
-  
 }
 
 @Controller('test')
 export class TestErrorsController {
-
   // 1. Test standard NestJS HttpException
   @Get('http-error')
   throwHttpError() {
