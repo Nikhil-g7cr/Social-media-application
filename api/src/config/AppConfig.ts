@@ -39,7 +39,7 @@ export class AppConfig {
         },
         rft: {
           expiresIn: process.env.JWT_WEB_RFT_EXPIRES_IN,
-          maxTtl: process.env.JWT_WEB_RFT_MAX_TTL || '30d',
+          maxTtl: process.env.JWT_WEB_RFT_MAX_TTL,
         },
       },
     };

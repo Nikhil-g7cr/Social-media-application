@@ -174,11 +174,11 @@ const ProfilePage: React.FC = () => {
                 </button> */}
               </>
             )}
-            <button className="rounded-md bg-white p-2 text-gray-400 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
+            {/* <button className="rounded-md bg-white p-2 text-gray-400 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
               <Link to="/settings" className="w-full h-full block">
                 <Settings className="h-5 w-5" />
               </Link>
-            </button>
+            </button> */}
           </div>
         </div>
 
