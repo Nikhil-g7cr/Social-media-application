@@ -14,6 +14,7 @@ import { messageFactory, messages } from '../../shared/message.shared';
 import { UsersDTO } from '../user/dto/users.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './models/jwt-payload.model';
+import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
 
 @Injectable()
 export class AuthService implements AbstractAuthSvc {
@@ -42,7 +43,7 @@ export class AuthService implements AbstractAuthSvc {
       if (existingUser.code === HttpStatus.OK) {
         return createResponse(
           HttpStatus.CONFLICT,
-          'User with this email already exists.',
+          AuthMessage.E3,
         );
       }
 
@@ -91,7 +92,7 @@ export class AuthService implements AbstractAuthSvc {
 
         return createResponse(
           HttpStatus.CREATED,
-          'User created and logged in successfully.',
+          AuthMessage.S2,
           {
             accessToken,
             refreshToken,
@@ -131,7 +132,7 @@ export class AuthService implements AbstractAuthSvc {
       if (userRes.code !== HttpStatus.OK) {
         return createResponse(
           HttpStatus.UNAUTHORIZED,
-          'Invalid email or password.',
+          AuthMessage.E2,
         );
       }
 
@@ -146,7 +147,7 @@ export class AuthService implements AbstractAuthSvc {
       if (!isPasswordValid) {
         return createResponse(
           HttpStatus.UNAUTHORIZED,
-          'Invalid email or password.',
+          AuthMessage.E2,
         );
       }
 
@@ -156,7 +157,6 @@ export class AuthService implements AbstractAuthSvc {
         email: user.EmailAddress,
         roles: [user.Role],
         name: user.FullName,
-        // image_url: user.ProfilePictureUrl,
       };
 
       // Generate Tokens
@@ -188,7 +188,7 @@ export class AuthService implements AbstractAuthSvc {
         IsRevoked: false,
       });
 
-      return createResponse(HttpStatus.OK, 'Login successful.', {
+      return createResponse(HttpStatus.OK, AuthMessage.S3, {
         accessToken,
         refreshToken,
       });
@@ -215,13 +215,13 @@ export class AuthService implements AbstractAuthSvc {
         secret: this.appConfig.get('jwt').appAXTSecret,
       });
 
-      return createResponse(HttpStatus.OK, 'Token is valid.', payload);
+      return createResponse(HttpStatus.OK, TokenMessage.VALID, payload);
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.UNAUTHORIZED);
 
       return createResponse(
         HttpStatus.UNAUTHORIZED,
-        'Invalid or expired token.',
+        TokenMessage.INVALID,
       );
     }
   }
@@ -235,12 +235,12 @@ export class AuthService implements AbstractAuthSvc {
       const payload = this.jwtService.decode(token);
 
       if (!payload) {
-        return createResponse(HttpStatus.BAD_REQUEST, 'Invalid token.');
+        return createResponse(HttpStatus.BAD_REQUEST, TokenMessage.INVALID);
       }
 
       return createResponse(
         HttpStatus.OK,
-        'Token parsed successfully.',
+        TokenMessage.TP,
         payload,
       );
     } catch (error: any) {
@@ -268,7 +268,6 @@ export class AuthService implements AbstractAuthSvc {
         email: verify.email,
         roles: verify.roles,
         name: verify.name,
-        // image_url: verify.image_url,
       };
 
       const accessToken = await this.jwtService.signAsync(payload, {
@@ -278,7 +277,7 @@ export class AuthService implements AbstractAuthSvc {
 
       return createResponse(
         HttpStatus.OK,
-        'Access token refreshed successfully.',
+        TokenMessage.TR,
         {
           accessToken,
         },
@@ -286,7 +285,7 @@ export class AuthService implements AbstractAuthSvc {
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.UNAUTHORIZED);
 
-      return createResponse(HttpStatus.UNAUTHORIZED, 'Invalid refresh token.');
+      return createResponse(HttpStatus.UNAUTHORIZED, TokenMessage.IRT);
     }
   }
 
@@ -316,6 +315,6 @@ export class AuthService implements AbstractAuthSvc {
 
   async logout(userId: string): Promise<AppResponse> {
     // Later you can revoke refresh token here.
-    return createResponse(HttpStatus.OK, 'User logged out successfully.');
+    return createResponse(HttpStatus.OK, AuthMessage.S4);
   }
 }

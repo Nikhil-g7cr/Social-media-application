@@ -166,19 +166,8 @@ const ProfilePage: React.FC = () => {
                 >
                   Your Activity
                 </button>
-                {/* <button
-                  onClick={() => navigate('/profile/update')}
-                  className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-blue-500 sm:flex-none transition"
-                >
-                  Edit Profile
-                </button> */}
               </>
             )}
-            {/* <button className="rounded-md bg-white p-2 text-gray-400 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 transition">
-              <Link to="/settings" className="w-full h-full block">
-                <Settings className="h-5 w-5" />
-              </Link>
-            </button> */}
           </div>
         </div>
 
