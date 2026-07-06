@@ -1,4 +1,4 @@
-import React, { useState, useMemo, memo } from 'react';
+import React, { useState, useMemo, memo, useEffect } from 'react';
 import { Settings, Grid, Heart, Bookmark, Trash2 } from 'lucide-react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import PostImage from '../../shared/shared-components/PostImage';
@@ -75,6 +75,7 @@ const ProfilePage: React.FC = () => {
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers?.onlineUserIds || []);
 
   const targetUserId = userId || (currentUser?.id);
+  const isCurrentUser = currentUser?.id === targetUserId;
 
   const { data: userProfile, isLoading: isUserLoading, isError: isUserError, error: userError, refetch: refetchUser } = useGetUserByIdQuery(targetUserId, { skip: !targetUserId });
   const { data: followInfo, isLoading: isFollowInfoLoading, isError: isFollowInfoError, error: followInfoError, refetch: refetchFollowInfo } = useGetProfileFollowInfoQuery(targetUserId, { skip: !targetUserId });
@@ -84,7 +85,7 @@ const ProfilePage: React.FC = () => {
   const likedPostsPage = activeTab === 'liked' ? page : 1;
 
   const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
-  const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page: likedPostsPage, limit: 10 }, { skip: !targetUserId });
+  const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page: likedPostsPage, limit: 10 }, { skip: !targetUserId || !isCurrentUser });
   const [deletePost] = useDeletePostMutation();
 
   const userPosts = userPostsData?.posts || [];
@@ -94,8 +95,6 @@ const ProfilePage: React.FC = () => {
   const isFetching = activeTab === 'posts' ? isPostsFetching : isLikedPostsFetching;
 
   const [modalState, setModalState] = useState<{ isOpen: boolean, type: 'followers' | 'following' }>({ isOpen: false, type: 'followers' });
-
-  const isCurrentUser = currentUser?.id === targetUserId;
   const isLoading = isUserLoading || isFollowInfoLoading;
 
   const handleTabChange = (tab: 'posts' | 'liked' | 'saved') => {
@@ -104,6 +103,13 @@ const ProfilePage: React.FC = () => {
       setPage(1);
     }
   };
+
+  useEffect(() => {
+    if (!isCurrentUser && activeTab !== 'posts') {
+      setActiveTab('posts');
+      setPage(1);
+    }
+  }, [isCurrentUser, activeTab]);
 
   const profile = useMemo(() => {
     if (!userProfile) return null;
@@ -191,10 +197,12 @@ const ProfilePage: React.FC = () => {
             <span className="font-bold text-gray-900">{profile.stats.posts}</span>
             <span className="text-sm text-gray-500">Posts</span>
           </div>
-          <div className="flex flex-col items-center sm:flex-row sm:gap-2">
-            <span className="font-bold text-gray-900">{likedPostsCount}</span>
-            <span className="text-sm text-gray-500">Liked</span>
-          </div>
+          {isCurrentUser && (
+            <div className="flex flex-col items-center sm:flex-row sm:gap-2">
+              <span className="font-bold text-gray-900">{likedPostsCount}</span>
+              <span className="text-sm text-gray-500">Liked</span>
+            </div>
+          )}
           <div
             className="flex flex-col items-center sm:flex-row sm:gap-2 cursor-pointer hover:underline"
             onClick={() => setModalState({ isOpen: true, type: 'followers' })}
@@ -222,22 +230,26 @@ const ProfilePage: React.FC = () => {
               <Grid className="h-4 w-4" />
               Posts
             </button>
-            <button
-              onClick={() => handleTabChange('liked')}
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'liked' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-            >
-              <Heart className="h-4 w-4" />
-              Liked
-            </button>
-            <button
-              onClick={() => handleTabChange('saved')}
-              className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'saved' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                }`}
-            >
-              <Bookmark className="h-4 w-4" />
-              Saved
-            </button>
+            {isCurrentUser && (
+              <>
+                <button
+                  onClick={() => handleTabChange('liked')}
+                  className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'liked' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                >
+                  <Heart className="h-4 w-4" />
+                  Liked
+                </button>
+                <button
+                  onClick={() => handleTabChange('saved')}
+                  className={`flex items-center gap-2 border-b-2 px-4 py-3 text-sm font-medium transition ${activeTab === 'saved' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                >
+                  <Bookmark className="h-4 w-4" />
+                  Saved
+                </button>
+              </>
+            )}
           </div>
 
           {/* Grid Content Area */}
