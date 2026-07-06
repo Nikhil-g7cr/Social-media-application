@@ -159,7 +159,7 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <div className="mt-4 flex gap-3 sm:mb-2 sm:mt-0">
-            {isCurrentUser && (
+            {isCurrentUser ? (
               <>
                 <button
                   onClick={() => navigate('/your-activity')}
@@ -168,6 +168,8 @@ const ProfilePage: React.FC = () => {
                   Your Activity
                 </button>
               </>
+            ) : (
+              <FollowButton userId={profile.id} />
             )}
           </div>
         </div>
