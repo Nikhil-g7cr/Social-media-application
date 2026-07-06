@@ -18,7 +18,7 @@ import { JwtPayload } from './models/jwt-payload.model';
 import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
 
 /** Maximum number of concurrent active sessions per user. */
-const MAX_SESSIONS = 5;
+const MAX_SESSIONS = 1;
 
 /** Refresh token TTL in days (must match JWT_WEB_RFT_EXPIRES_IN=7d). */
 const REFRESH_TOKEN_TTL_DAYS = 7;
@@ -30,7 +30,7 @@ export class AuthService implements AbstractAuthSvc {
     private readonly jwtService: JwtService,
     private readonly appConfig: AppConfig,
     private readonly logger: AppLogger,
-  ) {}
+  ) { }
 
   // =====================================================
   // PRIVATE HELPERS
@@ -49,12 +49,11 @@ export class AuthService implements AbstractAuthSvc {
    * If ua-parser-js is added to the project in the future, this helper
    * is the only place that needs to change.
    */
-  private parseDeviceInfo(userAgent?: string): string {
+  private parseDeviceInfo(userAgent?: string, clientBrowser?: string): string {
     if (!userAgent) return 'Unknown Device';
-
     const ua = userAgent;
 
-    // ── OS detection ─────────────────────────────────────────────────────
+    // OS detection (unchanged)
     let os = 'Unknown OS';
     if (/Windows NT 10\.0/i.test(ua)) os = 'Windows 10/11';
     else if (/Windows NT 6\.1/i.test(ua)) os = 'Windows 7';
@@ -64,16 +63,22 @@ export class AuthService implements AbstractAuthSvc {
     else if (/Macintosh/i.test(ua)) os = 'macOS';
     else if (/Linux/i.test(ua)) os = 'Linux';
 
-    // ── Browser detection (order matters — Edge before Chrome) ───────────
-    let browser = 'Unknown Browser';
-    if (/Edg\//i.test(ua)) browser = 'Edge';
-    else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = 'Opera';
-    else if (/Firefox\//i.test(ua)) browser = 'Firefox';
-    else if (/SamsungBrowser/i.test(ua)) browser = 'Samsung Browser';
-    else if (/Chrome\//i.test(ua)) browser = 'Chrome';
-    else if (/Safari\//i.test(ua)) browser = 'Safari';
+    // Browser detection — client hint overrides UA sniffing
+    let browser: string;
+    if (clientBrowser) {
+      // Trust the client-provided value (Brave, etc.)
+      browser = clientBrowser;
+    } else {
+      browser = 'Unknown Browser';
+      if (/Edg\//i.test(ua)) browser = 'Edge';
+      else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) browser = 'Opera';
+      else if (/Firefox\//i.test(ua)) browser = 'Firefox';
+      else if (/SamsungBrowser/i.test(ua)) browser = 'Samsung Browser';
+      else if (/Chrome\//i.test(ua)) browser = 'Chrome';
+      else if (/Safari\//i.test(ua)) browser = 'Safari';
+    }
 
-    // ── Device type detection ─────────────────────────────────────────────
+    // Device type (unchanged)
     let type = 'Desktop';
     if (/Mobile/i.test(ua)) type = 'Mobile';
     else if (/Tablet|iPad/i.test(ua)) type = 'Tablet';
