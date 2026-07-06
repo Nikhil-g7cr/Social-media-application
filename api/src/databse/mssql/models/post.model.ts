@@ -51,7 +51,7 @@ class Posts extends Model<Posts> {
 	[PostsColumns.Type]!: PostTypes;
 
 	@Column({
-		type: `${SQLDataType.VARCHAR}(3000)`,
+		type: `${SQLDataType.NVARCHAR}(3000)`,
 		allowNull: true
 	})
 	[PostsColumns.Content]?: string;

@@ -25,7 +25,7 @@ const PostCard: React.FC<PostCardProps> = ({
   const { open } = usePostPopup();
 
   const handleCardClick = () => {
-    open(PostPopupMode.VIEW, { postId: post.id });
+    open(PostPopupMode.VIEW, { postId: post.id, initialPost: post });
   };
 
   // Normalize media for the carousel

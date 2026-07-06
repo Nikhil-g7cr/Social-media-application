@@ -4,10 +4,13 @@ import { useGetUserByIdQuery } from '../../../../redux/features/user/userApiSlic
 import { useLikePostMutation, useUnlikePostMutation } from '../../../../redux/features/like/likeApiSlice';
 import { useAppSelector } from '../../../../redux/hooks';
 
-export const useViewPost = (postId?: string) => {
-  const { data: postData, isLoading, error } = useGetPostByIdQuery(postId || '', {
+export const useViewPost = (postId?: string, initialPost?: any) => {
+  const { data: fetchedPostData, isLoading: isQueryLoading, error } = useGetPostByIdQuery(postId || '', {
     skip: !postId,
   });
+
+  const postData = fetchedPostData || initialPost;
+  const isLoading = isQueryLoading && !postData;
 
   const { data: authorDetails } = useGetUserByIdQuery(postData?.author?.id || '', {
     skip: !postData?.author?.id || postData?.author?.name !== 'Unknown', 
@@ -49,7 +52,7 @@ export const useViewPost = (postId?: string) => {
   return { 
     post, 
     isLoading, 
-    error, 
+    error: !postData ? error : undefined, 
     user, 
     onlineUserIds, 
     toggleLike 

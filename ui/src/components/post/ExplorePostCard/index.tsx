@@ -18,7 +18,7 @@ const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
   return (
     <div 
       className="break-inside-avoid relative group rounded-xl overflow-hidden bg-gray-200 cursor-pointer shadow-sm hover:shadow-md transition-shadow h-full"
-      onClick={() => open(PostPopupMode.VIEW, { postId: post.id })}
+      onClick={() => open(PostPopupMode.VIEW, { postId: post.id, initialPost: post })}
     >
       {/* Post Media or Text Fallback */}
       {mediaToRender.length > 0 ? (

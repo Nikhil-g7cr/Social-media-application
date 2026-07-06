@@ -38,7 +38,7 @@ postPopupRegistry.register({
   component: ViewPostScreen,
   size: 'lg',
   title: 'View Post',
-  showCloseButton: true,
+  showCloseButton: false,
   closeOnBackdrop: true,
   closeOnEscape: true,
 });
