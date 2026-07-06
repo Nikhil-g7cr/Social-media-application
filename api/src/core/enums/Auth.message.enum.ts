@@ -6,6 +6,9 @@ export const enum AuthMessage {
   S4='Logout successfully.',
   S5='User deleted successfully.',
   S6='User verified successfully.',
+  S7='Logged out from all devices successfully.',
+  S8='Session removed successfully.',
+  S9='Active sessions fetched successfully.',
 
   // Error messages
   E1='user not found.',
@@ -13,6 +16,9 @@ export const enum AuthMessage {
   E3='User already exists.',
   E4='User is not verified.',
   E5='User is blocked.',
+  E6='Maximum active session limit (5) reached. Please log out from another device first.',
+  E7='Session not found or already expired.',
+  E8='You do not have permission to remove this session.',
 }
 
 export const enum TokenMessage {
@@ -21,4 +27,5 @@ export const enum TokenMessage {
   TP= 'Token parsed successfully.',
   TR= 'Token refreshed successfully.',
   IRT= 'Invalid refresh token.',
-}
+  IRS= 'Invalid or expired session. Please log in again.',
+}

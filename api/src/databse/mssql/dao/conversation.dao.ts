@@ -9,6 +9,7 @@ import { Op } from 'sequelize';
 import { ConversationAbstractSQLDAO } from '../abstract/conversation.abstract.mssql';
 import { FollowAbstractSQLDao } from '../abstract/follow.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
+import { ChatMessage } from '../../../core/enums/Chat.message.enum';
 import { Conversation } from '../models/conversation.model';
 import { CP } from '../models/conversationParticipants.model';
 import { Message } from '../models/message.model';
@@ -31,7 +32,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
 
   async getAllConversations(conversationId: string): Promise<any[]> {
     return this.cpModel.findAll({
-      where: { ConversationID: conversationId }
+      where: { ConversationID: conversationId },
     });
   }
 
@@ -163,7 +164,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
     targetUserId: string,
   ): Promise<{ conversationId: string }> {
     if (currentUserId === targetUserId) {
-      throw new Error('Cannot start conversation with yourself');
+      throw new Error(ChatMessage.CANNOT_START_WITH_YOURSELF);
     }
 
     const [iFollowThem, theyFollowMe] = await Promise.all([
@@ -172,9 +173,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
     ]);
 
     if (!iFollowThem || !theyFollowMe) {
-      throw new ForbiddenException(
-        'You can only chat with people who mutually follow you.',
-      );
+      throw new ForbiddenException(ChatMessage.MUTUAL_FOLLOW_REQUIRED);
     }
 
     const currentUserCps = await this.cpModel.findAll({
@@ -241,9 +240,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
     );
 
     if (filteredParticipants.length < 1) {
-      throw new BadRequestException(
-        'A group must contain at least 2 members including yourself.',
-      );
+      throw new BadRequestException(ChatMessage.GROUP_MEMBER_REQUIRED);
     }
 
     const conversationId = uuidv4();
@@ -287,7 +284,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
     const conversation = await this.conversationModel.findByPk(conversationId);
 
     if (!conversation || conversation.Type !== 'group') {
-      throw new BadRequestException('Group conversation not found.');
+      throw new BadRequestException(ChatMessage.GROUP_NOT_FOUND);
     }
 
     const currentParticipant = await this.cpModel.findOne({
@@ -295,9 +292,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
     });
 
     if (!currentParticipant) {
-      throw new ForbiddenException(
-        'You are not a participant of this conversation',
-      );
+      throw new ForbiddenException(ChatMessage.NOT_PARTICIPANT);
     }
 
     const uniqueParticipants = [...new Set(participants)].filter(
@@ -346,9 +341,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
       where: { ConversationID: conversationId, UserID: userId },
     });
     if (!cp) {
-      throw new ForbiddenException(
-        'You are not a participant of this conversation',
-      );
+      throw new ForbiddenException(ChatMessage.NOT_PARTICIPANT);
     }
 
     cp.HistoryClearedAt = new Date();
@@ -374,6 +367,4 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
 
     return { success: true };
   }
-
-
 }

@@ -2,19 +2,28 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
   Get,
   Headers,
+  Param,
   Post,
-  Req,
   Ip,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiBody, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiBody,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+} from '@nestjs/swagger';
 
 import { AbstractAuthSvc } from './auth.abstract';
 import { LoginDto } from './dto/login.dto';
 import { UsersDTO } from '../user/dto/users.dto';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
+import { CurrentUser } from '../../core/decorators/current-user.decorator';
+import type { JwtPayload } from './models/jwt-payload.model';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -26,9 +35,8 @@ export class AuthController {
   // =====================================================
 
   @Post('signup')
-  @ApiBody({
-    type: UsersDTO,
-  })
+  @ApiOperation({ summary: 'Register a new user account' })
+  @ApiBody({ type: UsersDTO })
   async signup(
     @Body() userData: UsersDTO,
     @Ip() ip: string,
@@ -42,9 +50,8 @@ export class AuthController {
   // =====================================================
 
   @Post('login')
-  @ApiBody({
-    type: LoginDto,
-  })
+  @ApiOperation({ summary: 'Authenticate user and receive tokens' })
+  @ApiBody({ type: LoginDto })
   async login(
     @Body() loginData: LoginDto,
     @Ip() ip: string,
@@ -58,6 +65,12 @@ export class AuthController {
   // =====================================================
 
   @Post('refresh-token')
+  @ApiOperation({
+    summary: 'Rotate tokens using a valid refresh token',
+    description:
+      'Verifies the refresh token, compares it against the stored bcrypt hash, ' +
+      'and issues a new access + refresh token pair. The old refresh token is invalidated.',
+  })
   async refreshToken(@Body('refreshToken') refreshToken: string) {
     return await this.authService.refreshToken(refreshToken);
   }
@@ -67,20 +80,22 @@ export class AuthController {
   // =====================================================
 
   @Post('validate-token')
+  @ApiOperation({ summary: 'Verify that an access token is valid and not expired' })
   async validateToken(@Headers('authorization') authorization: string) {
     if (!authorization) {
       return { code: 401, message: 'Authorization header missing' };
     }
-    const token = authorization.split(' ')[1]; // Safely extracts token
+    const token = authorization.split(' ')[1];
     return await this.authService.validateToken(token);
   }
 
   // =====================================================
-  // PARSE TOKEN (Optional)
+  // PARSE TOKEN
   // =====================================================
 
-  // REMOVED: @UseGuards(JwtAuthGuard) - Parsing should work even if token is expired!
+  // REMOVED: @UseGuards(JwtAuthGuard) — parsing works even if token is expired
   @Post('parse-token')
+  @ApiOperation({ summary: 'Decode a token and return its payload (no verification)' })
   async parseToken(@Headers('authorization') authorization: string) {
     if (!authorization) {
       return { code: 401, message: 'Authorization header missing' };
@@ -95,38 +110,98 @@ export class AuthController {
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  // @Authorize()   <-- Enable after JwtAuthGuard is ready
   @Get('profile')
-  async getProfile(@Req() req: any) {
-    return await this.authService.getProfile(req.user);
+  @ApiOperation({ summary: 'Get the profile of the currently authenticated user' })
+  async getProfile(@CurrentUser() user: JwtPayload) {
+    return await this.authService.getProfile(user);
   }
 
   // =====================================================
-  // LOGOUT
+  // GET ACTIVE SESSIONS
   // =====================================================
 
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth()
-  // @Authorize()   <-- Enable after JwtAuthGuard is ready
+  @Get('sessions')
+  @ApiOperation({
+    summary: 'List all active sessions for the current user',
+    description: 'Returns device info, IP address, and timestamps. Refresh token hashes are never returned.',
+  })
+  async getSessions(@CurrentUser() user: JwtPayload) {
+    return await this.authService.getSessions(user.sub);
+  }
+
+  // =====================================================
+  // LOGOUT (current device only)
+  // =====================================================
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
   @Post('logout')
-  async logout(@Req() req: any) {
-    return await this.authService.logout(req.user?.sub);
+  @ApiOperation({
+    summary: 'Log out from the current device',
+    description: 'Deletes the session associated with the access token used for this request.',
+  })
+  async logout(@CurrentUser() user: JwtPayload) {
+    return await this.authService.logout(user.sessionId!);
+  }
+
+  // =====================================================
+  // LOGOUT FROM ALL DEVICES
+  // =====================================================
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Post('logout/all')
+  @ApiOperation({
+    summary: 'Log out from all devices',
+    description: 'Deletes every active session belonging to the current user.',
+  })
+  async logoutAll(@CurrentUser() user: JwtPayload) {
+    return await this.authService.logoutAll(user.sub);
+  }
+
+  // =====================================================
+  // REMOVE ONE SPECIFIC SESSION (device management)
+  // =====================================================
+
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  @Delete('sessions/:sessionId')
+  @ApiOperation({
+    summary: 'Remove a specific session by ID',
+    description:
+      'Allows a user to remotely log out a specific device. ' +
+      'The session must belong to the authenticated user.',
+  })
+  @ApiParam({
+    name: 'sessionId',
+    description: 'UUID of the session to remove',
+    example: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
+  })
+  async removeSession(
+    @CurrentUser() user: JwtPayload,
+    @Param('sessionId') sessionId: string,
+  ) {
+    return await this.authService.removeSession(user.sub, sessionId);
   }
 }
+
+// =====================================================
+// TEST / DEBUG CONTROLLER (kept from original)
+// =====================================================
 
 @Controller('test')
 export class TestErrorsController {
   // 1. Test standard NestJS HttpException
   @Get('http-error')
   throwHttpError() {
-    // Should return 400 Bad Request
     throw new BadRequestException('This is a simulated bad request');
   }
 
   // 2. Test Sequelize Unique Constraint
   @Get('unique-error')
   throwUniqueConstraint() {
-    // Should return 409 Conflict
     const error = new Error('Validation error');
     error.name = 'SequelizeUniqueConstraintError';
     (error as any).errors = [{ message: 'email must be unique' }];
@@ -136,7 +211,6 @@ export class TestErrorsController {
   // 3. Test JWT Token Error
   @Get('jwt-error')
   throwJwtError() {
-    // Should return 401 Unauthorized
     const error = new Error('jwt expired');
     error.name = 'TokenExpiredError';
     throw error;
@@ -145,7 +219,6 @@ export class TestErrorsController {
   // 4. Test Unhandled Generic Error
   @Get('server-error')
   throwServerError() {
-    // Should return 500 Internal Server Error
     throw new Error('Something completely unexpected broke!');
   }
 }

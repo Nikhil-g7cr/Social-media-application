@@ -3,6 +3,7 @@ import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import { MessageAbstractSQLDAO } from '../abstract/message.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
+import { ChatMessage } from '../../../core/enums/Chat.message.enum';
 import { Message } from '../models/message.model';
 import { MessageAttachment } from '../models/messageAttachment.model';
 import { CP } from '../models/conversationParticipants.model';
@@ -23,9 +24,7 @@ export class MessageSQLDAO implements MessageAbstractSQLDAO {
 
   async getConversationHistory(conversationId: string, userId: string) {
     if (!userId) {
-      throw new Error(
-        'ChatService: getConversationHistory called with undefined userId. Check your Auth Guard/Decorator.',
-      );
+      throw new Error(ChatMessage.USER_ID_REQUIRED);
     }
 
     const cp = await this.cpModel.findOne({

@@ -24,4 +24,10 @@ export interface JwtPayload {
    * User profile picture url
    */
   image_url?: string;
-}
+
+  /**
+   * Active session ID — used by logout and refresh flows
+   * to target the exact session row without extra DB lookups.
+   */
+  sessionId?: string;
+}
