@@ -26,7 +26,7 @@ interface SignupFormData {
 const SignupPage = () => {
   const [signup, { isLoading }] = useSignupMutation();
   const [triggerCheckUsername] = useLazyCheckUsernameAvailabilityQuery();
-  const { uploadFiles } = useMediaUpload();
+  const { uploadFiles } = useMediaUpload("profile");
   const navigate = useNavigate();
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);

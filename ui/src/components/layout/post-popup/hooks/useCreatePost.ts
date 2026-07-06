@@ -6,7 +6,7 @@ export const POST_CONTENT_MAX_LENGTH = 3000;
 
 export const useCreatePost = (onSuccess?: () => void) => {
   const [createPost, { isLoading: isSubmitting }] = useCreatePostMutation();
-  const { uploadFiles } = useMediaUpload();
+  const { uploadFiles } = useMediaUpload("posts");
   
   const [newPostContent, setNewPostContent] = useState("");
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);

@@ -9,12 +9,12 @@ export interface UploadedMedia {
     fileSize: number;
 }
 
-export const useMediaUpload = () => {
+export const useMediaUpload = (defaultFolder?: string) => {
     const [isUploading, setIsUploading] = useState(false);
     const [getUploadUrl] = useGetUploadUrlMutation();
     const [uploadImageToAzure] = useUploadImageToAzureMutation();
 
-    const uploadFiles = async (files: File[]): Promise<UploadedMedia[]> => {
+    const uploadFiles = async (files: File[], overrideFolder?: string): Promise<UploadedMedia[]> => {
         if (!files || files.length === 0) return [];
         
         setIsUploading(true);
@@ -31,6 +31,7 @@ export const useMediaUpload = () => {
                 const { uploadUrl, blobPath } = await getUploadUrl({
                     fileName: file.name,
                     contentType: file.type,
+                    folder: overrideFolder || defaultFolder,
                 }).unwrap();
 
                 // 3. Upload to Azure

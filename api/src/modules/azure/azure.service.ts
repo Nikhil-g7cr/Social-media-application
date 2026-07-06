@@ -37,10 +37,11 @@ export class FileService implements OnModuleInit {
   }
 
   async onModuleInit() {
+    const containerClient = this.blobServiceClient.getContainerClient(this.containerName);
+    await containerClient.createIfNotExists();
     try {
       this.logger.log('Configuring Azure Blob Storage CORS rules...');
       const properties = await this.blobServiceClient.getProperties();
-      
       // Ensure our frontend can upload directly to blob storage
       properties.cors = [
         {
@@ -79,7 +80,7 @@ export class FileService implements OnModuleInit {
     }
 
     const extension = fileName.split('.').pop();
-    const folderName = folder || 'posts';
+    const folderName = folder || 'gallery';
     const blobName = `${folderName}/${uuidv4()}.${extension}`;
 
     const containerClient = this.blobServiceClient.getContainerClient(

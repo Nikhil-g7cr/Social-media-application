@@ -351,7 +351,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
             },
             invalidatesTags: (_result, _error, id) => [{ type: 'Post', id }],
         }),
-        getUploadUrl: builder.mutation<{ uploadUrl: string; blobPath: string; expiresIn: string }, { fileName: string; contentType: string }>({
+        getUploadUrl: builder.mutation<{ uploadUrl: string; blobPath: string; expiresIn: string }, { fileName: string; contentType: string; folder?: string }>({
             query: (data) => ({
                 url: 'files/upload-url',
                 method: 'POST',

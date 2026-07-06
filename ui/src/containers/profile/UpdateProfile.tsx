@@ -32,7 +32,7 @@ const UpdateProfilePage = () => {
 
   const [updateProfile, { isLoading: isUpdating }] =
     useUpdateUserProfileMutation();
-  const { uploadFiles } = useMediaUpload();
+  const { uploadFiles } = useMediaUpload("profile");
 
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);

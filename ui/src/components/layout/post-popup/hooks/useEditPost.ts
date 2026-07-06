@@ -10,7 +10,7 @@ export const useEditPost = (postId?: string, onSuccess?: () => void) => {
   });
 
   const [updatePost, { isLoading: isUpdating }] = useUpdatePostMutation();
-  const { uploadFiles } = useMediaUpload();
+  const { uploadFiles } = useMediaUpload("posts");
 
   const [existingMedia, setExistingMedia] = useState<any[]>([]);
   const [newFiles, setNewFiles] = useState<File[]>([]);
