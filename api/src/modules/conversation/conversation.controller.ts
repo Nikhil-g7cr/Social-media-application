@@ -11,6 +11,11 @@ import { ApiBearerAuth } from 'node_modules/@nestjs/swagger/dist/decorators/api-
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
+  @Get(':id')
+  getAllConversations(@Param('id') conversationId: string) {
+    return this.conversationService.getAllConversations(conversationId);
+  }
+  
   @Get()
   findAllForUser(@Req() req: any) {
     return this.conversationService.findAllForUser(req.user.sub);

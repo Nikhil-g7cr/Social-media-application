@@ -1,5 +1,8 @@
+
 export abstract class ConversationAbstractSQLDAO {
   abstract getUserConversations(userId: string): Promise<any[]>;
+
+  abstract getAllConversations(conversationId: string): Promise<any[]>;
 
   abstract startConversation(
     currentUserId: string,

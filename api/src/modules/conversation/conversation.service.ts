@@ -8,6 +8,10 @@ export class ConversationService {
     private readonly conversationDao: ConversationAbstractSQLDAO,
   ) {}
 
+  async getAllConversations(conversationId: string) {
+    return this.conversationDao.getAllConversations(conversationId);
+  }
+
   async findAllForUser(userId: string) {
     return this.conversationDao.getUserConversations(userId);
   }

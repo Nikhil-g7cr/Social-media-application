@@ -29,6 +29,12 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
     private readonly followDao: FollowAbstractSQLDao,
   ) {}
 
+  async getAllConversations(conversationId: string): Promise<any[]> {
+    return this.cpModel.findAll({
+      where: { ConversationID: conversationId }
+    });
+  }
+
   async getUserConversations(userId: string): Promise<any[]> {
     const userCps = await this.cpModel.findAll({
       where: { UserID: userId },
@@ -368,4 +374,6 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
 
     return { success: true };
   }
+
+
 }

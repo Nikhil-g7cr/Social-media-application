@@ -6,12 +6,15 @@ import { Users } from '../../databse/mssql/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
 import { NotificationService } from '../notification/notification.service';
 import { Op } from 'sequelize';
+import { ConversationAbstractSQLDAO } from 'src/databse/mssql/abstract/conversation.abstract.mssql';
 
 @Injectable()
 export class ChatService {
   constructor(
     @Inject(forwardRef(() => NotificationService))
-    private readonly notificationService: NotificationService
+    private readonly notificationService: NotificationService,
+
+    private readonly conversationDao: ConversationAbstractSQLDAO, // Replace 'any' with the actual type of your Conversation DAO
   ) {}
 
   // 1. Save a real-time message to MSSQL, return a normalized plain object
@@ -33,6 +36,8 @@ export class ChatService {
     if (payload.attachments && payload.attachments.length > 0) {
       for (const att of payload.attachments) {
         const attId = uuidv4();
+
+
         await MessageAttachment.create({
           ID: attId,
           Message_id: id,
@@ -49,6 +54,8 @@ export class ChatService {
           ThumbnailURL: att.thumbnailUrl,
           UploadedBy: payload.senderId,
         } as any);
+
+
         savedAttachments.push({
           id: attId,
           fileUrl: att.fileUrl,
@@ -95,9 +102,7 @@ export class ChatService {
     }
 
     // Find other participants in the conversation to notify them
-    const participants = await CP.findAll({
-      where: { ConversationID: payload.conversationId }
-    });
+    const participants = await this.conversationDao.getAllConversations(payload.conversationId);
     
     for (const participant of participants) {
       if (participant.UserID !== payload.senderId) {
