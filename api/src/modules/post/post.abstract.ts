@@ -17,7 +17,7 @@ export abstract class PostAbstractSvc {
     updatePostDto: UpdatePostDto,
   ): Promise<AppResponse>;
 
-  abstract deletePost(postId: string): Promise<AppResponse>;
+  abstract deletePost(postId: string, userId?: string, roles?: string[]): Promise<AppResponse>;
 
   abstract getLikedPostsByUserId(userId: string, pagination: PaginationDto): Promise<AppResponse>;
 

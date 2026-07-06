@@ -74,8 +74,13 @@ export class PostController {
   }
 
   @Delete(':id')
-  async deletePost(@Param('id') id: string): Promise<AppResponse> {
-    return await this.postService.deletePost(id);
+  @UseGuards(JwtAuthGuard)
+  async deletePost(
+    @Param('id') id: string,
+    @CurrentUser('sub') userId: string,
+    @CurrentUser('roles') roles: string[],
+  ): Promise<AppResponse> {
+    return await this.postService.deletePost(id, userId, roles);
   }
 
   @Get('liked/user/:userId')

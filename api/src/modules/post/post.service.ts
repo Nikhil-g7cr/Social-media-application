@@ -187,9 +187,32 @@ export class PostService implements PostAbstractSvc {
     }
   }
 
-  async deletePost(postId: string): Promise<AppResponse> {
+  async deletePost(postId: string, userId?: string, roles?: string[]): Promise<AppResponse> {
     try {
       this.logger.log(`[PostService] Deleting post with ID: ${postId}`, 200);
+
+      if (userId) {
+        const postRes = await this.postDao.getPostById(postId);
+        if (postRes.code === HttpStatus.NOT_FOUND || !postRes.data) {
+          return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
+        }
+        const postAuthorId = postRes.data.User?.ID || postRes.data.UserID || postRes.data.User?.Id;
+        const isAdmin = roles && (roles.includes('ADMIN') || roles.includes('admin') || roles.includes('Admin'));
+        if (postAuthorId !== userId && !isAdmin) {
+          return createResponse(HttpStatus.FORBIDDEN, 'You can only delete your own posts', null);
+        }
+
+        if (postRes.data.MediaURL) {
+          try { await this.fileService.deleteFile(postRes.data.MediaURL); } catch (e) {}
+        }
+        if (postRes.data.Media && Array.isArray(postRes.data.Media)) {
+          for (const m of postRes.data.Media) {
+            if (m.MediaURL) {
+              try { await this.fileService.deleteFile(m.MediaURL); } catch (e) {}
+            }
+          }
+        }
+      }
 
       return await this.postDao.deletePost(postId);
     } catch (error: any) {

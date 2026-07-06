@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { notification } from "antd";
-import { Image as ImageIcon, X } from "lucide-react";
+import { Image as ImageIcon, X, Trash2 } from "lucide-react";
 import { useSelector } from "react-redux";
 
 import DynamicForm from "../../shared/shared-components/DynamicForm";
 import { updatePostFields } from "../../components/layout/form/fields/updatePost.field";
 import { updatePostSchema, type UpdatePostFormData } from "../../components/layout/form/schemas/updatePost.schema";
-import { useGetPostByIdQuery, useUpdatePostMutation } from "../../redux/features/post/postApiSlice";
+import { useGetPostByIdQuery, useUpdatePostMutation, useDeletePostMutation } from "../../redux/features/post/postApiSlice";
 import { useMediaUpload } from "../../hooks/useMediaUpload";
 import type { RootState } from "../../redux/store";
 import MediaCarousel from "../../components/media/MediaCarousel";
@@ -33,6 +33,7 @@ const UpdatePostPage = () => {
   } = useEditPost(postId, () => {
     navigate(-1);
   });
+  const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
 
   if (isFetchingPost) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -118,9 +119,37 @@ const UpdatePostPage = () => {
           validationSchema={updatePostSchema}
           submitButtonText={isUploading || isUpdating ? "Saving..." : "Save Changes"}
           loading={isUpdating || isUploading}
-          disabled={isUpdating || isUploading}
+          disabled={isUpdating || isUploading || isDeleting}
           onSubmit={handleUpdate}
         />
+
+        <div className="mt-8 pt-6 border-t flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <h4 className="text-sm font-semibold text-red-600">Danger Zone</h4>
+            <p className="text-xs text-gray-500">Once deleted, this post and its media cannot be recovered.</p>
+          </div>
+          <button
+            type="button"
+            onClick={async () => {
+              if (window.confirm("Are you sure you want to delete this post?")) {
+                try {
+                  if (postId) {
+                    await deletePost(postId).unwrap();
+                    notification.success({ message: "Post deleted successfully" });
+                    navigate(-1);
+                  }
+                } catch (err) {
+                  notification.error({ message: "Failed to delete post" });
+                }
+              }
+            }}
+            disabled={isDeleting}
+            className="flex items-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg font-medium transition"
+          >
+            <Trash2 className="w-4 h-4" />
+            {isDeleting ? "Deleting..." : "Delete Post"}
+          </button>
+        </div>
       </div>
     </div>
   );

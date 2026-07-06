@@ -108,9 +108,13 @@ export class FileService implements OnModuleInit {
   }
 
   async deleteFile(blobUrl: string) {
-    const url = new URL(blobUrl);
-
-    const blobName = url.pathname.substring(this.containerName.length + 2);
+    let blobName = blobUrl;
+    try {
+      const url = new URL(blobUrl);
+      blobName = url.pathname.substring(this.containerName.length + 2);
+    } catch {
+      // Not a valid full URL, treat as direct blobName
+    }
 
     const containerClient = this.blobServiceClient.getContainerClient(
       this.containerName,

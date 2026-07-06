@@ -1,5 +1,5 @@
 import React, { useState, useMemo, memo } from 'react';
-import { Settings, Grid, Heart, Bookmark } from 'lucide-react';
+import { Settings, Grid, Heart, Bookmark, Trash2 } from 'lucide-react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import PostImage from '../../shared/shared-components/PostImage';
 import Avatar from '../../shared/shared-components/Avatar';
@@ -11,7 +11,7 @@ import {
   useGetFollowersQuery,
   useGetFollowingQuery
 } from '../../redux/features/user/userApiSlice';
-import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery } from '../../redux/features/post/postApiSlice';
+import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery, useDeletePostMutation } from '../../redux/features/post/postApiSlice';
 import { Edit3 } from 'lucide-react';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 import ErrorDisplay from '../../components/errors/ErrorDisplay';
@@ -85,6 +85,7 @@ const ProfilePage: React.FC = () => {
 
   const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
   const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page: likedPostsPage, limit: 10 }, { skip: !targetUserId });
+  const [deletePost] = useDeletePostMutation();
 
   const userPosts = userPostsData?.posts || [];
   const likedPosts = likedPostsData?.posts || [];
@@ -280,15 +281,32 @@ const ProfilePage: React.FC = () => {
                         <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white" /> {post.likes || 0}</span>
                       </div>
                       {isCurrentUser && (
-                        <button
-                          className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/post/update/${post.id}`);
-                          }}
-                        >
-                          <Edit3 className="w-4 h-4" /> Edit
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/post/update/${post.id}`);
+                            }}
+                          >
+                            <Edit3 className="w-4 h-4" /> Edit
+                          </button>
+                          <button
+                            className="flex items-center gap-1 bg-red-500/80 hover:bg-red-600 px-3 py-1 rounded-full text-sm font-medium transition"
+                            onClick={async (e) => {
+                              e.stopPropagation();
+                              if (window.confirm("Are you sure you want to delete this post?")) {
+                                try {
+                                  await deletePost(post.id).unwrap();
+                                } catch (err) {
+                                  console.error("Failed to delete post:", err);
+                                }
+                              }
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" /> Delete
+                          </button>
+                        </div>
                       )}
                     </div>
                   </div>
