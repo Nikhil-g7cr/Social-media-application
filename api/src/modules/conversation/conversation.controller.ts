@@ -3,9 +3,11 @@ import { ConversationService } from './conversation.service';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { CreateGroupDto } from './dto/create-group.dto';
 import { AddGroupMembersDto } from './dto/add-group-members.dto';
+import { ApiBearerAuth } from 'node_modules/@nestjs/swagger/dist/decorators/api-bearer.decorator';
 
 @Controller('conversation')
 @UseGuards(JwtAuthGuard)
+@ApiBearerAuth()
 export class ConversationController {
   constructor(private readonly conversationService: ConversationService) {}
 
@@ -33,6 +35,7 @@ export class ConversationController {
       dto.participants,
     );
   }
+
 
   @Post(':id/members')
   addGroupMembers(
