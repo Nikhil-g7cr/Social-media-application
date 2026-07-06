@@ -1,12 +1,7 @@
 import { Injectable, Inject, forwardRef } from '@nestjs/common';
-import { Message } from '../../databse/mssql/models/message.model';
-import { MessageAttachment } from '../../databse/mssql/models/messageAttachment.model';
-import { CP } from '../../databse/mssql/models/conversationParticipants.model';
-import { Users } from '../../databse/mssql/models/user.model';
-import { v4 as uuidv4 } from 'uuid';
 import { NotificationService } from '../notification/notification.service';
-import { Op } from 'sequelize';
-import { ConversationAbstractSQLDAO } from 'src/databse/mssql/abstract/conversation.abstract.mssql';
+import { ConversationAbstractSQLDAO } from '../../databse/mssql/abstract/conversation.abstract.mssql';
+import { MessageAbstractSQLDAO } from '../../databse/mssql/abstract/message.abstract.mssql';
 
 @Injectable()
 export class ChatService {
@@ -14,160 +9,37 @@ export class ChatService {
     @Inject(forwardRef(() => NotificationService))
     private readonly notificationService: NotificationService,
 
-    private readonly conversationDao: ConversationAbstractSQLDAO, // Replace 'any' with the actual type of your Conversation DAO
+    private readonly conversationDao: ConversationAbstractSQLDAO,
+    @Inject(MessageAbstractSQLDAO)
+    private readonly messageDao: MessageAbstractSQLDAO,
   ) {}
 
-  // 1. Save a real-time message to MSSQL, return a normalized plain object
-  async saveMessage(payload: { conversationId: string; senderId: string; text: string; attachments?: any[] }) {
-    const now = new Date();
-    const id = uuidv4();
+  async saveMessage(payload: {
+    conversationId: string;
+    senderId: string;
+    text: string;
+    attachments?: any[];
+  }) {
+    const savedMessage = await this.messageDao.saveMessage(payload);
 
-    await Message.create({
-      ID: id,
-      ConversationID: payload.conversationId,
-      SenderID: payload.senderId,
-      Message: payload.text,
-      IsRead: false,
-      CreatedAt: now,
-      ModifiedAt: now,
-    } as any);
+    const participants = await this.conversationDao.getAllConversations(
+      payload.conversationId,
+    );
 
-    const savedAttachments: any[] = [];
-    if (payload.attachments && payload.attachments.length > 0) {
-      for (const att of payload.attachments) {
-        const attId = uuidv4();
-
-
-        await MessageAttachment.create({
-          ID: attId,
-          Message_id: id,
-          FileURL: att.fileUrl,
-          FileType: att.fileType,
-          FileSizeBytes: att.fileSizeBytes,
-          CreatedAt: now,
-          OriginalFileName: att.originalFileName,
-          MimeType: att.mimeType,
-          FileExtension: att.fileExtension,
-          ImageWidth: att.imageWidth,
-          ImageHeight: att.imageHeight,
-          VideoDuration: att.videoDuration,
-          ThumbnailURL: att.thumbnailUrl,
-          UploadedBy: payload.senderId,
-        } as any);
-
-
-        savedAttachments.push({
-          id: attId,
-          fileUrl: att.fileUrl,
-          fileType: att.fileType,
-          fileSizeBytes: att.fileSizeBytes,
-          originalFileName: att.originalFileName,
-          mimeType: att.mimeType,
-          fileExtension: att.fileExtension,
-          imageWidth: att.imageWidth,
-          imageHeight: att.imageHeight,
-          videoDuration: att.videoDuration,
-          thumbnailUrl: att.thumbnailUrl,
-        });
-      }
-    }
-
-    // Return a normalized object (not a Sequelize model instance)
-    const normalizedMessage = {
-      id,
-      conversationId: payload.conversationId,
-      senderId: payload.senderId,
-      sender: null as null | {
-        id: string;
-        name: string;
-        username: string;
-        avatarUrl: string | null;
-      },
-      content: payload.text,
-      createdAt: now.toISOString(),
-      attachments: savedAttachments,
-    };
-
-    const sender = await Users.findByPk(payload.senderId, {
-      attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
-    });
-
-    if (sender) {
-      normalizedMessage.sender = {
-        id: sender.ID,
-        name: sender.FullName,
-        username: sender.UserName,
-        avatarUrl: sender.ProfilePictureUrl || null,
-      };
-    }
-
-    // Find other participants in the conversation to notify them
-    const participants = await this.conversationDao.getAllConversations(payload.conversationId);
-    
     for (const participant of participants) {
       if (participant.UserID !== payload.senderId) {
         await this.notificationService.createNotification({
           userId: participant.UserID,
           actorUserId: payload.senderId,
-          type: 'MESSAGE'
+          type: 'MESSAGE',
         });
       }
     }
 
-    return normalizedMessage;
+    return savedMessage;
   }
 
-  // 2. Fetch past messages for a specific chat room — normalized
-  async getConversationHistory(conversationId: string, userId:string) {
-
-    const cp = await CP.findOne({
-      where:{ConversationID:conversationId, UserID:userId}
-    });
-    const whereClause:any = {ConversationID:conversationId}
-
-    if (cp && cp.HistoryClearedAt) {
-      whereClause.CreatedAt = { [Op.gt]: cp.HistoryClearedAt };
-    }
-    const messages = await Message.findAll({
-      where: whereClause,
-      include: [
-        { model: MessageAttachment, as: 'attachments' },
-        {
-          model: Users,
-          as: 'Sender',
-          attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
-        },
-      ],
-      order: [['CreatedAt', 'ASC']],
-    });
-
-    return messages.map((m: any) => ({
-      id: m.ID,
-      conversationId: m.ConversationID,
-      senderId: m.SenderID,
-      sender: m.Sender
-        ? {
-            id: m.Sender.ID,
-            name: m.Sender.FullName,
-            username: m.Sender.UserName,
-            avatarUrl: m.Sender.ProfilePictureUrl || null,
-          }
-        : null,
-      content: m.Message,
-      createdAt: m.CreatedAt,
-      attachments: m.attachments ? m.attachments.map((a: any) => ({
-        id: a.ID,
-        fileUrl: a.FileURL,
-        fileType: a.FileType,
-        fileSizeBytes: a.FileSizeBytes,
-        originalFileName: a.OriginalFileName,
-        mimeType: a.MimeType,
-        fileExtension: a.FileExtension,
-        imageWidth: a.ImageWidth,
-        imageHeight: a.ImageHeight,
-        videoDuration: a.VideoDuration,
-        thumbnailUrl: a.ThumbnailURL,
-      })) : [],
-    }));
+  async getConversationHistory(conversationId: string, userId: string) {
+    return this.messageDao.getConversationHistory(conversationId, userId);
   }
 }

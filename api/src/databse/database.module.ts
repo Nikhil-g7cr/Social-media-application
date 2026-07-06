@@ -16,6 +16,8 @@ import { FollowAbstractSQLDao } from './mssql/abstract/follow.abstract.mssql';
 import { FollowSQLDao } from './mssql/dao/follow.dao';
 import { ConversationAbstractSQLDAO } from './mssql/abstract/conversation.abstract.mssql';
 import { ConversationSQLDAO } from './mssql/dao/conversation.dao';
+import { MessageAbstractSQLDAO } from './mssql/abstract/message.abstract.mssql';
+import { MessageSQLDAO } from './mssql/dao/message.dao';
 import { AdminAnalyticsAbsSQLDAO } from './mssql/abstract/admin-analytics.abstract.mssql';
 import { AdminAnalyticsSQLDAO } from './mssql/dao/admin-analytics.dao';
 
@@ -56,6 +58,10 @@ import { AdminAnalyticsSQLDAO } from './mssql/dao/admin-analytics.dao';
       provide: AdminAnalyticsAbsSQLDAO,
       useClass: AdminAnalyticsSQLDAO,
     },
+    {
+        provide: MessageAbstractSQLDAO,
+        useClass: MessageSQLDAO,
+    }
   ],
   exports: [
     ...sequelizeProvider,
@@ -93,6 +99,10 @@ import { AdminAnalyticsSQLDAO } from './mssql/dao/admin-analytics.dao';
       provide: AdminAnalyticsAbsSQLDAO,
       useClass: AdminAnalyticsSQLDAO,
     },
+    {
+        provide: MessageAbstractSQLDAO,
+        useClass: MessageSQLDAO,
+    }
   ],
 })
 export class DatabaseModule {}
