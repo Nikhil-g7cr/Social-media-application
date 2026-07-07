@@ -14,6 +14,7 @@ export const RESERVED_USERNAMES = [
   "notifications",
   "messages",
   "settings",
-  "tomo"
+  "tomo",
+  "manager"
 
 ];

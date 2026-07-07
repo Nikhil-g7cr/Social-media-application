@@ -6,8 +6,7 @@ import {
   IsArray,
   IsNumber,
 } from 'class-validator';
-
-import { PostTypes } from 'src/databse/mssql/models';
+import { PostTypes } from 'src/core/enums/post.enum';
 
 export class MediaItemDto {
   @IsString()

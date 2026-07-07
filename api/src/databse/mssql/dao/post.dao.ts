@@ -8,7 +8,7 @@ import {
 
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { PostAbstractSQLDao } from '../abstract/posts.abstract.mssql';
-import { Posts, PostsColumns } from '../models';
+import { Posts } from '../models';
 import AppLogger from 'src/core/logger/app-logger';
 import { MsSqlConstants } from '../connection/constant.mssql';
 
