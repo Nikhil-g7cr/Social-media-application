@@ -18,7 +18,7 @@ import { JwtPayload } from './models/jwt-payload.model';
 import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
 
 /** Maximum number of concurrent active sessions per user. */
-const MAX_SESSIONS = 1;
+const MAX_SESSIONS = 4;
 
 /**
  * Parse a JWT-style duration string (e.g. '7d', '1h', '30m') into milliseconds.
@@ -383,7 +383,21 @@ export class AuthService implements AbstractAuthSvc {
         verify = await this.jwtService.verifyAsync(refreshToken, {
           secret: this.appConfig.get('jwt').appRFTSecret,
         });
-      } catch {
+      } catch (jwtError: any) {
+        // If the JWT has expired, decode it (decode() ignores expiry) to get
+        // the sessionId and delete the session row immediately.
+        // This avoids waiting up to 60 minutes for the cron cleanup.
+        if (jwtError.name === 'TokenExpiredError') {
+          const decoded: any = this.jwtService.decode(refreshToken);
+          if (decoded?.sessionId) {
+            await this.authDao.deleteSession(decoded.sessionId);
+            this.logger.log(
+              `[AuthService] Refresh token expired — session ${decoded.sessionId} deleted immediately.`,
+            );
+          }
+          return createResponse(HttpStatus.UNAUTHORIZED, TokenMessage.IRS);
+        }
+        // Any other JWT error (bad signature, malformed token, etc.)
         return createResponse(HttpStatus.UNAUTHORIZED, TokenMessage.IRT);
       }
 

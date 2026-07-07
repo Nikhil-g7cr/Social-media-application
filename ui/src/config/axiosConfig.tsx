@@ -2,6 +2,14 @@ import axios from "axios";
 import { environment } from "../environment/environment";
 import { notification } from 'antd';
 import { updateSocketToken } from "../utils/socket";
+import { login } from "../redux/features/auth/AuthSlice";
+
+// We declare a variable to hold the Redux store without importing store.ts directly.
+// This breaks the circular dependency deadlock!
+let store: any;
+export const injectStore = (_store: any) => {
+    store = _store;
+};
 // Note: Removed react-jwt and manual date-fns checks. 
 // It is safer to let the backend tell us (via a 401) when a token is expired.
 
@@ -74,17 +82,27 @@ API.interceptors.response.use(
                     withCredentials: true 
                 });
 
-                // Assuming your backend returns { data: { accessToken: 'new_token' } }
+                // Assuming your backend returns { data: { accessToken: 'new_token', refreshToken: 'new_refresh' } }
                 const newAccessToken = result.data?.data?.accessToken || result.data?.accessToken;
+                const newRefreshToken = result.data?.data?.refreshToken || result.data?.refreshToken;
                 
                 if (!newAccessToken) {
                     throw new Error('Failed to retrieve new access token');
                 }
 
-                // Update sessionStorage with the new token
+                // Update sessionStorage with the new tokens
                 sessionStorage.setItem('accessToken', newAccessToken);
+                if (newRefreshToken) {
+                    sessionStorage.setItem('refreshToken', newRefreshToken);
+                }
 
                 updateSocketToken(newAccessToken);
+
+                // Pass the NEW refresh token into Redux memory!
+                store.dispatch(login({
+                    accessToken: newAccessToken, 
+                    refreshToken: newRefreshToken || refreshToken 
+                }));
 
                 // Update the failed request with the new token and retry it
                 originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
