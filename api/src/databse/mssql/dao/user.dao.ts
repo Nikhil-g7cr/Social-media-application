@@ -22,11 +22,15 @@ import {
 import { PostMedia } from '../models/postMedia.model';
 import AppLogger from '../../../core/logger/app-logger';
 import { UsersDTO } from '../../../modules/user/dto/users.dto';
-import { AppResponse, createResponse } from '../../../shared/appresponse.shared';
+import {
+  AppResponse,
+  createResponse,
+} from '../../../shared/appresponse.shared';
 import { UserAbsSQLDAO } from '../abstract/user.abstract.mssql';
 import { messageFactory, messages } from '../../../shared/message.shared';
 import { randomUUID } from 'crypto';
 import { UpdateUserDto } from '../../../modules/user/dto/UpdateUser.dto';
+import { UserMessage } from '../../../core/enums/user.enums';
 
 @Injectable()
 export class UserSQLDao implements UserAbsSQLDAO {
@@ -69,7 +73,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
         attributes: ['ID'], // Only fetch what's needed
       });
 
-      return createResponse(200, 'Username check completed.', {
+      return createResponse(200, UserMessage.S1, {
         available: !user,
       });
     } catch (error: any) {
@@ -87,7 +91,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
     try {
       const whereClause: any = showDeleted ? {} : { IsDeleted: false };
       const users = await this._user.findAll({ where: whereClause });
-      return createResponse(200, 'Users retrieved successfully', users);
+      return createResponse(200, UserMessage.S2, users);
     } catch (error: any) {
       this.logger.error(error.stack, 500);
       return {
@@ -110,7 +114,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
         attributes: ['ID', 'UserName', 'FullName', 'ProfilePictureUrl', 'Bio'],
         limit: 20,
       });
-      return createResponse(200, 'Users found', users);
+      return createResponse(200, UserMessage.S3, users);
     } catch (error: any) {
       this.logger.error(error.stack, 500);
       return {
@@ -130,7 +134,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
           null,
         );
       }
-      return createResponse(200, 'User found', user);
+      return createResponse(200, UserMessage.S4, user);
     } catch (error: any) {
       this.logger.error(error.stack, 500);
       return {
@@ -154,7 +158,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
           null,
         );
       }
-      return createResponse(200, 'Role retrieved successfully', {
+      return createResponse(200, UserMessage.S5, {
         Role: user.Role,
       });
     } catch (error: any) {
@@ -190,7 +194,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
       ); // <-- Added "as any" to bypass generic type errors
 
       await transaction.commit();
-      const successMsg = messageFactory(messages.S6);
+      const successMsg = UserMessage.S6;
       return createResponse(201, successMsg, newUser);
     } catch (error: any) {
       try {
@@ -247,7 +251,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
       );
 
       await transaction.commit();
-      return createResponse(200, messageFactory(messages.S5), {
+      return createResponse(200, UserMessage.S7, {
         updatedRowsCount,
       });
     } catch (error: any) {
@@ -277,7 +281,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
       }
       if ((user as any).IsDeleted) {
         await transaction.rollback();
-        return createResponse(400, 'User is already soft-deleted.', null);
+        return createResponse(400, UserMessage.E1, null);
       }
 
       // Invalidate sessions
@@ -299,7 +303,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
 
       await transaction.commit();
       this.logger.log(`User ${UserId} soft-deleted.`, 200);
-      return createResponse(200, 'User soft-deleted successfully.', null);
+      return createResponse(200, UserMessage.S8, null);
     } catch (error: any) {
       console.log('SOFT DELETE ERROR:', error);
       try {
@@ -332,7 +336,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
       }
       if (!(user as any).IsDeleted) {
         await transaction.rollback();
-        return createResponse(400, 'User is not soft-deleted.', null);
+        return createResponse(400, UserMessage.E2, null);
       }
 
       const [updatedCount] = await this._user.update(
@@ -351,7 +355,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
 
       await transaction.commit();
       this.logger.log(`User ${UserId} restored.`, 200);
-      return createResponse(200, 'User restored successfully.', null);
+      return createResponse(200, UserMessage.S9, null);
     } catch (error: any) {
       await transaction.rollback();
       this.logger.error(error.stack, 500);
@@ -508,11 +512,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
 
       await transaction.commit();
       this.logger.log(`User ${UserId} permanently deleted.`, 200);
-      return createResponse(
-        200,
-        'User permanently deleted successfully.',
-        null,
-      );
+      return createResponse(200, UserMessage.S10, null);
     } catch (error: any) {
       await transaction.rollback();
       this.logger.error(error.stack, 500);

@@ -21,6 +21,13 @@ export const enum AuthMessage {
   E6='Maximum active session limit (5) reached. Please log out from another device first.',
   E7='Session not found or already expired.',
   E8='You do not have permission to remove this session.',
+  E9='Access Denied: Only Admins can manually create users.',
+  E10='Access Denied: Only Admins can soft-delete users.',
+  E11='Access Denied: Only Admins can restore users.',
+  E12='Access Denied: Cannot soft-delete your own account.',
+  E13='Access Denied: Cannot restore your own account.',
+  E14='Access Denied: Only Admins can permanently delete users.',
+  E15='Access Denied: Cannot delete your own account.',
 }
 
 export const enum TokenMessage {

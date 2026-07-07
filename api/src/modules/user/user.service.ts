@@ -11,6 +11,7 @@ import { messageFactory, messages } from '../../shared/message.shared';
 import { UserRoles } from '../../core/enums/user.enums';
 import { DatabaseService } from '../../databse/database.service';
 import { UserAbsSQLDAO } from '../../databse/mssql/abstract/user.abstract.mssql';
+import { AuthMessage } from 'src/core/enums/Auth.message.enum';
 
 @Injectable()
 export class UserService implements UsersAbstractSvc {
@@ -69,7 +70,7 @@ export class UserService implements UsersAbstractSvc {
       if (payload && !payload.roles.includes(UserRoles.ADMIN)) {
         return createResponse(
           HttpStatus.FORBIDDEN,
-          'Access Denied: Only Admins can manually create users.',
+          AuthMessage.E9,
         );
       }
       return await this.userSQLAbsDAO.addUser(userInfo);
@@ -105,13 +106,13 @@ export class UserService implements UsersAbstractSvc {
       if (!payload.roles.includes(UserRoles.ADMIN)) {
         return createResponse(
           HttpStatus.FORBIDDEN,
-          'Access Denied: Only Admins can soft-delete users.',
+          AuthMessage.E10,
         );
       }
       if (payload.sub === userID) {
         return createResponse(
           HttpStatus.FORBIDDEN,
-          'Access Denied: Cannot soft-delete your own account.',
+          AuthMessage.E12,
         );
       }
       return await this.userSQLAbsDAO.softDeleteUser(userID);
@@ -129,7 +130,7 @@ export class UserService implements UsersAbstractSvc {
       if (!payload.roles.includes(UserRoles.ADMIN)) {
         return createResponse(
           HttpStatus.FORBIDDEN,
-          'Access Denied: Only Admins can restore users.',
+          AuthMessage.E11,
         );
       }
       return await this.userSQLAbsDAO.restoreUser(userID);
@@ -150,13 +151,13 @@ export class UserService implements UsersAbstractSvc {
       if (!payload.roles.includes(UserRoles.ADMIN)) {
         return createResponse(
           HttpStatus.FORBIDDEN,
-          'Access Denied: Only Admins can permanently delete users.',
+          AuthMessage.E14,
         );
       }
       if (payload.sub === userID) {
         return createResponse(
           HttpStatus.FORBIDDEN,
-          'Access Denied: Cannot delete your own account.',
+          AuthMessage.E15,
         );
       }
       return await this.userSQLAbsDAO.hardDeleteUser(userID);
