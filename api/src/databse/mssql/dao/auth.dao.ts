@@ -144,7 +144,13 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
     try {
       await this.sessionModel.create(sessionData as any);
     } catch (error: any) {
-      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(
+        `[AuthDAO] createSession failed: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+      // Rethrow so the service layer knows the session was not saved.
+      // Callers must NOT return tokens if the session insert failed.
+      throw error;
     }
   }
 
@@ -168,7 +174,11 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
         where: { [SessionColumns.ID]: sessionId },
       });
     } catch (error: any) {
-      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(
+        `[AuthDAO] updateSession failed for ${sessionId}: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+      throw error;
     }
   }
 
@@ -295,11 +305,20 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
    */
   async deleteSession(sessionId: string): Promise<void> {
     try {
-      await this.sessionModel.destroy({
+      const deleted = await this.sessionModel.destroy({
         where: { [SessionColumns.ID]: sessionId },
       });
+      if (deleted === 0) {
+        this.logger.warn(
+          `[AuthDAO] deleteSession: no row found for sessionId=${sessionId}`,
+        );
+      }
     } catch (error: any) {
-      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(
+        `[AuthDAO] deleteSession failed for ${sessionId}: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+      throw error;
     }
   }
 
@@ -309,11 +328,18 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
    */
   async deleteAllSessions(userId: string): Promise<void> {
     try {
-      await this.sessionModel.destroy({
+      const deleted = await this.sessionModel.destroy({
         where: { [SessionColumns.UserID]: userId },
       });
+      this.logger.log(
+        `[AuthDAO] deleteAllSessions: removed ${deleted} session(s) for user ${userId}`,
+      );
     } catch (error: any) {
-      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      this.logger.error(
+        `[AuthDAO] deleteAllSessions failed for user ${userId}: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+      throw error;
     }
   }
 

@@ -24,7 +24,7 @@ export abstract class AbstractAuthSvc {
   abstract getProfile(payload: JwtPayload): Promise<AppResponse>;
 
   // Logout current device (delete current session)
-  abstract logout(sessionId: string): Promise<AppResponse>;
+  abstract logout(sessionId: string, userId?: string): Promise<AppResponse>;
 
   // Logout from all devices (delete all sessions)
   abstract logoutAll(userId: string): Promise<AppResponse>;

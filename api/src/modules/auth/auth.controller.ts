@@ -24,6 +24,7 @@ import { UsersDTO } from '../user/dto/users.dto';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import type { JwtPayload } from './models/jwt-payload.model';
+import { SessionCleanupService } from './session-cleanup.service';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -143,7 +144,8 @@ export class AuthController {
     description: 'Deletes the session associated with the access token used for this request.',
   })
   async logout(@CurrentUser() user: JwtPayload) {
-    return await this.authService.logout(user.sessionId!);
+    // Pass both sessionId (primary) and sub (fallback for old JWTs without sessionId)
+    return await this.authService.logout(user.sessionId!, user.sub);
   }
 
   // =====================================================
@@ -192,7 +194,10 @@ export class AuthController {
 // =====================================================
 
 @Controller('test')
+@ApiTags('Dev / Testing')
 export class TestErrorsController {
+  constructor(private readonly cleanupService: SessionCleanupService) {}
+
   // 1. Test standard NestJS HttpException
   @Get('http-error')
   throwHttpError() {
@@ -220,5 +225,30 @@ export class TestErrorsController {
   @Get('server-error')
   throwServerError() {
     throw new Error('Something completely unexpected broke!');
+  }
+
+  /**
+   * 5. DEV ONLY — Manually trigger the expired-session cleanup cron.
+   *
+   * Simulates what the hourly @Cron job does, so you can test session
+   * expiry without waiting 1 hour.  Disabled automatically in production
+   * (returns 403 if NODE_ENV !== 'development').
+   */
+  @Get('cleanup-sessions')
+  @ApiOperation({
+    summary: '[DEV ONLY] Manually trigger expired-session cleanup',
+    description:
+      'Immediately runs DELETE FROM tbl_Session WHERE ExpiresAt < NOW(). ' +
+      'Only works when NODE_ENV=development.',
+  })
+  async triggerCleanup() {
+    if (process.env.NODE_ENV !== 'development') {
+      return { code: 403, message: 'Not available in production.' };
+    }
+    await this.cleanupService.cleanupExpiredSessions();
+    return {
+      code: 200,
+      message: 'Cleanup triggered. Check server logs for number of rows deleted.',
+    };
   }
 }

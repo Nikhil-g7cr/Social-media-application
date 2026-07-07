@@ -20,8 +20,26 @@ import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
 /** Maximum number of concurrent active sessions per user. */
 const MAX_SESSIONS = 1;
 
-/** Refresh token TTL in days (must match JWT_WEB_RFT_EXPIRES_IN=7d). */
-const REFRESH_TOKEN_TTL_DAYS = 7;
+/**
+ * Parse a JWT-style duration string (e.g. '7d', '1h', '30m') into milliseconds.
+ * Used so that the session ExpiresAt in the DB always matches the JWT TTL.
+ */
+function parseDurationMs(duration: string): number {
+  const match = duration.match(/^(\d+)([smhd])$/);
+  if (!match) {
+    // Fallback: if the format is unrecognised, default to 7 days
+    return 7 * 24 * 60 * 60 * 1000;
+  }
+  const value = parseInt(match[1], 10);
+  const unit = match[2];
+  const multipliers: Record<string, number> = {
+    s: 1000,
+    m: 60 * 1000,
+    h: 60 * 60 * 1000,
+    d: 24 * 60 * 60 * 1000,
+  };
+  return value * multipliers[unit];
+}
 
 @Injectable()
 export class AuthService implements AbstractAuthSvc {
@@ -87,12 +105,18 @@ export class AuthService implements AbstractAuthSvc {
   }
 
   /**
-   * Calculate the session ExpiresAt date based on the configured TTL.
+   * Calculate the session ExpiresAt date.
+   *
+   * Reads JWT_WEB_RFT_EXPIRES_IN from AppConfig (e.g. '7d', '1h', '30m') and
+   * converts it to a Date so the DB row expires at exactly the same time as
+   * the JWT itself.  This is the single source of truth — change the .env
+   * value and both the JWT and the session row are updated automatically.
    */
   private buildExpiresAt(): Date {
-    const expiresAt = new Date();
-    expiresAt.setDate(expiresAt.getDate() + REFRESH_TOKEN_TTL_DAYS);
-    return expiresAt;
+    const rftExpiresIn: string =
+      this.appConfig.get('jwt')?.web?.rft?.expiresIn ?? '7d';
+    const ttlMs = parseDurationMs(rftExpiresIn);
+    return new Date(Date.now() + ttlMs);
   }
 
   /**
@@ -168,17 +192,30 @@ export class AuthService implements AbstractAuthSvc {
       const deviceInfo = this.parseDeviceInfo(userAgent);
 
       // Reuse existing DAO createSession (now with correct schema)
-      await this.authDao.createSession({
-        ID: sessionId,
-        UserID: user.ID,
-        RefreshTokenHash: refreshTokenHash,
-        DeviceInfo: deviceInfo,
-        UserAgent: userAgent,
-        IpAddress: ipAddress,
-        CreatedAt: new Date(),
-        LastSeenAt: new Date(),
-        ExpiresAt: this.buildExpiresAt(),
-      });
+      try {
+        await this.authDao.createSession({
+          ID: sessionId,
+          UserID: user.ID,
+          RefreshTokenHash: refreshTokenHash,
+          DeviceInfo: deviceInfo,
+          UserAgent: userAgent,
+          IpAddress: ipAddress,
+          CreatedAt: new Date(),
+          LastSeenAt: new Date(),
+          ExpiresAt: this.buildExpiresAt(),
+        });
+      } catch (sessionError: any) {
+        // Session insert failed (likely DB migration not applied).
+        // Do NOT return tokens for a session that doesn't exist.
+        this.logger.error(
+          `[AuthService] signup: session insert failed — check that the DB migration has been run. ${sessionError.message}`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+        return createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Account created but session could not be established. Please try logging in.',
+        );
+      }
 
       return createResponse(HttpStatus.CREATED, AuthMessage.S2, {
         accessToken,
@@ -262,17 +299,30 @@ export class AuthService implements AbstractAuthSvc {
       const { accessToken, refreshToken } = await this.generateTokenPair(payload);
       const refreshTokenHash = await bcrypt.hash(refreshToken, 10);
 
-      await this.authDao.createSession({
-        ID: sessionId,
-        UserID: user.ID,
-        RefreshTokenHash: refreshTokenHash,
-        DeviceInfo: deviceInfo,
-        UserAgent: userAgent,
-        IpAddress: ipAddress,
-        CreatedAt: new Date(),
-        LastSeenAt: new Date(),
-        ExpiresAt: this.buildExpiresAt(),
-      });
+      try {
+        await this.authDao.createSession({
+          ID: sessionId,
+          UserID: user.ID,
+          RefreshTokenHash: refreshTokenHash,
+          DeviceInfo: deviceInfo,
+          UserAgent: userAgent,
+          IpAddress: ipAddress,
+          CreatedAt: new Date(),
+          LastSeenAt: new Date(),
+          ExpiresAt: this.buildExpiresAt(),
+        });
+      } catch (sessionError: any) {
+        // Session insert failed (likely DB migration not applied).
+        // Do NOT return tokens for a session that doesn't exist in the DB.
+        this.logger.error(
+          `[AuthService] login: session insert failed — check that the DB migration has been run. ${sessionError.message}`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
+        return createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Login failed: could not establish session. Please contact support.',
+        );
+      }
 
       delete user.PasswordHash;
       return createResponse(HttpStatus.OK, AuthMessage.S3, { accessToken, refreshToken });
@@ -411,14 +461,33 @@ export class AuthService implements AbstractAuthSvc {
   // LOGOUT (current device only)
   // =====================================================
 
-  async logout(sessionId: string): Promise<AppResponse> {
+  /**
+   * Logout current device.
+   *
+   * Primary path:  sessionId from JWT → delete that specific session row.
+   * Fallback path: if the JWT was issued before the refactor and has no
+   *                sessionId claim, we fall back to wiping ALL sessions for
+   *                the user so the logout is never a no-op.
+   */
+  async logout(sessionId: string, userId?: string): Promise<AppResponse> {
     try {
-      if (!sessionId) {
-        return createResponse(HttpStatus.BAD_REQUEST, AuthMessage.E7);
+      if (sessionId) {
+        // Happy path — precise single-session deletion
+        await this.authDao.deleteSession(sessionId);
+        return createResponse(HttpStatus.OK, AuthMessage.S4);
       }
 
-      await this.authDao.deleteSession(sessionId);
-      return createResponse(HttpStatus.OK, AuthMessage.S4);
+      // Fallback: old JWT without sessionId claim
+      if (userId) {
+        this.logger.warn(
+          `[AuthService] logout called without sessionId — falling back to deleteAllSessions for user ${userId}`,
+        );
+        await this.authDao.deleteAllSessions(userId);
+        return createResponse(HttpStatus.OK, AuthMessage.S4);
+      }
+
+      // Neither sessionId nor userId — nothing we can do
+      return createResponse(HttpStatus.BAD_REQUEST, AuthMessage.E7);
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return {

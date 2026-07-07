@@ -178,6 +178,7 @@ export class MessageSQLDAO implements MessageAbstractSQLDAO {
           avatarUrl: sender.ProfilePictureUrl || null,
         };
       }
+      
 
       return normalizedMessage;
     } catch (error: any) {
