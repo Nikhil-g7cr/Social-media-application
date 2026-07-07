@@ -9,6 +9,8 @@ export const enum AuthMessage {
   S7='Logged out from all devices successfully.',
   S8='Session removed successfully.',
   S9='Active sessions fetched successfully.',
+  S10='User Fetched successfully.',
+  S11='This account has been deactivated. Please contact an administrator.',
 
   // Error messages
   E1='user not found.',
@@ -28,4 +30,9 @@ export const enum TokenMessage {
   TR= 'Token refreshed successfully.',
   IRT= 'Invalid refresh token.',
   IRS= 'Invalid or expired session. Please log in again.',
-}
+  SC= 'Session created successfully.',
+  SR= 'Session removed successfully.',
+  SF='Session found.',
+  SRS= 'Session refreshed successfully.',
+  SNF= 'Session not found or already expired.',
+}

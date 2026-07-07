@@ -11,6 +11,7 @@ import { UsersDTO } from 'src/modules/user/dto/users.dto';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { messageFactory, messages } from 'src/shared/message.shared';
 import { randomUUID } from 'crypto';
+import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
 
 @Injectable()
 export class AuthSQLDao implements AuthAbstractSQLDao {
@@ -44,7 +45,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
 
       return createResponse(
         HttpStatus.OK,
-        'User fetched successfully',
+        AuthMessage.S10,
         user,
       );
     } catch (error: any) {
@@ -75,13 +76,13 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
       if ((user as any).IsDeleted) {
         return createResponse(
           HttpStatus.UNAUTHORIZED,
-          'This account has been deactivated. Please contact an administrator.',
+          AuthMessage.S11,
         );
       }
 
       return createResponse(
         HttpStatus.OK,
-        'User fetched successfully',
+        AuthMessage.S10,
         user,
       );
     } catch (error: any) {
@@ -108,7 +109,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
 
       return createResponse(
         HttpStatus.CREATED,
-        'User created successfully',
+        AuthMessage.S2,
         user,
       );
     } catch (error: any) {
@@ -189,7 +190,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
       if (!session) {
         return createResponse(
           HttpStatus.NOT_FOUND,
-          'Session not found or already expired.',
+          TokenMessage.SNF,
         );
       }
 
@@ -221,10 +222,10 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
       });
 
       if (!session) {
-        return createResponse(HttpStatus.NOT_FOUND, 'No session for this device.');
+        return createResponse(HttpStatus.NOT_FOUND, TokenMessage.SNF);
       }
 
-      return createResponse(HttpStatus.OK, 'Session found.', session);
+      return createResponse(HttpStatus.OK, TokenMessage.SRS, session);
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return createResponse(
@@ -274,7 +275,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
         order: [[SessionColumns.LastSeenAt, 'DESC']],
       });
 
-      return createResponse(HttpStatus.OK, 'Sessions fetched successfully.', sessions);
+      return createResponse(HttpStatus.OK, TokenMessage.SF, sessions);
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return createResponse(

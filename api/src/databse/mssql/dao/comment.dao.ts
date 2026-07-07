@@ -6,6 +6,7 @@ import { messageFactory, messages } from 'src/shared/message.shared';
 import { Comments, Users, Posts } from '../models';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { CommentsAbstractSQLDAO } from '../abstract/comment.abstract.mssql';
+import { CommentMessage } from 'src/core/enums/comment.enum';
 
 @Injectable()
 export class CommentSQLDAO implements CommentsAbstractSQLDAO {
@@ -37,7 +38,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
 
       return createResponse(
         HttpStatus.OK,
-        'User comments retrieved successfully',
+        CommentMessage.S4,
         comments,
       );
     } catch (error: any) {
@@ -48,7 +49,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to retrieve user comments',
+          CommentMessage.E5,
         ),
         description: error.message,
       };
@@ -64,7 +65,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
       if (!comment) {
         return createResponse(
           HttpStatus.NOT_FOUND,
-          'Comment not found or unauthorized',
+          CommentMessage.E1,
           null,
         );
       }
@@ -72,7 +73,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
       await this.commentModel.destroy({ where: { ID: commentId } });
       return createResponse(
         HttpStatus.OK,
-        'Comment deleted successfully',
+        CommentMessage.S3,
         null,
       );
     } catch (error: any) {
@@ -83,7 +84,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to delete comment',
+          CommentMessage.E4,
         ),
         description: error.message,
       };
@@ -107,7 +108,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
       const newComment = await this.commentModel.create(payload as any);
       return createResponse(
         HttpStatus.CREATED,
-        'Comment added successfully',
+        CommentMessage.S1,
         newComment,
       );
     } catch (error: any) {
@@ -118,7 +119,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to add comment',
+          CommentMessage.E6,
         ),
         description: error.message,
       };
@@ -141,7 +142,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
 
       return createResponse(
         HttpStatus.OK,
-        'Comments retrieved successfully',
+        CommentMessage.S4,
         comments,
       );
     } catch (error: any) {
@@ -152,7 +153,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to retrieve comments',
+          CommentMessage.E5,
         ),
         description: error.message,
       };
