@@ -9,6 +9,8 @@ import {
   X,
 } from "lucide-react";
 
+export const MAX_MESSAGE_LENGTH = 4000;
+
 interface MessageComposerProps {
   fileInputRef: RefObject<HTMLInputElement | null>;
   isUploading: boolean;
@@ -89,22 +91,66 @@ const MessageComposer = ({
           <Smile className="h-5 w-5" />
         </button>
       </div>
-      <textarea
-        value={messageDraft}
-        onChange={(e) => onMessageDraftChange(e.target.value)}
-        placeholder="Type a message..."
-        className="flex-1 max-h-32 min-h-11 bg-gray-100 border-transparent rounded-2xl px-4 py-3 focus:bg-white focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none resize-none"
-        rows={1}
-        onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            onSendMessage(e);
-          }
-        }}
-      />
+      <div className="flex-1 flex flex-col gap-1">
+        <textarea
+          value={messageDraft}
+          maxLength={MAX_MESSAGE_LENGTH}
+          onChange={(e) => onMessageDraftChange(e.target.value)}
+          placeholder="Type a message..."
+          className={`w-full max-h-32 min-h-11 bg-gray-100 border rounded-2xl px-4 py-3 focus:bg-white outline-none resize-none transition-all ${
+            messageDraft.length >= MAX_MESSAGE_LENGTH
+              ? "border-red-500 focus:border-red-500 focus:ring-2 focus:ring-red-200"
+              : "border-transparent focus:border-blue-500 focus:ring-2 focus:ring-blue-200"
+          }`}
+          rows={1}
+          onKeyDown={(e: KeyboardEvent<HTMLTextAreaElement>) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              if (
+                messageDraft.length <= MAX_MESSAGE_LENGTH &&
+                ((messageDraft.trim() || selectedFiles.length > 0) && !isUploading)
+              ) {
+                e.preventDefault();
+                onSendMessage(e);
+              }
+            }
+          }}
+        />
+        {messageDraft.length > 0 && (
+          <div className="flex items-center justify-between px-2">
+            <span
+              className={`text-[11px] font-medium ${
+                messageDraft.length >= MAX_MESSAGE_LENGTH
+                  ? "text-red-600 font-semibold"
+                  : messageDraft.length >= MAX_MESSAGE_LENGTH * 0.9
+                    ? "text-amber-500 font-medium"
+                    : "text-gray-400"
+              }`}
+            >
+              {messageDraft.length >= MAX_MESSAGE_LENGTH && (
+                <span>⚠️ Maximum 4,000 character limit reached</span>
+              )}
+            </span>
+            <span
+              className={`text-[11px] font-medium ml-auto ${
+                messageDraft.length >= MAX_MESSAGE_LENGTH
+                  ? "text-red-600 font-semibold"
+                  : messageDraft.length >= MAX_MESSAGE_LENGTH * 0.9
+                    ? "text-amber-500 font-medium"
+                    : "text-gray-400"
+              }`}
+            >
+              {messageDraft.length}/{MAX_MESSAGE_LENGTH}
+            </span>
+          </div>
+        )}
+      </div>
       <button
         type="submit"
-        disabled={(!messageDraft.trim() && selectedFiles.length === 0) || isUploading}
+        disabled={
+          (!messageDraft.trim() && selectedFiles.length === 0) ||
+          isUploading ||
+          messageDraft.length > MAX_MESSAGE_LENGTH
+        }
         className="p-3 mb-1 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:bg-blue-300 disabled:cursor-not-allowed transition"
       >
         {isUploading ? (

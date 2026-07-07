@@ -357,8 +357,15 @@ const MessagesPage: React.FC = () => {
     e.preventDefault();
     if (
       (!messageDraft.trim() && selectedFiles.length === 0) ||
-      !activeConversation
+      !activeConversation ||
+      messageDraft.length > 4000
     ) {
+      if (messageDraft.length > 4000) {
+        notification.error({
+          message: "Message too long",
+          description: "Your message exceeds the maximum limit of 4,000 characters.",
+        });
+      }
       return;
     }
 

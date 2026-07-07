@@ -2,7 +2,6 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
-import { messageFactory, messages } from 'src/shared/message.shared';
 import { Likes, Posts, Users } from '../models';
 import { LikeAbstractSQLDAO } from '../abstract/like.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';

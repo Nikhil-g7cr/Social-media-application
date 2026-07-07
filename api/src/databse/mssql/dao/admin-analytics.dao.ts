@@ -1,8 +1,23 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { Sequelize } from 'sequelize-typescript';
 import { Op } from 'sequelize';
-import { Users, Posts, Comments, Likes, Follow, Message, Notification, Reports, CP, PostView, MessageAttachment, PostHashtags, RefreshToken, Conversation } from '../models';
+import {
+  Users,
+  Posts,
+  Comments,
+  Likes,
+  Follow,
+  Message,
+  Notification,
+  Reports,
+  CP,
+  PostView,
+  MessageAttachment,
+  PostHashtags,
+  RefreshToken,
+  Conversation,
+} from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
@@ -18,7 +33,8 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
     @Inject(MsSqlConstants.LIKE) private _like: typeof Likes,
     @Inject(MsSqlConstants.MESSAGE) private _message: typeof Message,
     @Inject(MsSqlConstants.REPORT) private _report: typeof Reports,
-    @Inject(MsSqlConstants.CONVERSATION) private _conversation: typeof Conversation,
+    @Inject(MsSqlConstants.CONVERSATION)
+    private _conversation: typeof Conversation,
     @Inject(MsSqlConstants.POST_MEDIA) private _postMedia: typeof PostMedia,
     readonly logger: AppLogger,
   ) {}
@@ -28,28 +44,104 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
 
-      let totalUsers = 0, activeUsers = 0, deletedUsers = 0, newUsersToday = 0;
-      let totalPosts = 0, newPostsToday = 0, totalComments = 0, totalLikes = 0;
-      let totalConversations = 0, totalMessages = 0, totalReports = 0, pendingReports = 0, resolvedReports = 0, totalMediaUploaded = 0;
+      let totalUsers = 0,
+        activeUsers = 0,
+        deletedUsers = 0,
+        newUsersToday = 0;
+      let totalPosts = 0,
+        newPostsToday = 0,
+        totalComments = 0,
+        totalLikes = 0;
+      let totalConversations = 0,
+        totalMessages = 0,
+        totalReports = 0,
+        pendingReports = 0,
+        resolvedReports = 0,
+        totalMediaUploaded = 0;
 
-      try { totalUsers = await this._user.count(); } catch (e) { console.error('totalUsers error', e); }
-      try { activeUsers = await this._user.count({ where: { IsDeleted: false, IsActive: true } }); } catch (e) { console.error('activeUsers error', e); }
-      try { deletedUsers = await this._user.count({ where: { IsDeleted: true } }); } catch (e) { console.error('deletedUsers error', e); }
-      try { newUsersToday = await this._user.count({ where: { IsDeleted: false, CreatedAt: { [Op.gte]: startOfToday } } }); } catch (e) { console.error('newUsersToday error', e); }
-      
-      try { totalPosts = await this._post.count(); } catch (e) { console.error('totalPosts error', e); }
-      try { newPostsToday = await this._post.count({ where: { CreatedAt: { [Op.gte]: startOfToday } } }); } catch (e) { console.error('newPostsToday error', e); }
-      
-      try { totalComments = await this._comment.count(); } catch (e) { console.error('totalComments error', e); }
-      try { totalLikes = await this._like.count(); } catch (e) { console.error('totalLikes error', e); }
-      try { totalConversations = await this._conversation.count(); } catch (e) { console.error('totalConversations error', e); }
-      try { totalMessages = await this._message.count(); } catch (e) { console.error('totalMessages error', e); }
-      
-      try { totalReports = await this._report.count(); } catch (e) { console.error('totalReports error', e); }
-      try { pendingReports = await this._report.count({ where: { Status: 'PENDING' } }); } catch (e) { console.error('pendingReports error', e); }
-      try { resolvedReports = await this._report.count({ where: { Status: 'RESOLVED' } }); } catch (e) { console.error('resolvedReports error', e); }
-      try { totalMediaUploaded = await this._postMedia.count(); } catch (e) { console.error('totalMediaUploaded error', e); }
+      try {
+        totalUsers = await this._user.count();
+      } catch (e) {
+        console.error('totalUsers error', e);
+      }
+      try {
+        activeUsers = await this._user.count({
+          where: { IsDeleted: false, IsActive: true },
+        });
+      } catch (e) {
+        console.error('activeUsers error', e);
+      }
+      try {
+        deletedUsers = await this._user.count({ where: { IsDeleted: true } });
+      } catch (e) {
+        console.error('deletedUsers error', e);
+      }
+      try {
+        newUsersToday = await this._user.count({
+          where: { IsDeleted: false, CreatedAt: { [Op.gte]: startOfToday } },
+        });
+      } catch (e) {
+        console.error('newUsersToday error', e);
+      }
 
+      try {
+        totalPosts = await this._post.count();
+      } catch (e) {
+        console.error('totalPosts error', e);
+      }
+      try {
+        newPostsToday = await this._post.count({
+          where: { CreatedAt: { [Op.gte]: startOfToday } },
+        });
+      } catch (e) {
+        console.error('newPostsToday error', e);
+      }
+
+      try {
+        totalComments = await this._comment.count();
+      } catch (e) {
+        console.error('totalComments error', e);
+      }
+      try {
+        totalLikes = await this._like.count();
+      } catch (e) {
+        console.error('totalLikes error', e);
+      }
+      try {
+        totalConversations = await this._conversation.count();
+      } catch (e) {
+        console.error('totalConversations error', e);
+      }
+      try {
+        totalMessages = await this._message.count();
+      } catch (e) {
+        console.error('totalMessages error', e);
+      }
+
+      try {
+        totalReports = await this._report.count();
+      } catch (e) {
+        console.error('totalReports error', e);
+      }
+      try {
+        pendingReports = await this._report.count({
+          where: { Status: 'PENDING' },
+        });
+      } catch (e) {
+        console.error('pendingReports error', e);
+      }
+      try {
+        resolvedReports = await this._report.count({
+          where: { Status: 'RESOLVED' },
+        });
+      } catch (e) {
+        console.error('resolvedReports error', e);
+      }
+      try {
+        totalMediaUploaded = await this._postMedia.count();
+      } catch (e) {
+        console.error('totalMediaUploaded error', e);
+      }
 
       const summary = {
         totalUsers,
@@ -68,10 +160,14 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         totalMediaUploaded,
       };
 
-      return createResponse(200, 'Summary retrieved', summary);
+      return createResponse(HttpStatus.OK, 'Summary retrieved', summary);
     } catch (error: any) {
-      this.logger.error(error.stack, 500);
-      return createResponse(500, 'Error retrieving summary', error.message);
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error retrieving summary',
+        error.message
+      );
     }
   }
 
@@ -85,78 +181,113 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
       let postGrowth: any[] = [];
 
       try {
-        userGrowth = await this.sequelize.query(`
+        userGrowth = await this.sequelize.query(
+          `
           SELECT CAST(CreatedAt AS DATE) as Date, COUNT(ID) as count
           FROM Users
           WHERE CreatedAt >= :date AND IsDeleted = 0
           GROUP BY CAST(CreatedAt AS DATE)
           ORDER BY CAST(CreatedAt AS DATE) ASC
-        `, { replacements: { date: thirtyDaysAgo }, type: 'SELECT' });
-      } catch (e) { console.error('userGrowth error', e); }
+        `,
+          { replacements: { date: thirtyDaysAgo }, type: 'SELECT' },
+        );
+      } catch (e) {
+        console.error('userGrowth error', e);
+      }
 
       try {
-        postGrowth = await this.sequelize.query(`
+        postGrowth = await this.sequelize.query(
+          `
           SELECT CAST(P.CreatedAt AS DATE) as Date, COUNT(P.ID) as count
           FROM [Post] P
           INNER JOIN [Users] U ON P.UserID = U.ID
           WHERE P.CreatedAt >= :date AND U.IsDeleted = 0
           GROUP BY CAST(P.CreatedAt AS DATE)
           ORDER BY CAST(P.CreatedAt AS DATE) ASC
-        `, { replacements: { date: thirtyDaysAgo }, type: 'SELECT' });
-      } catch (e) { console.error('postGrowth error', e); }
+        `,
+          { replacements: { date: thirtyDaysAgo }, type: 'SELECT' },
+        );
+      } catch (e) {
+        console.error('postGrowth error', e);
+      }
 
-      return createResponse(200, 'Growth analytics retrieved', { userGrowth, postGrowth });
+      return createResponse(HttpStatus.OK, 'Growth analytics retrieved', {
+        userGrowth,
+        postGrowth,
+      });
     } catch (error: any) {
-      this.logger.error(error.stack, 500);
-      return createResponse(500, 'Error retrieving growth analytics', error.message);
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error retrieving growth analytics',
+        error.message,
+      );
     }
   }
 
   async getContentDistribution(): Promise<AppResponse> {
     try {
-      const mediaCounts = await this.sequelize.query(`
+      const mediaCounts = await this.sequelize.query(
+        `
         SELECT PM.MediaType, COUNT(PM.ID) as count
         FROM [tbl_PostMedia] PM
         INNER JOIN [Post] P ON PM.PostID = P.ID
         INNER JOIN [Users] U ON P.UserID = U.ID
         WHERE U.IsDeleted = 0
         GROUP BY PM.MediaType
-      `, { type: 'SELECT' });
+      `,
+        { type: 'SELECT' },
+      );
 
-      const textPostsCountResult = await this.sequelize.query(`
+      const textPostsCountResult = await this.sequelize.query(
+        `
         SELECT COUNT(P.ID) as count
         FROM [Post] P
         INNER JOIN [Users] U ON P.UserID = U.ID
         WHERE P.Type = 'TEXT' AND U.IsDeleted = 0
-      `, { type: 'SELECT' });
+      `,
+        { type: 'SELECT' },
+      );
 
-      const textPostsCount = Number((textPostsCountResult[0] as any)?.count) || 0;
+      const textPostsCount =
+        Number((textPostsCountResult[0] as any)?.count) || 0;
 
-      return createResponse(200, 'Content distribution retrieved', {
+      return createResponse(HttpStatus.OK, 'Content distribution retrieved', {
         mediaCounts,
-        textPostsCount
+        textPostsCount,
       });
     } catch (error: any) {
-      this.logger.error(error.stack, 500);
-      return createResponse(500, 'Error retrieving content distribution', error.message);
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error retrieving content distribution',
+        error.message,
+      );
     }
   }
 
   async getTopUsers(): Promise<AppResponse> {
     try {
-        const topUsersByPosts = await this.sequelize.query(`
+      const topUsersByPosts = await this.sequelize.query(
+        `
           SELECT TOP 10 U.ID, U.UserName, U.FullName, U.ProfilePictureUrl, COUNT(P.ID) as PostCount
           FROM [Users] U
           LEFT JOIN [Post] P ON U.ID = P.UserID
           WHERE U.IsDeleted = 0
           GROUP BY U.ID, U.UserName, U.FullName, U.ProfilePictureUrl
           ORDER BY PostCount DESC
-       `, { type: 'SELECT' });
+       `,
+        { type: 'SELECT' },
+      );
 
-       return createResponse(200, 'Top users retrieved', topUsersByPosts);
+      return createResponse(HttpStatus.OK, 'Top users retrieved', topUsersByPosts);
     } catch (error: any) {
-      this.logger.error(error.stack, 500);
-      return createResponse(500, 'Error retrieving top users', error.message);
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error retrieving top users',
+        error.message
+      );
     }
   }
 
@@ -166,12 +297,19 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         where: { IsDeleted: false },
         order: [['CreatedAt', 'DESC']],
         limit: 5,
-        attributes: ['ID', 'UserName', 'FullName', 'ProfilePictureUrl', 'CreatedAt']
+        attributes: [
+          'ID',
+          'UserName',
+          'FullName',
+          'ProfilePictureUrl',
+          'CreatedAt',
+        ],
       });
 
       let recentPosts: any[] = [];
       try {
-        recentPosts = await this.sequelize.query(`
+        recentPosts = await this.sequelize.query(
+          `
           SELECT TOP 5
             P.ID,
             P.UserID,
@@ -184,13 +322,24 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
           INNER JOIN [Users] U ON P.UserID = U.ID
           WHERE U.IsDeleted = 0
           ORDER BY P.CreatedAt DESC
-        `, { type: 'SELECT' });
-      } catch (e) { console.error('recentPosts join error', e); }
+        `,
+          { type: 'SELECT' },
+        );
+      } catch (e) {
+        console.error('recentPosts join error', e);
+      }
 
-      return createResponse(200, 'Recent activity retrieved', { recentUsers, recentPosts });
+      return createResponse(HttpStatus.OK, 'Recent activity retrieved', {
+        recentUsers,
+        recentPosts,
+      });
     } catch (error: any) {
-      this.logger.error(error.stack, 500);
-      return createResponse(500, 'Error retrieving recent activity', error.message);
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
+      return createResponse(
+        HttpStatus.INTERNAL_SERVER_ERROR,
+        'Error retrieving recent activity',
+        error.message,
+      );
     }
   }
 }

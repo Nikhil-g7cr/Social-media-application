@@ -20,6 +20,10 @@ export class ChatService {
     text: string;
     attachments?: any[];
   }) {
+    if (payload.text && payload.text.length > 4000) {
+      throw new Error('Message cannot exceed 4,000 characters.');
+    }
+
     const savedMessage = await this.messageDao.saveMessage(payload);
 
     const participants = await this.conversationDao.getAllConversations(

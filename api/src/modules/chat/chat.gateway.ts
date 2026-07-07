@@ -108,6 +108,11 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
+    if (payload.text && payload.text.length > 4000) {
+      client.emit('error', { message: 'Message cannot exceed 4,000 characters.' });
+      return { status: 'error', error: 'Message cannot exceed 4,000 characters.' };
+    }
+
     // Save to database
     const savedMessage = await this.chatService.saveMessage({
       conversationId: payload.conversationId,

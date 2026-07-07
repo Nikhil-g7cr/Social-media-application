@@ -32,7 +32,7 @@ export class Message extends Model<Message> {
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
   SenderID!: string;
 
-  @Column({ type: `${SQLDataType.VARCHAR}(4000)`, allowNull: true })
+  @Column({ type: `${SQLDataType.NVARCHAR}(4000)`, allowNull: true })
   Message?: string;
 
   @Column({ type: SQLDataType.BIT, allowNull: false, defaultValue: false })
