@@ -8,28 +8,9 @@ import { PostView } from './postView.model';
 import { Hashtags } from './hashtag.model';
 import { PostHashtags } from './postHashtag.model';
 import { PostMedia } from './postMedia.model';
+import { PostsAlias, PostsColumns, PostTypes } from 'src/core/enums/post.enum';
 
-export const enum PostsColumns {
-  ID = 'ID',
-  UserID = 'UserID',
-  Type = 'Type',
-  Content = 'Content',
-  MediaURL = 'MediaURL',
-  CreatedBy = 'CreatedBy',
-  CreatedAt = 'CreatedAt',
-  ModifiedBy = 'ModifiedBy',
-  ModifiedAt = 'ModifiedAt',
-}
 
-export const enum PostsAlias {
-	User = 'User'
-}
-
-export enum PostTypes {
-	TEXT = 'TEXT',
-	IMAGE = 'IMAGE',
-	VIDEO = 'VIDEO'
-}
 
 @Table({
 	tableName: Tables.tbl_Post,

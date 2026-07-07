@@ -26,11 +26,11 @@ export class PostService implements PostAbstractSvc {
     createPostDto: CreatePostDto,
     userId: string,
   ): Promise<AppResponse> {
-    this.logger.log('[PostService] Initiating createPost', 200);
+    this.logger.log('[PostService] Initiating createPost', HttpStatus.OK);
 
     const response = await this.postDao.createPost(createPostDto, userId);
     
-    if ((response.code === 201 || response.code === 200) && response.data) {
+    if ((response.code === HttpStatus.CREATED || response.code === HttpStatus.OK) && response.data) {
       try {
         const postData = response.data;
         
@@ -52,7 +52,7 @@ export class PostService implements PostAbstractSvc {
           userId
         });
       } catch (err) {
-        this.logger.error(`[PostService] Failed to emit post.created event: ${err}`, 500);
+        this.logger.error(`[PostService] Failed to emit post.created event: ${err}`, HttpStatus.INTERNAL_SERVER_ERROR);
       }
     }
 
@@ -61,7 +61,7 @@ export class PostService implements PostAbstractSvc {
 
   async getAllPosts(pagination:PaginationDto): Promise<AppResponse> {
     try {
-      this.logger.log('[PostService] Fetching all posts', 200);
+      this.logger.log('[PostService] Fetching all posts', HttpStatus.OK);
 
       // pagination
       const page = pagination.page || 1;
@@ -95,7 +95,7 @@ export class PostService implements PostAbstractSvc {
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in getAllPosts: ${error.message}`,
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
       throw error;
     }
@@ -103,7 +103,7 @@ export class PostService implements PostAbstractSvc {
 
   async getPostsByUserId(userId: string, pagination:PaginationDto): Promise<AppResponse> {
     try {
-      this.logger.log(`[PostService] Fetching posts for user: ${userId}`, 200);
+      this.logger.log(`[PostService] Fetching posts for user: ${userId}`, HttpStatus.OK);
 
       const page = pagination.page || 1;
       const limit = pagination.limit || 10;
@@ -134,7 +134,7 @@ export class PostService implements PostAbstractSvc {
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in getPostsByUserId: ${error.message}`,
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
       throw error;
     }
@@ -142,7 +142,7 @@ export class PostService implements PostAbstractSvc {
 
   async getPostById(postId: string): Promise<AppResponse> {
     try {
-      this.logger.log(`[PostService] Fetching post with ID: ${postId}`, 200);
+      this.logger.log(`[PostService] Fetching post with ID: ${postId}`, HttpStatus.OK);
 
       // return await this.postDao.getPostById(postId);
       const response = await this.postDao.getPostById(postId);
@@ -164,7 +164,7 @@ export class PostService implements PostAbstractSvc {
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in getPostById (${postId}): ${error.message}`,
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
       throw error;
     }
@@ -175,13 +175,13 @@ export class PostService implements PostAbstractSvc {
     updatePostDto: UpdatePostDto,
   ): Promise<AppResponse> {
     try {
-      this.logger.log(`[PostService] Updating post with ID: ${postId}`, 200);
+      this.logger.log(`[PostService] Updating post with ID: ${postId}`, HttpStatus.OK);
 
       return await this.postDao.updatePost(updatePostDto, postId);
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in updatePost (${postId}): ${error.message}`,
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
       throw error;
     }
@@ -189,7 +189,7 @@ export class PostService implements PostAbstractSvc {
 
   async deletePost(postId: string, userId?: string, roles?: string[]): Promise<AppResponse> {
     try {
-      this.logger.log(`[PostService] Deleting post with ID: ${postId}`, 200);
+      this.logger.log(`[PostService] Deleting post with ID: ${postId}`, HttpStatus.OK);
 
       if (userId) {
         const postRes = await this.postDao.getPostById(postId);
@@ -218,7 +218,7 @@ export class PostService implements PostAbstractSvc {
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in deletePost (${postId}): ${error.message}`,
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
       throw error;
     }
@@ -227,7 +227,7 @@ export class PostService implements PostAbstractSvc {
 
   async getLikedPostsByUserId(userId: string, pagination: PaginationDto): Promise<AppResponse> {
     try {
-      this.logger.log(`[PostService] Fetching liked posts for user: ${userId}`, 200);
+      this.logger.log(`[PostService] Fetching liked posts for user: ${userId}`, HttpStatus.OK);
 
       const page = pagination.page || 1;
       const limit = pagination.limit || 10;
@@ -258,7 +258,7 @@ export class PostService implements PostAbstractSvc {
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in getLikedPostsByUserId: ${error.message}`,
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
       throw error;
     }
@@ -266,7 +266,7 @@ export class PostService implements PostAbstractSvc {
 
   async getTrendingPosts(pagination: PaginationDto): Promise<AppResponse> {
     try {
-      this.logger.log(`[PostService] Fetching trending posts`, 200);
+      this.logger.log(`[PostService] Fetching trending posts`, HttpStatus.OK);
 
       const page = pagination.page || 1;
       const limit = pagination.limit || 10;
@@ -297,7 +297,7 @@ export class PostService implements PostAbstractSvc {
     } catch (error: any) {
       this.logger.error(
         `[PostService] Error in getTrendingPosts: ${error.message}`,
-        500,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
       throw error;
     }
@@ -305,10 +305,10 @@ export class PostService implements PostAbstractSvc {
 
   async getTrendingHashtags(): Promise<AppResponse> {
     try {
-      this.logger.log(`[PostService] Fetching trending hashtags`, 200);
+      this.logger.log(`[PostService] Fetching trending hashtags`, HttpStatus.OK);
       return await this.postDao.getTrendingHashtags();
     } catch (error: any) {
-      this.logger.error(`[PostService] Error in getTrendingHashtags: ${error.message}`, 500);
+      this.logger.error(`[PostService] Error in getTrendingHashtags: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
       throw error;
     }
   }
