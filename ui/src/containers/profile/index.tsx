@@ -15,6 +15,7 @@ import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery, useDeletePostM
 import { Edit3 } from 'lucide-react';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 import ErrorDisplay from '../../components/errors/ErrorDisplay';
+import ConfirmationModal from '../../components/shared/ConfirmationModal';
 
 const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
@@ -86,7 +87,18 @@ const ProfilePage: React.FC = () => {
 
   const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
   const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page: likedPostsPage, limit: 10 }, { skip: !targetUserId || !isCurrentUser });
-  const [deletePost] = useDeletePostMutation();
+  const [deletePost, { isLoading: isDeletingPost }] = useDeletePostMutation();
+  const [postToDelete, setPostToDelete] = useState<string | null>(null);
+
+  const handleConfirmDeletePost = async () => {
+    if (!postToDelete) return;
+    try {
+      await deletePost(postToDelete).unwrap();
+      setPostToDelete(null);
+    } catch (err) {
+      console.error("Failed to delete post:", err);
+    }
+  };
 
   const userPosts = userPostsData?.posts || [];
   const likedPosts = likedPostsData?.posts || [];
@@ -307,15 +319,9 @@ const ProfilePage: React.FC = () => {
                           </button>
                           <button
                             className="flex items-center gap-1 bg-red-500/80 hover:bg-red-600 px-3 py-1 rounded-full text-sm font-medium transition"
-                            onClick={async (e) => {
+                            onClick={(e) => {
                               e.stopPropagation();
-                              if (window.confirm("Are you sure you want to delete this post?")) {
-                                try {
-                                  await deletePost(post.id).unwrap();
-                                } catch (err) {
-                                  console.error("Failed to delete post:", err);
-                                }
-                              }
+                              setPostToDelete(post.id);
                             }}
                           >
                             <Trash2 className="w-4 h-4" /> Delete
@@ -382,6 +388,27 @@ const ProfilePage: React.FC = () => {
           type={modalState.type}
         />
       )}
+
+      <ConfirmationModal
+        isOpen={!!postToDelete}
+        onClose={() => setPostToDelete(null)}
+        onConfirm={handleConfirmDeletePost}
+        title="Delete Post"
+        description={
+          <div className="space-y-2">
+            <p>Are you sure you want to delete this post?</p>
+            <ul className="text-xs text-gray-500 space-y-1 mt-2 list-disc list-inside">
+              <li>The post and all its media will be permanently removed.</li>
+              <li>All associated comments and likes will be deleted.</li>
+              <li className="text-rose-500 font-medium">This cannot be undone.</li>
+            </ul>
+          </div>
+        }
+        confirmText="Delete Post"
+        cancelText="Cancel"
+        icon="warning"
+        isLoading={isDeletingPost}
+      />
     </div>
   );
 };

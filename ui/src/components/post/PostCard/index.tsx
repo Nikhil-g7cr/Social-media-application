@@ -70,11 +70,13 @@ const PostCard: React.FC<PostCardProps> = ({
         </button>
       </div>
 
-      <p className="mt-4 text-gray-800 whitespace-pre-wrap">{post.content}</p>
+      <p className="mt-4 max-w-full overflow-wrap-anywhere wrap-break-word text-gray-800 whitespace-pre-wrap">
+        {post.content}
+      </p>
 
       {mediaToRender.length > 0 && (
         <div
-          className={`mt-4 rounded-xl overflow-hidden ${compact ? "max-h-[300px]" : ""}`}
+          className={`mt-4 rounded-xl overflow-hidden ${compact ? "max-h-75" : ""}`}
           onClick={(e) => e.stopPropagation()}
           onDoubleClick={(e) => {
             e.stopPropagation();
@@ -83,7 +85,7 @@ const PostCard: React.FC<PostCardProps> = ({
         >
           <MediaCarousel
             media={mediaToRender}
-            className={`${compact ? "h-[250px] sm:h-[300px]" : "h-[350px] sm:h-[500px]"} bg-black`}
+            className={`${compact ? "h-62.5 sm:h-75" : "h-87.5 sm:h-125"} bg-black`}
           />
         </div>
       )}

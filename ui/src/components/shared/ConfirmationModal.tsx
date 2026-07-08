@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { FiAlertTriangle, FiX, FiCheckCircle, FiInfo } from 'react-icons/fi';
 
 export type IconType = 'warning' | 'success' | 'info' | 'error';
@@ -100,7 +101,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-0">
       {/* Backdrop */}
       <div 
@@ -178,7 +179,8 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

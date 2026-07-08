@@ -12,6 +12,7 @@ import { useMediaUpload } from "../../hooks/useMediaUpload";
 import type { RootState } from "../../redux/store";
 import MediaCarousel from "../../components/media/MediaCarousel";
 import { useEditPost } from "../../components/layout/post-popup/hooks/useEditPost";
+import ConfirmationModal from "../../components/shared/ConfirmationModal";
 
 const UpdatePostPage = () => {
   const { postId } = useParams<{ postId: string }>();
@@ -34,6 +35,19 @@ const UpdatePostPage = () => {
     navigate(-1);
   });
   const [deletePost, { isLoading: isDeleting }] = useDeletePostMutation();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
+  const handleConfirmDeletePost = async () => {
+    if (!postId) return;
+    try {
+      await deletePost(postId).unwrap();
+      notification.success({ message: "Post deleted successfully" });
+      setIsDeleteModalOpen(false);
+      navigate(-1);
+    } catch (err) {
+      notification.error({ message: "Failed to delete post" });
+    }
+  };
 
   if (isFetchingPost) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -130,19 +144,7 @@ const UpdatePostPage = () => {
           </div>
           <button
             type="button"
-            onClick={async () => {
-              if (window.confirm("Are you sure you want to delete this post?")) {
-                try {
-                  if (postId) {
-                    await deletePost(postId).unwrap();
-                    notification.success({ message: "Post deleted successfully" });
-                    navigate(-1);
-                  }
-                } catch (err) {
-                  notification.error({ message: "Failed to delete post" });
-                }
-              }
-            }}
+            onClick={() => setIsDeleteModalOpen(true)}
             disabled={isDeleting}
             className="flex items-center gap-2 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 px-4 py-2 rounded-lg font-medium transition"
           >
@@ -151,6 +153,27 @@ const UpdatePostPage = () => {
           </button>
         </div>
       </div>
+
+      <ConfirmationModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={handleConfirmDeletePost}
+        title="Delete Post"
+        description={
+          <div className="space-y-2">
+            <p>Are you sure you want to delete this post?</p>
+            <ul className="text-xs text-gray-500 space-y-1 mt-2 list-disc list-inside">
+              <li>The post and all its media will be permanently removed.</li>
+              <li>All associated comments and likes will be deleted.</li>
+              <li className="text-rose-500 font-medium">This cannot be undone.</li>
+            </ul>
+          </div>
+        }
+        confirmText="Delete Post"
+        cancelText="Cancel"
+        icon="warning"
+        isLoading={isDeleting}
+      />
     </div>
   );
 };
