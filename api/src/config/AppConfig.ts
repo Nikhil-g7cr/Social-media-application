@@ -40,6 +40,10 @@ export class AppConfig {
         rft: {
           expiresIn: process.env.JWT_WEB_RFT_EXPIRES_IN,
           maxTtl: process.env.JWT_WEB_RFT_MAX_TTL,
+          REFRESH_COOKIE_MAX_AGE_MS : 7 * 24 * 60 * 60 * 1000,
+          refreshTokenCookieName: process.env.JWT_WEB_RFT_COOKIE_NAME,
+          refreshTokenCookieDomain: process.env.JWT_WEB_RFT_COOKIE_DOMAIN,
+          
         },
       },
     };

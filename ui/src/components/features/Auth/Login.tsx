@@ -32,13 +32,11 @@ export const LoginPage = () => {
       // Depending on backend structure, data could be nested
       const data = response?.data || response;
       const accessToken = data?.accessToken;
-      const refreshToken = data?.refreshToken;
 
       // Dispatch to Redux store (this also sets sessionStorage internally in AuthSlice)
       dispatch(
         login({
           accessToken,
-          refreshToken,
         })
       );
 

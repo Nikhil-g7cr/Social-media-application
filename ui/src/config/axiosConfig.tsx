@@ -55,10 +55,11 @@ API.interceptors.response.use(
 
         // If the error is 401 (Unauthorized) and we haven't already retried this request
         if (error.response?.status === 401 && !originalRequest?._retry && !isAuthRequest) {
-            const refreshToken = sessionStorage.getItem('refreshToken');
-            if (!refreshToken) {
-                return Promise.reject(error);
-            }
+
+            // const refreshToken = sessionStorage.getItem('refreshToken');
+            // if (!refreshToken) {
+            //     return Promise.reject(error);
+            // }
             
             // If a refresh is already happening, queue this request to wait for the new token
             if (isRefreshing) {
@@ -77,7 +78,7 @@ API.interceptors.response.use(
                 // Call your refresh endpoint. 
                 // Make sure to use basic axios (not the interceptor API instance) to avoid infinite loops
                 const result = await axios.post(`${environment.APP_API_URL}auth/refresh-token`, {
-                    refreshToken
+                    // refreshToken
                 }, {
                     withCredentials: true 
                 });
@@ -92,16 +93,16 @@ API.interceptors.response.use(
 
                 // Update sessionStorage with the new tokens
                 sessionStorage.setItem('accessToken', newAccessToken);
-                if (newRefreshToken) {
-                    sessionStorage.setItem('refreshToken', newRefreshToken);
-                }
+                // if (newRefreshToken) {
+                //     sessionStorage.setItem('refreshToken', newRefreshToken);
+                // }
 
                 updateSocketToken(newAccessToken);
 
                 // Pass the NEW refresh token into Redux memory!
                 store.dispatch(login({
                     accessToken: newAccessToken, 
-                    refreshToken: newRefreshToken || refreshToken 
+                    // refreshToken: newRefreshToken 
                 }));
 
                 // Update the failed request with the new token and retry it

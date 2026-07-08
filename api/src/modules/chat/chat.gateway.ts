@@ -14,9 +14,10 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { AppConfig } from '../../config/AppConfig';
 import { CP } from '../../databse/mssql/models';
+import { corsOptions } from 'src/core/cors.config';
 
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({ cors: { origin: corsOptions.origin, credentials: true } })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;

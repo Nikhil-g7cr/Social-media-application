@@ -3,7 +3,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ScheduleModule } from '@nestjs/schedule';
 
-import { AuthController, TestErrorsController } from './auth.controller';
+import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { AbstractAuthSvc } from './auth.abstract';
 import { SessionCleanupService } from './session-cleanup.service';
@@ -32,7 +32,7 @@ import { JwtStrategy } from './models/jwt.strategy';
     ScheduleModule.forRoot(),
   ],
 
-  controllers: [AuthController, TestErrorsController],
+  controllers: [AuthController],
 
   providers: [
     AppConfig,

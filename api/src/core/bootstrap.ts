@@ -8,6 +8,7 @@ import { ResponseHandler } from "./response-handler";
 import { ErrorHandler } from "./middleware/error-handler";
 import AppLogger from "./logger/app-logger";
 import { setupSwagger } from "./swagger/doc.swagger";
+import cookieParser from "cookie-parser";
 
 export default function bootstrap(app: INestApplication, appConfigSvcObj: AppConfig) {
 	app.setGlobalPrefix('api');
@@ -16,6 +17,7 @@ export default function bootstrap(app: INestApplication, appConfigSvcObj: AppCon
 
 	app.use(helmet());
 	app.use(cors(corsOptions));
+	app.use(cookieParser());
 		
 	app.useGlobalPipes(
 		new ValidationPipe({

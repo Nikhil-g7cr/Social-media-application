@@ -10,7 +10,6 @@ interface User {
 interface AuthState {
     user: User | undefined|null;
     token: string | null;
-    refreshToken: string | null;
     isAuthenticated: boolean;
 }
 
@@ -36,7 +35,6 @@ const parseJwt = (token: string): User | null => {
 
 // 2. Initialize Redux state exclusively by reading and parsing the token
 const storedToken = sessionStorage.getItem('accessToken');
-const storedRefreshToken = sessionStorage.getItem('refreshToken');
 const rawDecodedUser = storedToken ? parseJwt(storedToken) : null;
 const decodedUser = rawDecodedUser ? {
     id: rawDecodedUser.id || (rawDecodedUser as any).sub,
@@ -47,7 +45,6 @@ const decodedUser = rawDecodedUser ? {
 const initialState: AuthState = {
     user: decodedUser,
     token: storedToken,
-    refreshToken: storedRefreshToken,
     isAuthenticated: !!storedToken && !!decodedUser,
 };
 
@@ -71,10 +68,9 @@ const authSlice = createSlice({
     initialState,
     reducers: {
         // We now accept the token and extract the user from it directly
-        login: (state, action: PayloadAction<{ user?: User, token?: string, accessToken?: string, refreshToken?: string }>) => {
+        login: (state, action: PayloadAction<{ user?: User, token?: string, accessToken?: string }>) => {
             // Accommodate 'token' or 'accessToken' depending on what the API returns
             const token = action.payload.token || action.payload.accessToken;
-            const refreshToken = action.payload.refreshToken;
             
             if (!token) return;
 
@@ -93,15 +89,10 @@ const authSlice = createSlice({
             }
 
             state.token = token;
-            if (refreshToken) {
-                state.refreshToken = refreshToken;
-            }
             state.isAuthenticated = true;
 
             sessionStorage.setItem('accessToken', token);
-            if (refreshToken) {
-                sessionStorage.setItem('refreshToken', refreshToken);
-            }
+            sessionStorage.removeItem('refreshToken'); // Clean up legacy item if present
             
             // Clean up the old, insecure 'user' key if it exists from older sessions
             sessionStorage.removeItem('user');
@@ -110,7 +101,6 @@ const authSlice = createSlice({
         logout: (state) => {
             state.user = null;
             state.token = null;
-            state.refreshToken = null;
             state.isAuthenticated = false;
 
             sessionStorage.removeItem('accessToken');

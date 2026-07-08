@@ -415,10 +415,12 @@ export class AuthService implements AbstractAuthSvc {
       const session: any = sessionRes.data;
 
       // Step 3: Compare the presented refresh token against the stored hash
-      const isHashValid = await bcrypt.compare(refreshToken, session.RefreshTokenHash);
+      const isHashValid = await bcrypt.compare(
+        refreshToken,
+        session.RefreshTokenHash,
+      );
       if (!isHashValid) {
-        // Possible token reuse attack — delete the session immediately
-        await this.authDao.deleteSession(sessionId);
+        await this.authDao.deleteAllSessions(session.UserID); // was: deleteSession(sessionId)
         return createResponse(HttpStatus.UNAUTHORIZED, TokenMessage.IRS);
       }
 
