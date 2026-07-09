@@ -337,19 +337,40 @@ export const postApiSlice = apiSlice.injectEndpoints({
                 url: `posts/${id}`,
                 method: 'DELETE',
             }),
-            async onQueryStarted(id, { dispatch, queryFulfilled }) {
-                const patchResult = dispatch(
-                    postApiSlice.util.updateQueryData('getAllExplorePosts', { page: 1, limit: 100 }, (draft) => {
-                        draft.posts = draft.posts.filter(p => p.id !== id);
-                    })
-                );
+            async onQueryStarted(id, { dispatch, queryFulfilled, getState }) {
+                const state = getState() as any;
+                const userId = state.auth?.user?.id;
+
+                const patches = [
+                    dispatch(
+                        postApiSlice.util.updateQueryData('getAllExplorePosts', { page: 1, limit: 100 }, (draft) => {
+                            draft.posts = draft.posts.filter(p => p.id !== id);
+                        })
+                    ),
+                    dispatch(
+                        postApiSlice.util.updateQueryData('getPosts', { page: 1, limit: 10 }, (draft) => {
+                            draft.posts = draft.posts.filter(p => p.id !== id);
+                        })
+                    ),
+                ];
+
+                if (userId) {
+                    patches.push(
+                        dispatch(
+                            postApiSlice.util.updateQueryData('getPostsByUserId', { userId, page: 1, limit: 10 }, (draft) => {
+                                draft.posts = draft.posts.filter(p => p.id !== id);
+                            })
+                        )
+                    );
+                }
+
                 try {
                     await queryFulfilled;
                 } catch {
-                    patchResult.undo();
+                    patches.forEach(patch => patch.undo());
                 }
             },
-            invalidatesTags: (_result, _error, id) => [{ type: 'Post', id }],
+            invalidatesTags: (_result, _error, id) => ['Post', { type: 'Post', id }],
         }),
         getUploadUrl: builder.mutation<{ uploadUrl: string; blobPath: string; expiresIn: string }, { fileName: string; contentType: string; folder?: string }>({
             query: (data) => ({
