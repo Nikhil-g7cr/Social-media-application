@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import "./App.css";
 import Approutes from "./routes";
 import { useAppDispatch, useAppSelector } from "./redux/hooks";
-import { initializeSocket } from "./utils/socket";
+import { initializeSocket, disconnectSocket } from "./utils/socket";
 import {
   setOnlineUsers,
   userOnline,
@@ -14,7 +14,11 @@ function App() {
   const { isAuthenticated } = useAppSelector((state: any) => state.auth);
 
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      disconnectSocket();
+      dispatch(setOnlineUsers([]));
+      return;
+    }
 
     const socket = initializeSocket();
 
@@ -34,6 +38,7 @@ function App() {
       socket.off("syncOnlineUsers");
       socket.off("userOnline");
       socket.off("userOffline");
+      disconnectSocket();
     };
   }, [dispatch, isAuthenticated]);
 

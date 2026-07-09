@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice, type PayloadAction } from "@reduxjs/toolkit";
 import API from "../../../config/axiosConfig";
+import { disconnectSocket } from "../../../utils/socket";
 
 interface User {
     id?: string;
@@ -64,6 +65,7 @@ export const performLogout = createAsyncThunk(
             // logged out on the frontend.
             console.error("Backend logout call failed — clearing local state anyway.", error);
         } finally {
+            disconnectSocket();
             // Always clear Redux + sessionStorage regardless of backend outcome
             dispatch(logout());
         }
@@ -106,6 +108,7 @@ const authSlice = createSlice({
         },
 
         logout: (state) => {
+            disconnectSocket();
             state.user = null;
             state.token = null;
             state.isAuthenticated = false;
