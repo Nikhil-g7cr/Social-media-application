@@ -167,11 +167,6 @@ const AdminDashboard = () => {
                 }`}
               title={!row.isDeleted && onlineUserIds.includes(row.id) ? 'Online' : 'Offline'}
             />
-            {/* <img
-              src={row.avatarUrl || `https://ui-avatars.com/api/?name=${val}&background=random`}
-              alt={val}
-              className={`w-8 h-8 rounded-full object-cover ${row.isDeleted ? 'opacity-50 grayscale' : ''}`}
-            /> */}
             <Avatar url={row.avatarUrl} name={row.name} className="w-12 h-12 rounded-full object-cover" />
           </div>
           <div className="flex flex-col">

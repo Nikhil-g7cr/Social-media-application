@@ -1,6 +1,7 @@
 import React from 'react';
-import { Table, Avatar } from 'antd';
+import { Table } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
+import Avatar from '../../../../shared/shared-components/Avatar';
 
 interface TopUsersProps {
     users: any[];
@@ -14,9 +15,9 @@ const TopUsers: React.FC<TopUsersProps> = ({ users }) => {
             render: (_: any, record: any) => (
                 <div className="flex items-center gap-3">
                     <Avatar 
-                        src={record.ProfilePictureUrl} 
-                        icon={!record.ProfilePictureUrl && <UserOutlined />}
-                        className="bg-blue-100 text-blue-600"
+                        url={record.ProfilePictureUrl} 
+                        name={record.FullName || 'Unknown User'}
+                        className="w-12 h-12 rounded-full object-cover"
                     />
                     <div>
                         <div className="font-medium text-gray-900">{record.FullName || 'Unknown User'}</div>
