@@ -26,56 +26,16 @@ import { UsersDTO } from '../user/dto/users.dto';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import type { JwtPayload } from './models/jwt-payload.model';
-import { AppResponse } from '../../shared/appresponse.shared';
-
-const REFRESH_COOKIE_PATH = '/api/auth';
-const REFRESH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
-
-/**
- * Build a per-user cookie name keyed on email so different users in different tabs never overwrite each other.
- * '@' is an RFC 6265 separator and is forbidden in cookie names, so we replace it with '_at_'.
- * e.g.  nikhil@gmail.com  →  refreshToken_nikhil_at_gmail.com
- */
-const refreshCookieName = (email: string) =>
-  `refreshToken_${email.replace('@', '_at_')}`;
+import { RefreshCookieService } from './refresh-cookie.service';
+import { RefreshCookieStrategy } from './models/refresh-cookie-strategy.enum';
 
 @Controller('auth')
 @ApiTags('Authentication')
 export class AuthController {
-  constructor(private readonly authService: AbstractAuthSvc) {}
-
-  // ======= cookie helpers =====
-
-  /** The shared cookie options — must be identical for set AND clear to work correctly. */
-  private get cookieOptions() {
-    return {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict' as const,
-      path: REFRESH_COOKIE_PATH,
-    };
-  }
-
-  private setRefreshCookie(res: Response, result: AppResponse, email: string) {
-    if (result?.data?.refreshToken) {
-      res.cookie(refreshCookieName(email), result.data.refreshToken, {
-        ...this.cookieOptions,
-        maxAge: REFRESH_COOKIE_MAX_AGE_MS,
-      });
-      delete result.data.refreshToken; // never expose to JS
-    }
-  }
-
-  private clearRefreshCookie(res: Response, email: string) {
-    // Must use the same options as setCookie — browsers ignore clears with mismatched attributes
-    res.clearCookie(refreshCookieName(email), this.cookieOptions);
-  }
-
-  /** One-time migration: remove the old shared 'refreshToken' cookie left over before the user-scoped fix. */
-  private clearLegacyCookie(res: Response) {
-    res.clearCookie('refreshToken', this.cookieOptions);
-  }
-  // ======= end of cookie helpers =====
+  constructor(
+    private readonly authService: AbstractAuthSvc,
+    private readonly cookieService: RefreshCookieService,
+  ) {}
 
   @Post('signup')
   @ApiOperation({ summary: 'Register a new user account' })
@@ -87,13 +47,17 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.signup(userData, ip, userAgent);
-    // Decode the access token to get the email for the scoped cookie name
+    // Decode access token or use user DTO email for per-user cookie strategy
     const email = result?.data?.accessToken
-      ? (JSON.parse(Buffer.from((result.data.accessToken as string).split('.')[1], 'base64url').toString()))?.email
-      : undefined;
-    // Always clear the old legacy 'refreshToken' cookie (pre-user-scoped-fix cleanup)
-    this.clearLegacyCookie(res);
-    if (email) this.setRefreshCookie(res, result, email);
+      ? JSON.parse(
+          Buffer.from(
+            (result.data.accessToken as string).split('.')[1],
+            'base64url',
+          ).toString(),
+        )?.email
+      : userData.EmailAddress;
+
+    this.cookieService.setRefreshCookieFromResult(res, result, email);
     return result;
   }
 
@@ -107,13 +71,16 @@ export class AuthController {
     @Res({ passthrough: true }) res: Response,
   ) {
     const result = await this.authService.login(loginData, ip, userAgent);
-    // Decode the access token to get the email for the scoped cookie name
     const email = result?.data?.accessToken
-      ? (JSON.parse(Buffer.from((result.data.accessToken as string).split('.')[1], 'base64url').toString()))?.email
-      : undefined;
-    // Always clear the old legacy 'refreshToken' cookie (pre-user-scoped-fix cleanup)
-    this.clearLegacyCookie(res);
-    if (email) this.setRefreshCookie(res, result, email);
+      ? JSON.parse(
+          Buffer.from(
+            (result.data.accessToken as string).split('.')[1],
+            'base64url',
+          ).toString(),
+        )?.email
+      : loginData.EmailAddress;
+
+    this.cookieService.setRefreshCookieFromResult(res, result, email);
     return result;
   }
 
@@ -121,26 +88,34 @@ export class AuthController {
   @ApiOperation({
     summary: 'Rotate tokens using a valid refresh token',
     description:
-      'Reads the httpOnly per-user refresh cookie (`refreshToken_<email>`), verifies it ' +
-      'against the stored bcrypt hash, and issues a new access + refresh token pair. ' +
-      'The old refresh token is invalidated. The caller must pass `email` in the request body ' +
-      'so the server knows which cookie to read (access token may be expired at this point).',
+      'Reads the httpOnly refresh cookie according to active strategy (`single` or `per_user`), verifies it ' +
+      'against stored bcrypt hash, and issues a new access + refresh token pair. ' +
+      'In `per_user` mode, caller must pass `email` in request body.',
   })
   async refreshToken(
     @Body() body: { email?: string },
     @Req() req: Request,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const { email } = body;
-    if (!email) {
-      return { code: 401, message: 'email is required to identify the refresh token cookie' };
+    const { email } = body || {};
+    if (
+      this.cookieService.getStrategy() === RefreshCookieStrategy.PER_USER &&
+      !email
+    ) {
+      return {
+        code: 401,
+        message:
+          'email is required to identify the refresh token cookie in per_user strategy',
+      };
     }
-    const refreshToken = req.cookies?.[refreshCookieName(email)];
+
+    const refreshToken = this.cookieService.getRefreshToken(req, email);
     if (!refreshToken) {
       return { code: 401, message: 'No refresh token provided' };
     }
+
     const result = await this.authService.refreshToken(refreshToken);
-    this.setRefreshCookie(res, result, email);
+    this.cookieService.setRefreshCookieFromResult(res, result, email);
     return result;
   }
 
@@ -192,12 +167,12 @@ export class AuthController {
   @ApiOperation({ summary: 'Log out from the current device' })
   async logout(
     @CurrentUser() user: JwtPayload,
+    @Body() body: { email?: string },
     @Res({ passthrough: true }) res: Response,
   ) {
-    // Clear the per-user scoped cookie (keyed on email) and any legacy leftover
-    this.clearRefreshCookie(res, user.email);
-    this.clearLegacyCookie(res);
-    console.log("User is loged out")
+    const email = user?.email || body?.email;
+    this.cookieService.clearRefreshCookie(res, email);
+    console.log('User is loged out');
     return await this.authService.logout(user.sessionId!, user.sub);
   }
 
@@ -207,11 +182,11 @@ export class AuthController {
   @ApiOperation({ summary: 'Log out from all devices' })
   async logoutAll(
     @CurrentUser() user: JwtPayload,
+    @Body() body: { email?: string },
     @Res({ passthrough: true }) res: Response,
   ) {
-    // Clear the per-user scoped cookie (keyed on email) and any legacy leftover
-    this.clearRefreshCookie(res, user.email);
-    this.clearLegacyCookie(res);
+    const email = user?.email || body?.email;
+    this.cookieService.clearRefreshCookie(res, email);
     return await this.authService.logoutAll(user.sub);
   }
 

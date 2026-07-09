@@ -18,6 +18,8 @@ import { AppConfig } from '../../config/AppConfig';
 
 import { JwtStrategy } from './models/jwt.strategy';
 
+import { RefreshCookieService } from './refresh-cookie.service';
+
 @Module({
   imports: [
     DatabaseModule,
@@ -37,6 +39,7 @@ import { JwtStrategy } from './models/jwt.strategy';
   providers: [
     AppConfig,
     AppLogger,
+    RefreshCookieService,
 
     // JWT
     JwtStrategy,
@@ -57,6 +60,6 @@ import { JwtStrategy } from './models/jwt.strategy';
     SessionCleanupService,
   ],
 
-  exports: [AbstractAuthSvc, PassportModule, JwtModule],
+  exports: [AbstractAuthSvc, RefreshCookieService, PassportModule, JwtModule],
 })
 export class AuthModule {}
