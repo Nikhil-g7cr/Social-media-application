@@ -5,6 +5,7 @@ import { useAcceptFollowRequestMutation, useRejectFollowRequestMutation, useGetP
 import { formatDistanceToNow } from 'date-fns';
 import { initializeSocket } from '../../utils/socket';
 import { useDispatch } from 'react-redux';
+import { useAppSelector } from '../../redux/hooks';
 import { useNavigate } from 'react-router-dom';
 import { apiSlice } from '../../redux/apiSlice';
 import PostImage from './PostImage';
@@ -16,8 +17,9 @@ import ErrorDisplay from '../../components/errors/ErrorDisplay';
 
 const NotificationDropdown: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
-  const { data: serverNotifications = [], refetch, isError, error } = useGetNotificationsQuery();
-  const { data: pendingRequests = [] } = useGetPendingRequestsQuery();
+  const { isAuthenticated } = useAppSelector((state: any) => state.auth);
+  const { data: serverNotifications = [], refetch, isError, error } = useGetNotificationsQuery(undefined, { skip: !isAuthenticated });
+  const { data: pendingRequests = [] } = useGetPendingRequestsQuery(undefined, { skip: !isAuthenticated });
   const [markAsReadMutation] = useMarkAsReadMutation();
   const [markAllAsReadMutation] = useMarkAllAsReadMutation();
   const [deleteNotification] = useDeleteNotificationMutation();

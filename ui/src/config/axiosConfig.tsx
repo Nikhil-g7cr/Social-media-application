@@ -33,10 +33,81 @@ const processQueue = (error: any, token: string | null = null) => {
     failedQueue = [];
 };
 
-// Request Interceptor: Attach the accessToken from sessionStorage
+// Check if a JWT token is expired or expiring within 5 seconds
+const isTokenExpired = (token: string): boolean => {
+    try {
+        const payloadBase64 = token.split('.')[1];
+        if (!payloadBase64) return true;
+        const decodedJson = JSON.parse(atob(payloadBase64));
+        return decodedJson.exp * 1000 < Date.now() + 5000;
+    } catch (e) {
+        return true;
+    }
+};
+
+// Centralized helper to refresh access token and update store + socket
+const refreshAccessToken = async (): Promise<string> => {
+    if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+            failedQueue.push({ resolve, reject });
+        });
+    }
+
+    isRefreshing = true;
+    try {
+        const email = store.getState()?.auth?.user?.email;
+        const result = await axios.post(`${environment.APP_API_URL}auth/refresh-token`, {
+            email,
+        }, {
+            withCredentials: true,
+        });
+
+        const newAccessToken = result.data?.data?.accessToken || result.data?.accessToken;
+        if (!newAccessToken) {
+            throw new Error('Failed to retrieve new access token');
+        }
+
+        sessionStorage.setItem('accessToken', newAccessToken);
+        updateSocketToken(newAccessToken);
+        store.dispatch(login({ accessToken: newAccessToken }));
+
+        processQueue(null, newAccessToken);
+        return newAccessToken;
+    } catch (refreshError) {
+        processQueue(refreshError, null);
+        sessionStorage.clear();
+        if (!['/login', '/signup'].includes(window.location.pathname)) {
+            notification.warning({
+                message: 'Session Expired',
+                description: 'Please login again.',
+                duration: 3,
+                onClose: () => {
+                    window.location.href = '/login';
+                },
+            });
+        }
+        throw refreshError;
+    } finally {
+        isRefreshing = false;
+    }
+};
+
+// Request Interceptor: Proactively refresh if token is expired before sending request
 API.interceptors.request.use(
-    (config: any) => {
-        const token = sessionStorage.getItem('accessToken');
+    async (config: any) => {
+        const requestUrl = String(config?.url || '');
+        const isAuthRequest = /auth\/(login|signup|refresh-token)/.test(requestUrl);
+
+        let token = sessionStorage.getItem('accessToken');
+
+        if (token && !isAuthRequest && isTokenExpired(token)) {
+            try {
+                token = await refreshAccessToken();
+            } catch (err) {
+                return Promise.reject(err);
+            }
+        }
+
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
@@ -45,7 +116,7 @@ API.interceptors.request.use(
     (error: any) => Promise.reject(error)
 );
 
-// Response Interceptor: Catch 401s and automatically refresh the token
+// Response Interceptor: Catch unexpected 401s as a reactive safety net
 API.interceptors.response.use(
     (response) => response,
     async (error: any) => {
@@ -53,90 +124,16 @@ API.interceptors.response.use(
         const requestUrl = String(originalRequest?.url || '');
         const isAuthRequest = /auth\/(login|signup|refresh-token)/.test(requestUrl);
 
-        // If the error is 401 (Unauthorized) and we haven't already retried this request
         if (error.response?.status === 401 && !originalRequest?._retry && !isAuthRequest) {
-
-            // const refreshToken = sessionStorage.getItem('refreshToken');
-            // if (!refreshToken) {
-            //     return Promise.reject(error);
-            // }
-            
-            // If a refresh is already happening, queue this request to wait for the new token
-            if (isRefreshing) {
-                return new Promise(function(resolve, reject) {
-                    failedQueue.push({ resolve, reject });
-                }).then(token => {
-                    originalRequest.headers['Authorization'] = 'Bearer ' + token;
-                    return API(originalRequest);
-                }).catch(err => Promise.reject(err));
-            }
-
             originalRequest._retry = true;
-            isRefreshing = true;
-
             try {
-                // Call your refresh endpoint.
-                // Make sure to use basic axios (not the interceptor API instance) to avoid infinite loops.
-                // We send the email in the body so the backend knows which per-user cookie
-                // (refreshToken_<email>) to read — since cookies are shared across tabs but
-                // sessionStorage (and therefore the Redux store) is tab-isolated.
-                const email = store.getState()?.auth?.user?.email;
-                const result = await axios.post(`${environment.APP_API_URL}auth/refresh-token`, {
-                    email,
-                }, {
-                    withCredentials: true,
-                });
-
-                // Assuming your backend returns { data: { accessToken: 'new_token', refreshToken: 'new_refresh' } }
-                const newAccessToken = result.data?.data?.accessToken || result.data?.accessToken;
-                const newRefreshToken = result.data?.data?.refreshToken || result.data?.refreshToken;
-                
-                if (!newAccessToken) {
-                    throw new Error('Failed to retrieve new access token');
-                }
-
-                // Update sessionStorage with the new tokens
-                sessionStorage.setItem('accessToken', newAccessToken);
-                // if (newRefreshToken) {
-                //     sessionStorage.setItem('refreshToken', newRefreshToken);
-                // }
-
-                updateSocketToken(newAccessToken);
-
-                // Pass the NEW refresh token into Redux memory!
-                store.dispatch(login({
-                    accessToken: newAccessToken, 
-                    // refreshToken: newRefreshToken 
-                }));
-
-                // Update the failed request with the new token and retry it
-                originalRequest.headers['Authorization'] = 'Bearer ' + newAccessToken;
-                processQueue(null, newAccessToken);
-                
+                const newAccessToken = await refreshAccessToken();
+                originalRequest.headers['Authorization'] = `Bearer ${newAccessToken}`;
                 return API(originalRequest);
-                
             } catch (refreshError) {
-                // If the refresh token is also expired/invalid, force logout
-                processQueue(refreshError, null);
-                sessionStorage.clear();
-                
-                if (!['/login', '/signup'].includes(window.location.pathname)) {
-                    notification.warning({
-                        message: 'Session Expired',
-                        description: 'Please login again.',
-                        duration: 3,
-                        onClose: () => {
-                            window.location.href = '/login';
-                        },
-                    });
-                }
-                
                 return Promise.reject(refreshError);
-            } finally {
-                isRefreshing = false;
             }
         } 
-        // Handle Forbidden errors
         else if (error.response?.status === 403) {
             window.location.href = '/403';
         }
