@@ -128,7 +128,7 @@ export class AuthService implements AbstractAuthSvc {
     return {
       sub: user.ID,
       email: user.EmailAddress,
-      roles: [user.Role || 'USER'],
+      roles: [user.Role?.Name || user.Role || 'USER'],
       name: user.FullName,
       sessionId,
     };

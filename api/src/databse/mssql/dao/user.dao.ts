@@ -18,6 +18,7 @@ import {
   RefreshToken,
   Conversation,
   Session,
+  Roles,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import AppLogger from '../../../core/logger/app-logger';
@@ -56,6 +57,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
     @Inject(MsSqlConstants.SESSION) private _session: typeof Session,
     @Inject(MsSqlConstants.CONVERSATION)
     private _conversation: typeof Conversation,
+    @Inject(MsSqlConstants.ROLES) private _role: typeof Roles,
     readonly logger: AppLogger,
   ) {}
 
@@ -147,7 +149,8 @@ export class UserSQLDao implements UserAbsSQLDAO {
   async getUserRoleByID(UserID: string): Promise<AppResponse> {
     try {
       const user = await this._user.findOne({
-        attributes: ['Role'],
+        attributes: ['RoleID'],
+        include: [{ model: this._role, as: 'Role' }],
         where: { ID: UserID },
       });
 
@@ -159,7 +162,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
         );
       }
       return createResponse(200, UserMessage.S5, {
-        Role: user.Role,
+        Role: (user as any).Role?.Name || 'USER',
       });
     } catch (error: any) {
       this.logger.error(error.stack, 500);
@@ -177,6 +180,11 @@ export class UserSQLDao implements UserAbsSQLDAO {
   async addUser(UserInfo: UsersDTO): Promise<AppResponse> {
     const transaction = await this.sequelize.transaction();
     try {
+      const defaultRole = await this._role.findOne({
+        where: { Name: 'USER' },
+        transaction,
+      });
+
       const newUser = await this._user.create(
         {
           ID: randomUUID(),
@@ -187,6 +195,7 @@ export class UserSQLDao implements UserAbsSQLDAO {
           ProfilePictureUrl: UserInfo.ProfilePictureUrl,
           Bio: UserInfo.Bio,
           Gender: UserInfo.Gender,
+          RoleID: defaultRole?.ID,
           // CreatedBy: UserInfo.CreatedBy,
           //   CreatedAt: new Date(),
         } as any,

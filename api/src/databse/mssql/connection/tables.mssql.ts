@@ -17,6 +17,7 @@ export enum Tables{
     tbl_Report = 'tbl_Report',
     tbl_FileDeleteRequest = 'FileDeleteRequest',
     tbl_Session = 'tbl_Session',
+    tbl_Roles = 'tbl_Roles',
 }
 
 export class TableGroup{

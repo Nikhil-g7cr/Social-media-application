@@ -16,6 +16,7 @@ import {
   RefreshToken,
   FileDeleteRequest,
   Session,
+  Roles,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import { MsSqlConstants } from './constant.mssql';
@@ -39,7 +40,7 @@ const msSqlDBModelsProvider = [
     { provide: MsSqlConstants.REFRESH_TOKEN, useValue: RefreshToken },
     { provide: MsSqlConstants.SESSION, useValue: Session },
     { provide: MsSqlConstants.FILE_DELETE_REQUEST, useValue: FileDeleteRequest },
-
+    { provide: MsSqlConstants.ROLES, useValue: Roles },
   ],
   models: any = msSqlDBModelsProvider.map((providers) => providers.useValue);
 

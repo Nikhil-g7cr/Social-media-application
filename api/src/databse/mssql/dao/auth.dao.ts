@@ -5,7 +5,7 @@ import AppLogger from 'src/core/logger/app-logger';
 import { AppConfig } from 'src/config/AppConfig';
 import { AuthAbstractSQLDao } from '../abstract/auth.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import { Users, UserColumns, Session } from '../models';
+import { Users, UserColumns, Session, Roles } from '../models';
 import { SessionColumns } from 'src/core/enums/session.enum';
 import { UsersDTO } from 'src/modules/user/dto/users.dto';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
@@ -20,6 +20,8 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
     private readonly userModel: typeof Users,
     @Inject(MsSqlConstants.SESSION)
     private readonly sessionModel: typeof Session,
+    @Inject(MsSqlConstants.ROLES)
+    private readonly roleModel: typeof Roles,
     readonly logger: AppLogger,
     private readonly appConfig: AppConfig,
   ) {}
@@ -34,6 +36,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
         where: {
           [UserColumns.ID]: userID,
         },
+        include: [{ model: this.roleModel, as: 'Role' }],
       });
 
       if (!user) {
@@ -63,6 +66,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
         where: {
           [UserColumns.EmailAddress]: email,
         },
+        include: [{ model: this.roleModel, as: 'Role' }],
       });
 
       if (!user) {
@@ -96,6 +100,10 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
 
   async createUser(userData: UsersDTO): Promise<AppResponse> {
     try {
+      const defaultRole = await this.roleModel.findOne({
+        where: { Name: 'USER' },
+      });
+
       const user = await this.userModel.create({
         ID: randomUUID(),
         UserName: userData.UserName,
@@ -105,6 +113,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
         ProfilePictureUrl: userData.ProfilePictureUrl,
         Bio: userData.Bio,
         Gender: userData.Gender,
+        RoleID: defaultRole?.ID,
       } as any);
 
       return createResponse(

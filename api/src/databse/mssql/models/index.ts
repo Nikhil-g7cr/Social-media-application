@@ -1,6 +1,6 @@
 export * from './conversation.model';
 export * from './message.model';
-export * from './messageAttachment.model'
+export * from './messageAttachment.model';
 export * from './refreshToken.model';
 export * from './session.model';
 export * from './post.model';
@@ -15,3 +15,4 @@ export * from './hashtag.model';
 export * from './postHashtag.model';
 export * from './report.model';
 export * from './fileDeleteRequest.model';
+export * from './roles.model';

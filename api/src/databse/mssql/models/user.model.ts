@@ -3,6 +3,7 @@ import {
   BelongsTo,
   Column,
   DataType,
+  ForeignKey,
   HasMany,
   Model,
   PrimaryKey,
@@ -15,6 +16,7 @@ import { Likes } from './like.model';
 import { UserRoles } from '../../../core/enums/user.enums';
 import { Follow } from './follow.model';
 import { RefreshToken } from './refreshToken.model';
+import { Roles, RolesColumns } from './roles.model';
 
 export const enum UserColumns {
   ID = 'ID',
@@ -25,7 +27,7 @@ export const enum UserColumns {
   ProfilePictureUrl = 'ProfilePictureUrl',
   Bio = 'Bio',
   Gender = 'Gender',
-  Role = 'Role',
+  RoleID = 'RoleID',
   IsActive = 'IsActive',
   IsDeleted = 'IsDeleted',
   DeletedAt = 'DeletedAt',
@@ -112,12 +114,12 @@ class Users extends Model<Users> {
   })
   [UserColumns.Gender]?: string;
 
+  @ForeignKey(() => Roles)
   @Column({
-    type: `${SQLDataType.VARCHAR}(20)`,
+    type: SQLDataType.UNIQUEIDENTIFIER,
     allowNull: false,
-    defaultValue: UserRoles.USER,
   })
-  [UserColumns.Role]!: UserRoles;
+  [UserColumns.RoleID]!: string;
 
   @Column({
     type: SQLDataType.BIT,
@@ -177,6 +179,13 @@ class Users extends Model<Users> {
     onDelete: 'NO ACTION',
   })
   ModifiedByUser!: Users;
+
+  @BelongsTo(() => Roles, {
+    foreignKey: UserColumns.RoleID,
+    targetKey: RolesColumns.ID,
+    as: 'Role',
+  })
+  Role?: Roles;
 
   @HasMany(() => Posts, { foreignKey: 'UserID' })
   Posts!: Posts[];
