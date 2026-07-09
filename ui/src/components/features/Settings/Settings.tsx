@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
-import { logout } from "../../../redux/features/auth/AuthSlice";
+import { logout, performLogout } from "../../../redux/features/auth/AuthSlice";
 
 const SettingsPage = () => {
   const navigate = useNavigate();
@@ -93,8 +93,10 @@ const SettingsPage = () => {
   );
 
     const dispatch = useDispatch();
-    const handleLogout = () => {
-      dispatch(logout() as any);
+    const handleLogout = async () => {
+      // dispatch performLogout (the async thunk) — calls POST /auth/logout
+      // on the backend first to clear the HttpOnly cookie + revoke DB session
+      await dispatch(performLogout() as any);
       navigate("/login");
     };
 

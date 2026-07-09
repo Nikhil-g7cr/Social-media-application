@@ -31,6 +31,7 @@ import GalleryPage from '../Gallery';
 import FileRequestsPage from '../FileRequests';
 import { FiImage, FiFolder } from 'react-icons/fi';
 import { PanelShell } from '../../components/layout/Panel';
+import Avatar from '../../shared/shared-components/Avatar';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ModalState {
@@ -166,11 +167,12 @@ const AdminDashboard = () => {
                 }`}
               title={!row.isDeleted && onlineUserIds.includes(row.id) ? 'Online' : 'Offline'}
             />
-            <img
+            {/* <img
               src={row.avatarUrl || `https://ui-avatars.com/api/?name=${val}&background=random`}
               alt={val}
               className={`w-8 h-8 rounded-full object-cover ${row.isDeleted ? 'opacity-50 grayscale' : ''}`}
-            />
+            /> */}
+            <Avatar url={row.avatarUrl} name={row.name} className="w-12 h-12 rounded-full object-cover" />
           </div>
           <div className="flex flex-col">
             <span className={`font-medium ${row.isDeleted ? 'text-gray-400 line-through' : 'text-gray-800'}`}>

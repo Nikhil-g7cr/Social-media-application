@@ -75,12 +75,16 @@ API.interceptors.response.use(
             isRefreshing = true;
 
             try {
-                // Call your refresh endpoint. 
-                // Make sure to use basic axios (not the interceptor API instance) to avoid infinite loops
+                // Call your refresh endpoint.
+                // Make sure to use basic axios (not the interceptor API instance) to avoid infinite loops.
+                // We send the email in the body so the backend knows which per-user cookie
+                // (refreshToken_<email>) to read — since cookies are shared across tabs but
+                // sessionStorage (and therefore the Redux store) is tab-isolated.
+                const email = store.getState()?.auth?.user?.email;
                 const result = await axios.post(`${environment.APP_API_URL}auth/refresh-token`, {
-                    // refreshToken
+                    email,
                 }, {
-                    withCredentials: true 
+                    withCredentials: true,
                 });
 
                 // Assuming your backend returns { data: { accessToken: 'new_token', refreshToken: 'new_refresh' } }

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate } from 'react-router-dom';
 import type { RootState } from '../../redux/store';
-import { logout } from '../../redux/features/auth/AuthSlice';
+import { logout, performLogout } from '../../redux/features/auth/AuthSlice';
 import { useGetUserByIdQuery } from '../../redux/features/user/userApiSlice';
 import Avatar from './Avatar';
 import { Settings, Shield, LogOut, ChevronDown } from 'lucide-react';
@@ -27,11 +27,11 @@ const ProfileDropdown: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleLogout = () => {
-    // Assuming dispatching logout correctly clears state and maybe triggers API
-    // If you need the async API call, dispatch(logout()) handles the local state.
-    // AuthSlice might have a thunk, but here dispatch(logout()) is safe as a basic fallback.
-    dispatch(logout() as any);
+  const handleLogout = async () => {
+    // dispatch performLogout (the async thunk) — this calls POST /auth/logout
+    // on the backend FIRST (to clear the HttpOnly cookie + revoke the DB session),
+    // then clears local Redux state. Without this, the cookie is never removed.
+    await dispatch(performLogout() as any);
     navigate('/login');
   };
 

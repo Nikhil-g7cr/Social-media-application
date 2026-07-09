@@ -51,13 +51,20 @@ const initialState: AuthState = {
 export const performLogout = createAsyncThunk(
     'auth/performLogout',
     async (_, { dispatch }) => {
+        // IMPORTANT: call the backend FIRST while the access token is still
+        // valid in sessionStorage. Only then clear local state in `finally`.
+        // If we cleared state first, the request would have no Authorization
+        // header and the backend would return 401 — meaning the HttpOnly
+        // cookie would never be cleared server-side.
         try {
-            // Call the backend endpoint to clear the HttpOnly cookie and revoke the session
             await API.post('/auth/logout');
         } catch (error) {
-            console.error("Backend logout failed, but clearing local state anyway.", error);
+            // Even if the backend call fails (e.g. network error or token
+            // already expired), we still clear local state so the user is
+            // logged out on the frontend.
+            console.error("Backend logout call failed — clearing local state anyway.", error);
         } finally {
-            // Always clear the local Redux/SessionStorage state
+            // Always clear Redux + sessionStorage regardless of backend outcome
             dispatch(logout());
         }
     }
