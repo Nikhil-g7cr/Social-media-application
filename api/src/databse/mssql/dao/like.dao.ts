@@ -2,9 +2,10 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
-import { Likes, Posts, Users } from '../models';
+import { Likes, LikesColumns, Posts, UserColumns, Users } from '../models';
 import { LikeAbstractSQLDAO } from '../abstract/like.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
+import { LikeMessage } from 'src/core/enums/post.enum'
 
 @Injectable()
 export class LikeSQLDAO implements LikeAbstractSQLDAO {
@@ -25,18 +26,18 @@ export class LikeSQLDAO implements LikeAbstractSQLDAO {
               {
                 model: Users,
                 as: 'User',
-                attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+                attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
               }
             ]
           },
         ],
-        order: [['CreatedAt', 'DESC']],
+        order: [[LikesColumns.CreatedAt, 'DESC']],
       });
-      return createResponse(HttpStatus.OK, 'User likes retrieved successfully', likes);
+      return createResponse(HttpStatus.OK, LikeMessage.S1, likes);
     } catch (error: any) {
       this.logger.error(`[LikeSQLDAO] getUserLikes Error: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Failed to retrieve user likes'),
+        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, LikeMessage.E1),
         description: error.message,
       };
     }
@@ -58,7 +59,7 @@ export class LikeSQLDAO implements LikeAbstractSQLDAO {
           where: { ID: existingLike.ID },
         });
 
-        return createResponse(HttpStatus.OK, 'Post unliked successfully', null);
+        return createResponse(HttpStatus.OK, LikeMessage.S2, null);
       }
 
       // 3. If it doesn't exist, the user is trying to LIKE the post
@@ -71,18 +72,16 @@ export class LikeSQLDAO implements LikeAbstractSQLDAO {
       const newLike = await this.likeModel.create(newLikePayload as any);
       return createResponse(
         HttpStatus.CREATED,
-        'Post liked successfully',
+        LikeMessage.S1,
         newLike,
       );
     } catch (error: any) {
-      console.error('=== RAW DATABASE ERROR ===');
-      console.error(error);
-      console.error('==========================');
+      this.logger.error(`[LikeSQLDAO] toggleLike Error: ${error.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
 
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to toggle like',
+          LikeMessage.E3,
         ),
         description:
           error?.original?.message || error?.message || 'Unknown Error',
