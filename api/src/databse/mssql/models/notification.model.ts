@@ -12,6 +12,16 @@ import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
 
+export const enum NotificationColumns {
+  ID = 'ID',
+  UserID = 'UserID',
+  ActorUserID = 'ActorUserID',
+  PostID = 'PostID',
+  NotificationType = 'NotificationType',
+  IsRead = 'IsRead',
+  CreatedAt = 'CreatedAt',
+}
+
 @Table({ tableName: Tables.tbl_Notification, timestamps: false })
 export class Notification extends Model<Notification> {
   @PrimaryKey
@@ -19,28 +29,28 @@ export class Notification extends Model<Notification> {
     type: SQLDataType.UNIQUEIDENTIFIER,
     allowNull: false,
   })
-  ID!: string;
+  [NotificationColumns.ID]!: string;
 
   @ForeignKey(() => Users)
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  UserID!: string; // The user who receives the notification
+  [NotificationColumns.UserID]!: string; // The user who receives the notification
 
   @ForeignKey(() => Users)
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  ActorUserID!: string; // The user who triggered the notification
+  [NotificationColumns.ActorUserID]!: string; // The user who triggered the notification
 
   @ForeignKey(() => Posts)
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: true })
-  PostID?: string; // Optional, related to likes etc.
+  [NotificationColumns.PostID]?: string; // Optional, related to likes etc.
 
   @Column({ type: `${SQLDataType.VARCHAR}(255)`, allowNull: false })
-  NotificationType!: string; // LIKE, FOLLOW, MESSAGE
+  [NotificationColumns.NotificationType]!: string; // LIKE, FOLLOW, MESSAGE
 
   @Column({ type: SQLDataType.BIT, allowNull: false, defaultValue: false })
-  IsRead!: boolean;
+  [NotificationColumns.IsRead]!: boolean;
 
   @Column({ type: DataType.DATE, allowNull: false })
-  CreatedAt!: Date;
+  [NotificationColumns.CreatedAt]!: Date;
 
   // ==========================================
   // Relationships

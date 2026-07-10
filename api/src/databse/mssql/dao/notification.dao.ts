@@ -1,10 +1,11 @@
 import { Injectable, Inject } from '@nestjs/common';
 import { NotificationAbsSQLDAO } from '../abstract/notification.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import { Notification } from '../models/notification.model';
-import { Users } from '../models/user.model';
+import { Notification, NotificationColumns } from '../models/notification.model';
+import { UserColumns, Users } from '../models/user.model';
 import { Posts } from '../models/post.model';
 import { v4 as uuidv4 } from 'uuid';
+import { PostsColumns } from 'src/core/enums/post.enum';
 
 @Injectable()
 export class NotificationSQLDao implements NotificationAbsSQLDAO {
@@ -34,8 +35,8 @@ export class NotificationSQLDao implements NotificationAbsSQLDAO {
     return await this.notificationModel.findOne({
       where: { ID: id },
       include: [
-        { model: Users, as: 'Actor', attributes: ['ID', 'UserName', 'ProfilePictureUrl'], required: false },
-        { model: Posts, as: 'Post', attributes: ['ID', 'Content'], required: false },
+        { model: Users, as: 'Actor', attributes: [UserColumns.ID, UserColumns.UserName, UserColumns.ProfilePictureUrl], required: false },
+        { model: Posts, as: 'Post', attributes: [PostsColumns.ID, PostsColumns.Content], required: false },
       ],
     });
   }
@@ -44,10 +45,10 @@ export class NotificationSQLDao implements NotificationAbsSQLDAO {
     return await this.notificationModel.findAll({
       where: { UserID: userId },
       include: [
-        { model: Users, as: 'Actor', attributes: ['ID', 'UserName', 'ProfilePictureUrl'], required: false },
-        { model: Posts, as: 'Post', attributes: ['ID', 'Content'], required: false },
+        { model: Users, as: 'Actor', attributes: [UserColumns.ID, UserColumns.UserName, UserColumns.ProfilePictureUrl], required: false },
+        { model: Posts, as: 'Post', attributes: [PostsColumns.ID, PostsColumns.Content], required: false },
       ],
-      order: [['CreatedAt', 'DESC']],
+      order: [[NotificationColumns.CreatedAt, 'DESC']],
       limit,
     });
   }

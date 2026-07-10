@@ -7,10 +7,10 @@ import {
   ChatMessage,
   ConversationMessage,
 } from '../../../core/enums/Chat.message.enum';
-import { Message } from '../models/message.model';
+import { Message, MessageColumns } from '../models/message.model';
 import { MessageAttachment } from '../models/messageAttachment.model';
 import { CP } from '../models/conversationParticipants.model';
-import { Users } from '../models/user.model';
+import { UserColumns, Users } from '../models/user.model';
 
 @Injectable()
 export class MessageSQLDAO implements MessageAbstractSQLDAO {
@@ -51,10 +51,10 @@ export class MessageSQLDAO implements MessageAbstractSQLDAO {
           {
             model: this.userModel,
             as: 'Sender',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
         ],
-        order: [['CreatedAt', 'ASC']],
+        order: [[MessageColumns.CreatedAt, 'ASC']],
       });
 
       return messages.map((m: any) => ({
@@ -167,7 +167,7 @@ export class MessageSQLDAO implements MessageAbstractSQLDAO {
       };
 
       const sender = await this.userModel.findByPk(payload.senderId, {
-        attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+        attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
       });
 
       if (sender) {
