@@ -8,7 +8,7 @@ import {
 
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { PostAbstractSQLDao } from '../abstract/posts.abstract.mssql';
-import { Posts } from '../models';
+import { CommentsColumns, LikesColumns, Posts, UserColumns } from '../models';
 import AppLogger from 'src/core/logger/app-logger';
 import { MsSqlConstants } from '../connection/constant.mssql';
 
@@ -17,6 +17,7 @@ import { UpdatePostDto } from 'src/modules/post/dto/update-post.dto';
 import { Sequelize } from 'sequelize-typescript';
 import { messageFactory, messages } from 'src/shared/message.shared';
 import { Op } from 'sequelize';
+import { PostsColumns } from 'src/core/enums/post.enum';
 
 @Injectable()
 export class PostSQLDAO implements PostAbstractSQLDao {
@@ -57,13 +58,19 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           FileName: m.fileName,
           MimeType: m.mimeType,
           FileSize: m.fileSize,
-          DisplayOrder: index + 1
+          DisplayOrder: index + 1,
         }));
-        await this.sequelize.models.PostMedia.bulkCreate(postMediaData, { transaction });
+        await this.sequelize.models.PostMedia.bulkCreate(postMediaData, {
+          transaction,
+        });
       }
 
       if (createPostDto.content) {
-        await this.extractAndSaveHashtags(newPost.ID, createPostDto.content, transaction);
+        await this.extractAndSaveHashtags(
+          newPost.ID,
+          createPostDto.content,
+          transaction,
+        );
       }
 
       await transaction.commit();
@@ -96,29 +103,29 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       const { rows, count } = await this.postModel.findAndCountAll({
         limit,
         offset,
-        order: [['CreatedAt', 'DESC']],
+        order: [[PostsColumns.CreatedAt, 'DESC']],
         distinct: true,
         include: [
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
+            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID']
+            attributes: ['UserID'],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID']
+            attributes: ['ID'],
           },
           {
             model: this.sequelize.models.PostMedia,
             as: 'Media',
-          }
-        ]
+          },
+        ],
       });
 
       return createResponse(HttpStatus.OK, 'Posts retrieved successfully', {
@@ -144,7 +151,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       };
     }
   }
-  async getPostsByUserId(userId: string, page: number, limit: number): Promise<AppResponse> {
+  async getPostsByUserId(
+    userId: string,
+    page: number,
+    limit: number,
+  ): Promise<AppResponse> {
     try {
       const offset = (page - 1) * limit;
 
@@ -152,42 +163,46 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         where: { UserID: userId },
         limit,
         offset,
-        order: [['CreatedAt', 'DESC']],
+        order: [[PostsColumns.CreatedAt, 'DESC']],
         distinct: true,
         include: [
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID']
+            attributes: ['UserID'],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID']
+            attributes: ['ID'],
           },
           {
             model: this.sequelize.models.PostMedia,
             as: 'Media',
-          }
-        ]
+          },
+        ],
       });
 
-      return createResponse(HttpStatus.OK, 'User posts retrieved successfully', {
-        posts: rows,
-        pagination: {
-          page,
-          limit,
-          totalRecords: count,
-          totalPages: Math.ceil(count / limit),
-          hasNextPage: page < Math.ceil(count / limit),
-          hasPreviousPage: page > 1,
+      return createResponse(
+        HttpStatus.OK,
+        'User posts retrieved successfully',
+        {
+          posts: rows,
+          pagination: {
+            page,
+            limit,
+            totalRecords: count,
+            totalPages: Math.ceil(count / limit),
+            hasNextPage: page < Math.ceil(count / limit),
+            hasPreviousPage: page > 1,
+          },
         },
-      });
+      );
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
 
@@ -209,23 +224,23 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID']
+            attributes: [LikesColumns.UserID],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID']
+            attributes: [CommentsColumns.ID],
           },
           {
             model: this.sequelize.models.PostMedia,
             as: 'Media',
-          }
-        ]
+          },
+        ],
       });
 
       if (!post) {
@@ -276,15 +291,25 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       }
 
       if (updatePostDto.content !== undefined) {
-        await this.sequelize.query('DELETE FROM tbl_PostHashtag WHERE PostID = :postId', {
-          replacements: { postId },
-          transaction
-        });
-        await this.extractAndSaveHashtags(postId, updatePostDto.content, transaction);
+        await this.sequelize.query(
+          'DELETE FROM tbl_PostHashtag WHERE PostID = :postId',
+          {
+            replacements: { postId },
+            transaction,
+          },
+        );
+        await this.extractAndSaveHashtags(
+          postId,
+          updatePostDto.content,
+          transaction,
+        );
       }
 
       if (updatePostDto.media !== undefined) {
-        await this.sequelize.models.PostMedia.destroy({ where: { PostID: postId }, transaction });
+        await this.sequelize.models.PostMedia.destroy({
+          where: { PostID: postId },
+          transaction,
+        });
         if (updatePostDto.media.length > 0) {
           const postMediaData = updatePostDto.media.map((m, index) => ({
             PostID: postId,
@@ -294,9 +319,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             FileName: m.fileName,
             MimeType: m.mimeType,
             FileSize: m.fileSize,
-            DisplayOrder: index + 1
+            DisplayOrder: index + 1,
           }));
-          await this.sequelize.models.PostMedia.bulkCreate(postMediaData, { transaction });
+          await this.sequelize.models.PostMedia.bulkCreate(postMediaData, {
+            transaction,
+          });
         }
       }
 
@@ -332,11 +359,16 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     }
   }
 
-  private async extractAndSaveHashtags(postId: string, content: string, transaction: any) {
+  private async extractAndSaveHashtags(
+    postId: string,
+    content: string,
+    transaction: any,
+  ) {
     const hashtags = content.match(/#[a-zA-Z0-9_]+/g);
     if (!hashtags || hashtags.length === 0) return;
 
-    await this.sequelize.query(`
+    await this.sequelize.query(
+      `
       IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'tbl_Hashtag')
       BEGIN
           CREATE TABLE tbl_Hashtag (
@@ -354,31 +386,42 @@ export class PostSQLDAO implements PostAbstractSQLDao {
               PRIMARY KEY (PostID, HashtagID)
           )
       END
-    `, { transaction });
+    `,
+      { transaction },
+    );
 
     for (const tag of hashtags) {
       try {
-        await this.sequelize.query(`
+        await this.sequelize.query(
+          `
           IF NOT EXISTS (SELECT 1 FROM tbl_Hashtag WHERE Name = :name)
           BEGIN
               INSERT INTO tbl_Hashtag (ID, Name, Category, CreatedAt)
               VALUES (NEWID(), :name, 'Trending', GETDATE())
           END
-        `, { replacements: { name: tag }, transaction });
+        `,
+          { replacements: { name: tag }, transaction },
+        );
 
-        const [results]: any = await this.sequelize.query(`
+        const [results]: any = await this.sequelize.query(
+          `
           SELECT ID FROM tbl_Hashtag WHERE Name = :name
-        `, { replacements: { name: tag }, transaction });
+        `,
+          { replacements: { name: tag }, transaction },
+        );
 
         if (results && results.length > 0) {
           const hashtagId = results[0].ID;
-          await this.sequelize.query(`
+          await this.sequelize.query(
+            `
             IF NOT EXISTS (SELECT 1 FROM tbl_PostHashtag WHERE PostID = :postId AND HashtagID = :hashtagId)
             BEGIN
                 INSERT INTO tbl_PostHashtag (PostID, HashtagID)
                 VALUES (:postId, :hashtagId)
             END
-          `, { replacements: { postId, hashtagId }, transaction });
+          `,
+            { replacements: { postId, hashtagId }, transaction },
+          );
         }
       } catch (err) {
         this.logger.error(`Error saving hashtag ${tag}: ` + err, 500);
@@ -390,11 +433,26 @@ export class PostSQLDAO implements PostAbstractSQLDao {
     const transaction = await this.sequelize.transaction();
     try {
       // Manually delete related records to avoid FK constraint violations
-      await this.sequelize.models.Comments.destroy({ where: { PostID: postId }, transaction });
-      await this.sequelize.models.Likes.destroy({ where: { PostID: postId }, transaction });
-      await this.sequelize.models.PostHashtags.destroy({ where: { PostID: postId }, transaction });
-      await this.sequelize.models.PostView.destroy({ where: { Post_id: postId }, transaction });
-      await this.sequelize.models.PostMedia.destroy({ where: { PostID: postId }, transaction });
+      await this.sequelize.models.Comments.destroy({
+        where: { PostID: postId },
+        transaction,
+      });
+      await this.sequelize.models.Likes.destroy({
+        where: { PostID: postId },
+        transaction,
+      });
+      await this.sequelize.models.PostHashtags.destroy({
+        where: { PostID: postId },
+        transaction,
+      });
+      await this.sequelize.models.PostView.destroy({
+        where: { Post_id: postId },
+        transaction,
+      });
+      await this.sequelize.models.PostMedia.destroy({
+        where: { PostID: postId },
+        transaction,
+      });
 
       const deletedRowsCount = await this.postModel.destroy({
         where: { ID: postId },
@@ -402,7 +460,9 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       });
 
       if (deletedRowsCount === 0) {
-        try { await transaction.rollback(); } catch(e) {}
+        try {
+          await transaction.rollback();
+        } catch (e) {}
         return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
       }
 
@@ -412,7 +472,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       try {
         await transaction.rollback();
       } catch (rollbackError: any) {
-        this.logger.error(`[PostSQLDAO] Rollback skipped in delete: ${rollbackError.message}`, HttpStatus.INTERNAL_SERVER_ERROR);
+        this.logger.error(
+          `[PostSQLDAO] Rollback skipped in delete: ${rollbackError.message}`,
+          HttpStatus.INTERNAL_SERVER_ERROR,
+        );
       }
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return {
@@ -426,94 +489,69 @@ export class PostSQLDAO implements PostAbstractSQLDao {
   }
 
   async getFeedPosts(
-  followingIds: string[],
-  page: number,
-  limit: number,
-): Promise<AppResponse> {
+    followingIds: string[],
+    page: number,
+    limit: number,
+  ): Promise<AppResponse> {
+    try {
+      const offset = (page - 1) * limit;
 
-  try {
-
-    const offset =
-      (page - 1) * limit;
-
-    const {
-      rows,
-      count,
-    } =
-      await this.postModel.findAndCountAll({
+      const { rows, count } = await this.postModel.findAndCountAll({
         where: {
           UserID: {
-            [Op.in]:
-              followingIds,
+            [Op.in]: followingIds,
           },
         },
         limit,
         offset,
-        order: [
-          ['CreatedAt', 'DESC'],
-        ],
+        order: [[PostsColumns.CreatedAt, 'DESC']],
         distinct: true,
         include: [
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl']
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID']
+            attributes: [LikesColumns.UserID],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID']
+            attributes: [CommentsColumns.ID],
           },
           {
             model: this.sequelize.models.PostMedia,
             as: 'Media',
-          }
-        ]
+          },
+        ],
       });
 
-    return createResponse(
-      HttpStatus.OK,
-      'Feed retrieved successfully',
-      {
+      return createResponse(HttpStatus.OK, 'Feed retrieved successfully', {
         posts: rows,
         pagination: {
           page,
           limit,
           totalRecords: count,
-          totalPages: Math.ceil(
-            count / limit,
-          ),
-          hasNextPage:
-            page <
-            Math.ceil(
-              count / limit,
-            ),
-          hasPreviousPage:
-            page > 1,
+          totalPages: Math.ceil(count / limit),
+          hasNextPage: page < Math.ceil(count / limit),
+          hasPreviousPage: page > 1,
         },
-      },
-    );
+      });
+    } catch (error: any) {
+      this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
 
-  } catch (error: any) {
-    this.logger.error(
-      error.stack,
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
-
-    return {
-      ...createResponse(
-        HttpStatus.INTERNAL_SERVER_ERROR,
-        'Failed to retrieve feed',
-      ),
-      description: error.message,
-    };
+      return {
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Failed to retrieve feed',
+        ),
+        description: error.message,
+      };
+    }
   }
-}
 
   async getLikedPostsByUserId(
     userId: string,
@@ -529,18 +567,18 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
             where: { UserID: userId }, // INNER JOIN basically, only fetch posts liked by the user
-            attributes: ['UserID'],
+            attributes: [LikesColumns.UserID],
           },
         ],
         limit,
         offset,
-        order: [['CreatedAt', 'DESC']],
+        order: [[PostsColumns.CreatedAt, 'DESC']],
         distinct: true,
       });
 
@@ -552,24 +590,24 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID'],
+            attributes: [LikesColumns.UserID],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID'],
+            attributes: [CommentsColumns.ID],
           },
           {
             model: this.sequelize.models.PostMedia,
             as: 'Media',
-          }
+          },
         ],
-        order: [['CreatedAt', 'DESC']],
+        order: [[PostsColumns.CreatedAt, 'DESC']],
       });
 
       return createResponse(
@@ -654,22 +692,22 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID'],
+            attributes: [LikesColumns.UserID],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID'],
+            attributes: [CommentsColumns.ID],
           },
           {
             model: this.sequelize.models.PostMedia,
             as: 'Media',
-          }
+          },
         ],
       });
 
@@ -738,11 +776,18 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       const [results] = await this.sequelize.query(query);
 
-      return createResponse(HttpStatus.OK, 'Trending hashtags retrieved successfully', results);
+      return createResponse(
+        HttpStatus.OK,
+        'Trending hashtags retrieved successfully',
+        results,
+      );
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return {
-        ...createResponse(HttpStatus.INTERNAL_SERVER_ERROR, 'Failed to retrieve trending hashtags'),
+        ...createResponse(
+          HttpStatus.INTERNAL_SERVER_ERROR,
+          'Failed to retrieve trending hashtags',
+        ),
         description: error.message,
       };
     }
