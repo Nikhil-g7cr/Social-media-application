@@ -4,6 +4,7 @@ import AppLogger from "src/core/logger/app-logger";
 import { Sequelize } from "sequelize-typescript";
 import { messageFactory, messages } from "src/shared/message.shared";
 import { models } from "./models.connection.mssql";
+import { HttpStatus } from "@nestjs/common"
 
 export const sequelizeProvider = [
     {
@@ -18,11 +19,11 @@ export const sequelizeProvider = [
                 sequelize = new Sequelize({ ...dbConfig, logging: console.log });
                 
                 sequelize.addModels([...models]);
-                _logger.log(messages.S3, 200);
+                _logger.log(messages.S3, HttpStatus.OK);
                 
                 return sequelize;
             } catch (err:any) {
-                _logger.log(messageFactory(messages.E4, [err.stack]), 500);
+                _logger.log(messageFactory(messages.E4, [err.stack]), HttpStatus.INTERNAL_SERVER_ERROR);
                 throw err; // Ensure the application fails to start if database connection fails
             } finally {
                 /* If the Node process ends, dispose the sequelize connection */
@@ -31,9 +32,9 @@ export const sequelizeProvider = [
                     if (sequelize) {
                         try {
                             await sequelize.close();
-                            _logger.log(messages.E5, 200);
+                            _logger.log(messages.E5, HttpStatus.OK);
                         } catch (err:any) {
-                            _logger.log(messageFactory(messages.E6, [err.stack]), 500);
+                            _logger.log(messageFactory(messages.E6, [err.stack]), HttpStatus.INTERNAL_SERVER_ERROR);
                         } finally {
                             process.exit(0);
                         }
