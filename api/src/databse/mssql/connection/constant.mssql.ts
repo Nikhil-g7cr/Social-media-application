@@ -20,4 +20,7 @@ export class MsSqlConstants {
 	static readonly SESSION = 'SESSION';
 	static readonly FILE_DELETE_REQUEST = 'FILE_DELETE_REQUEST';
 	static readonly ROLES = 'ROLES';
+	static readonly HASHTAG = 'HASHTAG';
+	static readonly POST_HASHTAG = 'POST_HASHTAG';
+
 }
