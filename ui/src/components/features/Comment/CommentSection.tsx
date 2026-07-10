@@ -6,6 +6,7 @@ import {
 } from "../../../redux/features/post/postApiSlice";
 import { useGetUserByIdQuery } from "../../../redux/features/user/userApiSlice";
 import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import PostImage from "../../../shared/shared-components/PostImage";
 import Avatar from "../../../shared/shared-components/Avatar";
 import ErrorDisplay from "../../errors/ErrorDisplay";
@@ -25,6 +26,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   isOpen: controlledOpen,
   hideTrigger = false,
 }) => {
+  const navigate = useNavigate();
   // const [isOpen, setIsOpen] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [createError, setCreateError] = useState<any>(null);
@@ -52,6 +54,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   } = useGetCommentsByPostIdQuery(postId, {
     skip: !isOpen, // Only fetch when opened
   });
+  console.log("Comments fetched:", comments);
 
   const [createComment, { isLoading: isCreating }] =
     useCreatePostCommentMutation();
@@ -132,23 +135,32 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                   comments.map((comment: any) => (
                     <div key={comment.id} className="flex gap-3 group">
                       {/* Avatar */}
-                      <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/profile/${comment.authorId}`)}
+                        className="relative shrink-0"
+                        aria-label={`View ${comment.authorName}'s profile`}
+                      >
                         <Avatar
                           url={comment?.authorAvatar}
-                          name={comment?.name}
+                          name={comment?.authorName}
                           className="w-8 h-8 rounded-full object-cover shrink-0"
                         />
                         {onlineUserIds.includes(comment.authorId) && (
                           <span className="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-green-500 ring-2 ring-white"></span>
                         )}
-                      </div>
+                      </button>
 
                       {/* Comment Body */}
                       <div className="flex-1">
                         <div className="bg-gray-100 rounded-2xl px-4 py-2 inline-block">
-                          <span className="font-semibold text-sm text-gray-900 cursor-pointer hover:underline">
+                          <button
+                            type="button"
+                            onClick={() => navigate(`/profile/${comment.authorId}`)}
+                            className="font-semibold text-sm text-gray-900 hover:underline"
+                          >
                             {comment.authorName}
-                          </span>
+                          </button>
                           <p className="text-sm text-gray-800 wrap-break-word mt-0.5">
                             {comment.content}
                           </p>

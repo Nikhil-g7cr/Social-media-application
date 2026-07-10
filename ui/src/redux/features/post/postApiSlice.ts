@@ -413,7 +413,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     id: c.ID,
                     authorId: c.User?.ID || c.UserID,
                     authorName: c.User?.FullName || 'Unknown',
-                    authorAvatar: c.User?.ProfilePictureURL || `https://ui-avatars.com/api/?name=${c.User?.FullName || 'User'}&background=random`,
+                    authorAvatar: c.User?.ProfilePictureUrl || `https://ui-avatars.com/api/?name=${c.User?.FullName || 'User'}&background=random`,
                     content: c.Content,
                     time: new Date(c.CreatedAt).toLocaleString(),
                     likes: 0,
