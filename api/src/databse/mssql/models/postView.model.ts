@@ -4,25 +4,33 @@ import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
 
+export const enum PostViewColumns {
+  ID = 'ID',
+  Post_id = 'Post_id',
+  User_id = 'User_id',
+  Ip_address = 'Ip_address',
+  Viewed_at = 'Viewed_at',
+}
+
 @Table({ tableName: Tables.tbl_Post_View, timestamps: false })
 export class PostView extends Model<PostView> { // ✅ Explicit generic to bypass any Sequelize type overload errors
   @PrimaryKey
   @Column({ type: `${SQLDataType.VARCHAR}(36)`, allowNull: false })
-  ID!: string;
+  [PostViewColumns.ID]!: string;
 
   @ForeignKey(() => Posts)
   @Column({ type: `${SQLDataType.VARCHAR}(36)`, allowNull: false })
-  Post_id!: string; // Foreign key referencing the parent post
+  [PostViewColumns.Post_id]!: string; // Foreign key referencing the parent post
 
   @ForeignKey(() => Users)
   @Column({ type: `${SQLDataType.VARCHAR}(36)`, allowNull: true })
-  User_id?: string; // Nullable to easily support guest views
+  [PostViewColumns.User_id]?: string; // Nullable to easily support guest views
 
   @Column({ type: `${SQLDataType.VARCHAR}(36)`, allowNull: false })
-  Ip_address!: string; // Helps track unique views for non-logged-in users
+  [PostViewColumns.Ip_address]!: string; // Helps track unique views for non-logged-in users
 
   @Column({ type: SQLDataType.DATETIME, allowNull: false })
-  Viewd_at!: Date; // Matches spelling in your database specification
+  [PostViewColumns.Viewed_at]!: Date; // Matches spelling in your database specification
 
   // ==========================================
   // Relationships

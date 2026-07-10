@@ -32,27 +32,27 @@ export class Message extends Model<Message> {
     type: SQLDataType.UNIQUEIDENTIFIER,
     allowNull: false,
   })
-  ID!: string;
+  [MessageColumns.ID]!: string;
 
   @ForeignKey(() => Conversation)
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  ConversationID!: string;
+  [MessageColumns.ConversationID]!: string;
 
   @ForeignKey(() => Users)
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  SenderID!: string;
+  [MessageColumns.SenderID]!: string;
 
   @Column({ type: `${SQLDataType.NVARCHAR}(4000)`, allowNull: true })
-  Message?: string;
+  [MessageColumns.Message]?: string;
 
   @Column({ type: SQLDataType.BIT, allowNull: false, defaultValue: false })
-  IsRead!: boolean; // Maps to your 'bit' data type with a default of 0
+  [MessageColumns.IsRead]!: boolean; // Maps to your 'bit' data type with a default of 0
 
   @Column({ type: DataType.DATE, allowNull: false })
-  CreatedAt!: Date;
+  [MessageColumns.CreatedAt]!: Date;
 
   @Column({ type: DataType.DATE, allowNull: false })
-  ModifiedAt!: Date;
+  [MessageColumns.ModifiedAt]!: Date;
 
   // ==========================================
   // Relationships

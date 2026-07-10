@@ -2,6 +2,13 @@ import { Column, DataType, Default, Model, PrimaryKey, Table } from 'sequelize-t
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 
+export const enum HashtagsColumns {
+  ID = 'ID',
+  Name = 'Name',
+  Category = 'Category',
+  CreatedAt = 'CreatedAt',
+}
+
 @Table({
   tableName: Tables.tbl_Hashtag,
   timestamps: false,
@@ -10,26 +17,26 @@ export class Hashtags extends Model<Hashtags> {
   @PrimaryKey
   @Default(DataType.UUIDV4)
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  ID!: string;
+  [HashtagsColumns.ID]!: string;
 
   @Column({
     type: `${SQLDataType.VARCHAR}(100)`,
     allowNull: false,
     unique: true,
   })
-  Name!: string;
+  [HashtagsColumns.Name]!: string;
 
   @Column({
     type: `${SQLDataType.VARCHAR}(100)`,
     allowNull: true,
     defaultValue: 'Trending',
   })
-  Category?: string;
+  [HashtagsColumns.Category]?: string;
 
   @Column({
     type: DataType.DATE,
     allowNull: true,
     defaultValue: DataType.NOW,
   })
-  CreatedAt!: Date;
+  [HashtagsColumns.CreatedAt]!: Date;
 }

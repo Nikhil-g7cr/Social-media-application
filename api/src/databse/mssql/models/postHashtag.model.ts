@@ -4,6 +4,11 @@ import { Tables } from '../connection/tables.mssql';
 import { Posts } from './post.model';
 import { Hashtags } from './hashtag.model';
 
+export const enum PostHashtagsColumns {
+  PostID = 'PostID',
+  HashtagID = 'HashtagID',
+}
+
 @Table({
   tableName: Tables.tbl_PostHashtag,
   timestamps: false,
@@ -12,10 +17,10 @@ export class PostHashtags extends Model<PostHashtags> {
   @ForeignKey(() => Posts)
   @PrimaryKey
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  PostID!: string;
+  [PostHashtagsColumns.PostID]!: string;
 
   @ForeignKey(() => Hashtags)
   @PrimaryKey
   @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  HashtagID!: string;
+  [PostHashtagsColumns.HashtagID]!: string;
 }
