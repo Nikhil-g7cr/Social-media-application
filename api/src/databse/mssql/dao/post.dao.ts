@@ -17,7 +17,7 @@ import { UpdatePostDto } from 'src/modules/post/dto/update-post.dto';
 import { Sequelize } from 'sequelize-typescript';
 import { messageFactory, messages } from 'src/shared/message.shared';
 import { Op } from 'sequelize';
-import { PostsColumns } from 'src/core/enums/post.enum';
+import { PostMessage, PostsColumns } from 'src/core/enums/post.enum';
 
 @Injectable()
 export class PostSQLDAO implements PostAbstractSQLDao {
@@ -77,7 +77,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       return createResponse(
         HttpStatus.CREATED,
-        'Post created successfully',
+        PostMessage.S1,
         newPost,
       );
     } catch (error: any) {
@@ -109,17 +109,17 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Users,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID'],
+            attributes: [LikesColumns.UserID],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID'],
+            attributes: [CommentsColumns.ID],
           },
           {
             model: this.sequelize.models.PostMedia,
@@ -128,7 +128,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         ],
       });
 
-      return createResponse(HttpStatus.OK, 'Posts retrieved successfully', {
+      return createResponse(HttpStatus.OK, PostMessage.S2, {
         posts: rows,
         pagination: {
           page,
@@ -190,7 +190,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       return createResponse(
         HttpStatus.OK,
-        'User posts retrieved successfully',
+        PostMessage.S3,
         {
           posts: rows,
           pagination: {
@@ -244,10 +244,10 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       });
 
       if (!post) {
-        return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
+        return createResponse(HttpStatus.NOT_FOUND, PostMessage.E4, null);
       }
 
-      return createResponse(HttpStatus.OK, 'Post retrieved successfully', post);
+      return createResponse(HttpStatus.OK, PostMessage.S2, post);
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return {
@@ -287,7 +287,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       if (updatedRowsCount === 0) {
         await transaction.rollback();
-        return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
+        return createResponse(HttpStatus.NOT_FOUND, PostMessage.E4, null);
       }
 
       if (updatePostDto.content !== undefined) {
@@ -328,7 +328,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       }
 
       await transaction.commit();
-      return createResponse(HttpStatus.OK, 'Post updated successfully', null);
+      return createResponse(HttpStatus.OK, PostMessage.S4, null);
     } catch (error: any) {
       // 1. Try to rollback, but catch and ignore the "double rollback" error
       // if MS SQL Server already killed the transaction.
@@ -463,11 +463,11 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         try {
           await transaction.rollback();
         } catch (e) {}
-        return createResponse(HttpStatus.NOT_FOUND, 'Post not found', null);
+        return createResponse(HttpStatus.NOT_FOUND, PostMessage.E4, null);
       }
 
       await transaction.commit();
-      return createResponse(HttpStatus.OK, 'Post deleted successfully', null);
+      return createResponse(HttpStatus.OK, PostMessage.S5, null);
     } catch (error: any) {
       try {
         await transaction.rollback();
@@ -529,7 +529,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
         ],
       });
 
-      return createResponse(HttpStatus.OK, 'Feed retrieved successfully', {
+      return createResponse(HttpStatus.OK, PostMessage.S6, {
         posts: rows,
         pagination: {
           page,
@@ -546,7 +546,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to retrieve feed',
+          PostMessage.E6,
         ),
         description: error.message,
       };
@@ -612,7 +612,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       return createResponse(
         HttpStatus.OK,
-        'Liked posts retrieved successfully',
+        PostMessage.S7,
         {
           posts: fullPosts,
           pagination: {
@@ -631,7 +631,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to retrieve liked posts',
+          PostMessage.E7,
         ),
         description: error.message,
       };
@@ -685,7 +685,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
             )`),
             'DESC',
           ],
-          ['CreatedAt', 'DESC'],
+          [PostsColumns.CreatedAt, 'DESC'],
         ],
         distinct: true,
         include: [
@@ -713,7 +713,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       return createResponse(
         HttpStatus.OK,
-        'Trending posts retrieved successfully',
+        PostMessage.S8,
         {
           posts: rows,
           pagination: {
@@ -732,7 +732,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to retrieve trending posts',
+          PostMessage.E8,
         ),
         description: error.message,
       };
@@ -778,7 +778,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
 
       return createResponse(
         HttpStatus.OK,
-        'Trending hashtags retrieved successfully',
+        PostMessage.S9,
         results,
       );
     } catch (error: any) {
@@ -786,7 +786,7 @@ export class PostSQLDAO implements PostAbstractSQLDao {
       return {
         ...createResponse(
           HttpStatus.INTERNAL_SERVER_ERROR,
-          'Failed to retrieve trending hashtags',
+          PostMessage.E9,
         ),
         description: error.message,
       };
