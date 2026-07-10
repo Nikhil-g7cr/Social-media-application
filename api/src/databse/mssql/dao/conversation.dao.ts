@@ -10,10 +10,22 @@ import { ConversationAbstractSQLDAO } from '../abstract/conversation.abstract.ms
 import { FollowAbstractSQLDao } from '../abstract/follow.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { ConversationMessage } from '../../../core/enums/Chat.message.enum';
-import { Conversation } from '../models/conversation.model';
-import { CP } from '../models/conversationParticipants.model';
-import { Message } from '../models/message.model';
-import { Users } from '../models/user.model';
+import { Conversation, ConversationColumns } from '../models/conversation.model';
+import { CP, CPColumns } from '../models/conversationParticipants.model';
+import { Message, MessageColumns } from '../models/message.model';
+import { UserColumns, Users } from '../models/user.model';
+
+export const enum cpRoles{
+  MEMBER = 'member',
+  ADMIN = 'admin',
+  OWNER = 'owner', // Although only member and admin are in the check constraint, we'll keep owner if it's used elsewhere, but we'll use 'admin' instead of 'owner' for new chats.
+}
+
+export const enum conversationTypes {
+  SINGLE = 'single',
+  GROUP = 'group',
+  BROADCAST = 'broadcast',
+}
 
 @Injectable()
 export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
@@ -44,7 +56,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
     try {
       const userCps = await this.cpModel.findAll({
         where: { UserID: userId },
-        attributes: ['ConversationID', 'HistoryClearedAt'],
+        attributes: [CPColumns.ConversationID, CPColumns.HistoryClearedAt],
       });
 
       const conversationIds = userCps.map((cp) => cp.ConversationID);
@@ -63,10 +75,10 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
             model: this.messageModel,
             as: 'messages',
             limit: 1,
-            order: [['CreatedAt', 'DESC']],
+            order: [[MessageColumns.CreatedAt, 'DESC']],
           },
         ],
-        order: [['CreatedAt', 'DESC']],
+        order: [[ConversationColumns.CreatedAt, 'DESC']],
       });
 
       const result: any[] = [];
@@ -80,7 +92,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
           {
             model: this.userModel,
             as: 'User',
-            attributes: ['ID', 'FullName', 'UserName', 'ProfilePictureUrl'],
+            attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
         ],
       });
@@ -126,7 +138,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
         }));
 
         const displayName =
-          conv.Type === 'group'
+          conv.Type === conversationTypes.GROUP
             ? conv.Title
             : (mappedParticipants[0]?.name ?? '');
 
@@ -137,7 +149,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
           null;
 
         const displayAvatar =
-          conv.Type === 'group'
+          conv.Type === conversationTypes.GROUP
             ? groupAvatar
             : (mappedParticipants[0]?.avatarUrl ?? null);
 
@@ -148,7 +160,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
           displayName,
           displayAvatar,
           participants: mappedParticipants,
-          participant: conv.Type === 'single' ? mappedParticipants[0] : null,
+          participant: conv.Type === conversationTypes.SINGLE ? mappedParticipants[0] : null,
           latestMessage: lm
             ? {
                 id: lm.ID,
@@ -188,11 +200,11 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
 
       const currentUserCps = await this.cpModel.findAll({
         where: { UserID: currentUserId },
-        attributes: ['ConversationID'],
+        attributes: [CPColumns.ConversationID],
       });
       const targetUserCps = await this.cpModel.findAll({
         where: { UserID: targetUserId },
-        attributes: ['ConversationID'],
+        attributes: [CPColumns.ConversationID],
       });
 
       const targetUserConvIdsLower = targetUserCps.map((cp) =>
@@ -207,7 +219,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
 
       if (sharedConvIds.length > 0) {
         const existingConv = await this.conversationModel.findOne({
-          where: { ID: { [Op.in]: sharedConvIds }, Type: 'single' },
+          where: { ID: { [Op.in]: sharedConvIds }, Type: conversationTypes.SINGLE },
         });
         if (existingConv) {
           return { conversationId: existingConv.ID };
@@ -217,7 +229,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
       const newConvId = uuidv4();
       await this.conversationModel.create({
         ID: newConvId,
-        Type: 'single',
+        Type: conversationTypes.SINGLE,
         CreatedBy: currentUserId,
         CreatedAt: new Date(),
       } as any);
@@ -225,14 +237,14 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
         ID: uuidv4(),
         ConversationID: newConvId,
         UserID: currentUserId,
-        Role: 'admin',
+        Role: cpRoles.ADMIN,
         JoinedAt: new Date(),
       } as any);
       await this.cpModel.create({
         ID: uuidv4(),
         ConversationID: newConvId,
         UserID: targetUserId,
-        Role: 'member',
+        Role: cpRoles.MEMBER,
         JoinedAt: new Date(),
       } as any);
 
@@ -268,7 +280,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
       await this.conversationModel.create({
         ID: conversationId,
         Title: title,
-        Type: 'group',
+        Type: conversationTypes.GROUP,
         CreatedBy: currUserID,
         CreatedAt: new Date(),
       } as any);
@@ -277,7 +289,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
         ID: uuidv4(),
         ConversationID: conversationId,
         UserID: currUserID,
-        Role: 'admin',
+        Role: cpRoles.ADMIN,
         JoinedAt: new Date(),
       } as any);
 
@@ -287,7 +299,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
             ID: uuidv4(),
             ConversationID: conversationId,
             UserID: userId,
-            Role: 'member',
+            Role: cpRoles.MEMBER,
             JoinedAt: new Date(),
           } as any),
         ),
@@ -311,7 +323,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
       const conversation =
         await this.conversationModel.findByPk(conversationId);
 
-      if (!conversation || conversation.Type !== 'group') {
+      if (!conversation || conversation.Type !== conversationTypes.GROUP) {
         throw new BadRequestException(ConversationMessage.E4);
       }
 
@@ -336,7 +348,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
           ConversationID: conversationId,
           UserID: { [Op.in]: uniqueParticipants },
         },
-        attributes: ['UserID'],
+        attributes: [CPColumns.UserID],
       });
       const existingUserIds = new Set(
         existingParticipants.map((cp) => cp.UserID),
@@ -352,7 +364,7 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
             ID: uuidv4(),
             ConversationID: conversationId,
             UserID: userId,
-            Role: 'member',
+            Role: cpRoles.MEMBER,
             JoinedAt: new Date(),
           } as any),
         ),

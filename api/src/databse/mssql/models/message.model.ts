@@ -14,6 +14,16 @@ import { Users } from './user.model';
 import { Conversation } from './conversation.model';
 import { MessageAttachment } from './messageAttachment.model';
 
+export const enum MessageColumns {
+  ID = 'ID',
+  ConversationID = 'ConversationID',
+  SenderID = 'SenderID',
+  Message = 'Message',
+  IsRead = 'IsRead',
+  CreatedAt = 'CreatedAt',
+  ModifiedAt = 'ModifiedAt',
+}
+
 @Table({ tableName: Tables.tbl_Message, timestamps: false })
 export class Message extends Model<Message> {
   // ✅ Explicit generic parameter to prevent overload errors
