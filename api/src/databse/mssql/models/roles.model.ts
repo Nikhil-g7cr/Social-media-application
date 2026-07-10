@@ -23,11 +23,17 @@ export const enum RolesColumns {
   Description = 'Description',
 }
 
+export enum RoleId {
+  ADMIN = 1,
+  MANAGER = 2,
+  USER = 3,
+}
+
 @Table({ tableName: Tables.tbl_Roles, timestamps: false })
 export class Roles extends Model<Roles> {
   @PrimaryKey
-  @Column({ type: SQLDataType.UNIQUEIDENTIFIER, allowNull: false })
-  [RolesColumns.ID]!: string;
+  @Column({ type: SQLDataType.TINYINT, allowNull: false,})
+  [RolesColumns.ID]!: number;
 
   @Unique
   @Column({ type: `${SQLDataType.VARCHAR}(100)`, allowNull: false })

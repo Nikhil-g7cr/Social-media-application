@@ -91,11 +91,6 @@ export class RefreshCookieService {
   clearRefreshCookie(res: Response, email?: string): void {
     const cookieName = this.getCookieName(email);
     res.clearCookie(cookieName, this.getCookieOptions());
-
-    // Also clear legacy or single 'refreshToken' cookie if different to ensure clean logout
-    if (cookieName !== 'refreshToken') {
-      res.clearCookie('refreshToken', this.getCookieOptions());
-    }
   }
 
   /**

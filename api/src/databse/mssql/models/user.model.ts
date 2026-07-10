@@ -116,10 +116,10 @@ class Users extends Model<Users> {
 
   @ForeignKey(() => Roles)
   @Column({
-    type: SQLDataType.UNIQUEIDENTIFIER,
+    type: SQLDataType.TINYINT,
     allowNull: false,
   })
-  [UserColumns.RoleID]!: string;
+  [UserColumns.RoleID]!: number;
 
   @Column({
     type: SQLDataType.BIT,
@@ -201,7 +201,7 @@ class Users extends Model<Users> {
 
   @HasMany(() => Follow, { foreignKey: 'FollowerID', as: 'Following' })
   Following!: Follow[];
-  
+
   // Import RefreshToken at the top of the file
   @HasMany(() => RefreshToken, { foreignKey: 'UserID' })
   RefreshTokens!: RefreshToken[];
