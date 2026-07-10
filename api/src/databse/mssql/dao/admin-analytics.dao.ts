@@ -7,16 +7,10 @@ import {
   Posts,
   Comments,
   Likes,
-  Follow,
   Message,
-  Notification,
   Reports,
-  CP,
-  PostView,
-  MessageAttachment,
-  PostHashtags,
-  RefreshToken,
   Conversation,
+  UserColumns,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import AppLogger from 'src/core/logger/app-logger';
@@ -166,7 +160,7 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
       return createResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         'Error retrieving summary',
-        error.message
+        error.message,
       );
     }
   }
@@ -280,13 +274,17 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         { type: 'SELECT' },
       );
 
-      return createResponse(HttpStatus.OK, 'Top users retrieved', topUsersByPosts);
+      return createResponse(
+        HttpStatus.OK,
+        'Top users retrieved',
+        topUsersByPosts,
+      );
     } catch (error: any) {
       this.logger.error(error.stack, HttpStatus.INTERNAL_SERVER_ERROR);
       return createResponse(
         HttpStatus.INTERNAL_SERVER_ERROR,
         'Error retrieving top users',
-        error.message
+        error.message,
       );
     }
   }
@@ -298,11 +296,11 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         order: [['CreatedAt', 'DESC']],
         limit: 5,
         attributes: [
-          'ID',
-          'UserName',
-          'FullName',
-          'ProfilePictureUrl',
-          'CreatedAt',
+          UserColumns.ID,
+          UserColumns.UserName,
+          UserColumns.FullName,
+          UserColumns.ProfilePictureUrl,
+          UserColumns.CreatedAt,
         ],
       });
 
