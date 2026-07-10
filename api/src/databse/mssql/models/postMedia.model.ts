@@ -12,19 +12,7 @@ import { Sequelize } from 'sequelize';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Posts } from './post.model';
-
-export const enum PostMediaColumns {
-  ID = 'ID',
-  PostID = 'PostID',
-  MediaType = 'MediaType', // e.g., 'IMAGE', 'VIDEO'
-  MediaURL = 'MediaURL',
-  DisplayOrder = 'DisplayOrder',
-  CreatedAt = 'CreatedAt',
-  BlobName = 'BlobName',
-  FileName = 'FileName',
-  MimeType = 'MimeType',
-  FileSize = 'FileSize',
-}
+import { PostMediaColumns } from 'src/core/enums/post.enum';
 
 @Table({
   tableName: Tables.tbl_postMedia, // Ensure this matches your SQL table exactly

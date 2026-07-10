@@ -5,13 +5,14 @@ import AppLogger from 'src/core/logger/app-logger';
 import { AppConfig } from 'src/config/AppConfig';
 import { AuthAbstractSQLDao } from '../abstract/auth.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import { Users, UserColumns, Session, Roles } from '../models';
+import { Users, Session, Roles } from '../models';
 import { SessionColumns } from 'src/core/enums/session.enum';
 import { UsersDTO } from 'src/modules/user/dto/users.dto';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { messageFactory, messages } from 'src/shared/message.shared';
 import { randomUUID } from 'crypto';
 import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
+import { UserColumns } from 'src/core/enums/user.enums';
 
 @Injectable()
 export class AuthSQLDao implements AuthAbstractSQLDao {
@@ -42,7 +43,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
       if (!user) {
         return createResponse(
           HttpStatus.NOT_FOUND,
-          messageFactory(messages.W12, ['User']),
+          messageFactory(messages.W12, [MsSqlConstants.USER]),
         );
       }
 
@@ -72,7 +73,7 @@ export class AuthSQLDao implements AuthAbstractSQLDao {
       if (!user) {
         return createResponse(
           HttpStatus.NOT_FOUND,
-          messageFactory(messages.W12, ['User']),
+          messageFactory(messages.W12, [MsSqlConstants.USER]),
         );
       }
 

@@ -20,6 +20,33 @@ export enum PostTypes {
     VIDEO = 'VIDEO'
 }
 
+export const enum PostHashtagsColumns {
+  PostID = 'PostID',
+  HashtagID = 'HashtagID',
+}
+
+
+export const enum PostMediaColumns {
+  ID = 'ID',
+  PostID = 'PostID',
+  MediaType = 'MediaType', // e.g., 'IMAGE', 'VIDEO'
+  MediaURL = 'MediaURL',
+  DisplayOrder = 'DisplayOrder',
+  CreatedAt = 'CreatedAt',
+  BlobName = 'BlobName',
+  FileName = 'FileName',
+  MimeType = 'MimeType',
+  FileSize = 'FileSize',
+}
+
+export const enum PostViewColumns {
+  ID = 'ID',
+  Post_id = 'Post_id',
+  User_id = 'User_id',
+  Ip_address = 'Ip_address',
+  Viewed_at = 'Viewed_at',
+}
+
 export const enum LikeMessage {
   E1 = 'Failed to get user likes',
   E2 = 'LIKE_ALREADY_EXISTS',

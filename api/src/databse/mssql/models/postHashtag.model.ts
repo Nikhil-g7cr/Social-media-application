@@ -3,11 +3,7 @@ import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Posts } from './post.model';
 import { Hashtags } from './hashtag.model';
-
-export const enum PostHashtagsColumns {
-  PostID = 'PostID',
-  HashtagID = 'HashtagID',
-}
+import { PostHashtagsColumns } from 'src/core/enums/post.enum';
 
 @Table({
   tableName: Tables.tbl_PostHashtag,

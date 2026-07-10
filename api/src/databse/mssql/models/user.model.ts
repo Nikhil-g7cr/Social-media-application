@@ -13,50 +13,13 @@ import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Posts } from './post.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
-import { UserRoles } from '../../../core/enums/user.enums';
+import { UserAlias, UserColumns, UserRoles } from '../../../core/enums/user.enums';
 import { Follow } from './follow.model';
 import { RefreshToken } from './refreshToken.model';
-import { Roles, RolesColumns } from './roles.model';
+import { Roles } from './roles.model';
+import { RolesColumns } from 'src/core/enums/role.enum';
 
-export const enum UserColumns {
-  ID = 'ID',
-  FullName = 'FullName',
-  UserName = 'UserName',
-  EmailAddress = 'EmailAddress',
-  PasswordHash = 'PasswordHash',
-  ProfilePictureUrl = 'ProfilePictureUrl',
-  Bio = 'Bio',
-  Gender = 'Gender',
-  RoleID = 'RoleID',
-  IsActive = 'IsActive',
-  IsDeleted = 'IsDeleted',
-  DeletedAt = 'DeletedAt',
-  CreatedBy = 'CreatedBy',
-  CreatedAt = 'CreatedAt',
-  ModifiedBy = 'ModifiedBy',
-  ModifiedAt = 'ModifiedAt',
-}
 
-export const enum UserAlias {
-  CreatedByUser = 'CreatedByUser',
-  ModifiedByUser = 'ModifiedByUser',
-  UserRoles = 'UserRoles',
-}
-
-export const enum UserRolesColumns {
-  UserRolesGuid = 'UserRolesGuid',
-  UserGuid = 'UserGuid',
-  RoleId = 'RoleId',
-  CreatedBy = 'CreatedBy',
-  EffectiveFrom = 'EffectiveFrom',
-  EffectiveTill = 'EffectiveTill',
-  ModifiedBy = 'ModifiedBy',
-}
-
-export const enum RecordCreatedBy {
-  USER = 'USER',
-  ADMIN = 'ADMIN',
-}
 
 @Table({
   tableName: Tables.tbl_User,

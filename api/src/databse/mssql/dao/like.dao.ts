@@ -2,10 +2,12 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
-import { Likes, LikesColumns, Posts, UserColumns, Users } from '../models';
+import { Likes, Posts, Users } from '../models';
 import { LikeAbstractSQLDAO } from '../abstract/like.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { LikeMessage } from 'src/core/enums/post.enum'
+import { UserColumns } from 'src/core/enums/user.enums';
+import { LikesColumns } from 'src/core/enums/likes.enum';
 
 @Injectable()
 export class LikeSQLDAO implements LikeAbstractSQLDAO {

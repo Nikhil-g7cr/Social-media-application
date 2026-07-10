@@ -1,8 +1,9 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Follow, FollowStatus } from '../models/follow.model';
+import { Follow } from '../models/follow.model';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { FollowAbstractSQLDao } from '../abstract/follow.abstract.mssql';
 import { FollowMessage } from '../../../core/enums/follow.message.enum';
+import { FollowStatus } from 'src/core/enums/follow.enum';
 
 @Injectable()
 export class FollowSQLDao implements FollowAbstractSQLDao {

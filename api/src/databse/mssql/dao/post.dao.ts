@@ -1,14 +1,12 @@
 import {
   Injectable,
-  NotFoundException,
-  InternalServerErrorException,
   HttpStatus,
   Inject,
 } from '@nestjs/common';
 
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { PostAbstractSQLDao } from '../abstract/posts.abstract.mssql';
-import { CommentsColumns, LikesColumns, Posts, UserColumns } from '../models';
+import { Posts } from '../models';
 import AppLogger from 'src/core/logger/app-logger';
 import { MsSqlConstants } from '../connection/constant.mssql';
 
@@ -18,6 +16,9 @@ import { Sequelize } from 'sequelize-typescript';
 import { messageFactory, messages } from 'src/shared/message.shared';
 import { Op } from 'sequelize';
 import { PostMessage, PostsColumns } from 'src/core/enums/post.enum';
+import { UserColumns } from 'src/core/enums/user.enums';
+import { CommentsColumns } from 'src/core/enums/comment.enum';
+import { LikesColumns } from 'src/core/enums/likes.enum';
 
 @Injectable()
 export class PostSQLDAO implements PostAbstractSQLDao {
@@ -174,12 +175,12 @@ export class PostSQLDAO implements PostAbstractSQLDao {
           {
             model: this.sequelize.models.Likes,
             as: 'Likes',
-            attributes: ['UserID'],
+            attributes: [LikesColumns.UserID],
           },
           {
             model: this.sequelize.models.Comments,
             as: 'Comments',
-            attributes: ['ID'],
+            attributes: [CommentsColumns.ID],
           },
           {
             model: this.sequelize.models.PostMedia,

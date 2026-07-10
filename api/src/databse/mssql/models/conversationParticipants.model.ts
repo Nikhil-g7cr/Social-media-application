@@ -8,30 +8,12 @@ import {
 } from 'sequelize-typescript';
 import { DataType } from 'sequelize-typescript';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
-import { Tables } from '../connection/tables.mssql';
 
-import { Users, UserColumns } from './user.model';
+import { Users } from './user.model';
 import { Conversation } from './conversation.model';
+import { UserColumns } from 'src/core/enums/user.enums';
+import { ConversationParticipantRoles, CPAlias, CPColumns } from 'src/core/enums/conv.enums';
 
-export const enum CPColumns {
-  ID = 'ID',
-  ConversationID = 'ConversationID',
-  UserID = 'UserID',
-  Role = 'Role',
-  JoinedAt = 'JoinedAt',
-  HistoryClearedAt = 'HistoryClearedAt',
-}
-
-export const enum CPAlias {
-  User = 'User',
-  Conversation = 'Conversation',
-}
-
-export const enum ConversationParticipantRoles {
-  MEMBER = 'member',
-  ADMIN = 'admin',
-  OWNER = 'owner', // Although only member and admin are in the check constraint, we'll keep owner if it's used elsewhere, but we'll use 'admin' instead of 'owner' for new chats.
-}
 
 @Table({
   tableName: 'Conversation_Participants', // Ensure this string matches exactly if Tables.tbl_Conversation_Participants is different

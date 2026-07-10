@@ -1,3 +1,13 @@
+export const enum CommentsColumns {
+    ID = "ID",
+    PostID = "PostID",
+    UserID = "UserID",
+    ParentCommentID = "ParentCommentID",
+    Content = "Content",
+    CreatedAt = "CreatedAt",
+    ModifiedAt = "ModifiedAt"
+}
+
 export enum CommentMessage {
     // Success messages
     S1 = 'Comment created successfully.',
@@ -13,3 +23,4 @@ export enum CommentMessage {
     E5 = 'Failed to retrieve user comments.',
     E6='Failed to add comment to the post.',
 }
+

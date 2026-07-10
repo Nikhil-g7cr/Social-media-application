@@ -9,23 +9,16 @@ import { Op } from 'sequelize';
 import { ConversationAbstractSQLDAO } from '../abstract/conversation.abstract.mssql';
 import { FollowAbstractSQLDao } from '../abstract/follow.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import { ConversationMessage } from '../../../core/enums/Chat.message.enum';
-import { Conversation, ConversationColumns } from '../models/conversation.model';
-import { CP, CPColumns } from '../models/conversationParticipants.model';
-import { Message, MessageColumns } from '../models/message.model';
-import { UserColumns, Users } from '../models/user.model';
+import { ConversationColumns, ConversationMessage } from '../../../core/enums/Chat.message.enum';
+import { Conversation } from '../models/conversation.model';
+import { CP } from '../models/conversationParticipants.model';
+import { Message } from '../models/message.model';
+import { Users } from '../models/user.model';
+import { conversationTypes, CPColumns, cpRoles } from 'src/core/enums/conv.enums';
+import { UserColumns } from 'src/core/enums/user.enums';
+import { MessageColumns } from 'src/core/enums/message.enum';
 
-export const enum cpRoles{
-  MEMBER = 'member',
-  ADMIN = 'admin',
-  OWNER = 'owner', // Although only member and admin are in the check constraint, we'll keep owner if it's used elsewhere, but we'll use 'admin' instead of 'owner' for new chats.
-}
 
-export const enum conversationTypes {
-  SINGLE = 'single',
-  GROUP = 'group',
-  BROADCAST = 'broadcast',
-}
 
 @Injectable()
 export class ConversationSQLDAO implements ConversationAbstractSQLDAO {

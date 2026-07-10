@@ -10,6 +10,16 @@ export const enum ChatMessage {
   NOT_PARTICIPANT = 'You are not a participant of this conversation',
 }
 
+
+export const enum ConversationColumns {
+  ID = 'ID',
+  Title = 'Title',
+  Type = 'Type',
+  CreatedBy = 'CreatedBy',
+  CreatedAt = 'CreatedAt',
+  ModifiedAt = 'ModifiedAt',
+}
+
 export const enum ConversationMessage {
   // Success messages
   S1 = 'Conversations retrieved successfully.',

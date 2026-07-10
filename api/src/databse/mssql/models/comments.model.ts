@@ -3,16 +3,7 @@ import { Tables } from "../connection/tables.mssql";
 import { SQLDataType } from "../../../core/enums/data-type-sql.enum";
 import { Sequelize } from "sequelize";
 import { Users } from "./user.model";
-
-export const enum CommentsColumns {
-    ID = "ID",
-    PostID = "PostID",
-    UserID = "UserID",
-    ParentCommentID = "ParentCommentID",
-    Content = "Content",
-    CreatedAt = "CreatedAt",
-    ModifiedAt = "ModifiedAt"
-}
+import { CommentsColumns } from "src/core/enums/comment.enum";
 
 @Table({ tableName: Tables.tbl_Comment, timestamps: false })
 export class Comments extends Model<Comments> {
@@ -22,47 +13,47 @@ export class Comments extends Model<Comments> {
         type: SQLDataType.UNIQUEIDENTIFIER,
         allowNull: false
     })
-    ID!: string;
+    [CommentsColumns.ID]!: string;
 
     @Column({
         type: SQLDataType.UNIQUEIDENTIFIER,
         allowNull: false
     })
-    PostID!: string;
+    [CommentsColumns.PostID]!: string;
 
     @Column({
         type: SQLDataType.UNIQUEIDENTIFIER,
         allowNull: false
     })
-    UserID!: string;
+    [CommentsColumns.UserID]!: string;
 
     @Column({
         type: SQLDataType.UNIQUEIDENTIFIER,
         allowNull: true
     })
-    ParentCommentID?: string;
+    [CommentsColumns.ParentCommentID]?: string;
 
     @Column({
         type: `${SQLDataType.VARCHAR}(2000)`,
         allowNull: false
     })
-    Content!: string;
+    [CommentsColumns.Content]!: string;
 
     @Column({
         type: DataType.DATE,
         allowNull: false,
         defaultValue: Sequelize.literal("GETDATE()")
     })
-    CreatedAt!: Date;
+    [CommentsColumns.CreatedAt]!: Date;
 
     @Column({
         type: DataType.DATE,
         allowNull: true
     })
-    ModifiedAt?: Date;
+    [CommentsColumns.ModifiedAt]?: Date;
 
     @BelongsTo(() => Users, {
-        foreignKey: 'UserID',
+        foreignKey: CommentsColumns.UserID,
         targetKey: 'ID',
         as: 'User'
     })

@@ -3,14 +3,8 @@ import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
+import { PostViewColumns } from 'src/core/enums/post.enum';
 
-export const enum PostViewColumns {
-  ID = 'ID',
-  Post_id = 'Post_id',
-  User_id = 'User_id',
-  Ip_address = 'Ip_address',
-  Viewed_at = 'Viewed_at',
-}
 
 @Table({ tableName: Tables.tbl_Post_View, timestamps: false })
 export class PostView extends Model<PostView> { // ✅ Explicit generic to bypass any Sequelize type overload errors

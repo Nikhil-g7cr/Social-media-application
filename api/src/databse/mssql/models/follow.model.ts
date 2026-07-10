@@ -10,20 +10,9 @@ import {
 } from 'sequelize-typescript';
 import { Users } from './user.model';
 import { Tables } from '../connection/tables.mssql';
+import { FollowColumns } from 'src/core/enums/follow.enum';
 
-export const enum FollowColumns {
-  ID = 'ID',
-  FollowerID = 'FollowerID',
-  FollowingID = 'FollowingID',
-  Status = 'Status',
-  CreatedAt = 'CreatedAt',
-}
 
-export const enum FollowStatus{
-  PENDING = 'PENDING',
-  ACCEPTED = 'ACCEPTED',
-  REJECTED = 'REJECTED',
-}
 
 @Table({
   tableName: Tables.tbl_Follow,

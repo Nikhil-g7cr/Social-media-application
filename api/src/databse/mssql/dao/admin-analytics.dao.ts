@@ -10,12 +10,12 @@ import {
   Message,
   Reports,
   Conversation,
-  UserColumns,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { AdminAnalyticsAbsSQLDAO } from '../abstract/admin-analytics.abstract.mssql';
+import { UserColumns } from 'src/core/enums/user.enums';
 
 @Injectable()
 export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {

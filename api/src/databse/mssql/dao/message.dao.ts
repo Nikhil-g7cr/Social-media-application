@@ -7,10 +7,12 @@ import {
   ChatMessage,
   ConversationMessage,
 } from '../../../core/enums/Chat.message.enum';
-import { Message, MessageColumns } from '../models/message.model';
+import { Message } from '../models/message.model';
 import { MessageAttachment } from '../models/messageAttachment.model';
 import { CP } from '../models/conversationParticipants.model';
-import { UserColumns, Users } from '../models/user.model';
+import { Users } from '../models/user.model';
+import { UserColumns } from 'src/core/enums/user.enums';
+import { MessageColumns } from 'src/core/enums/message.enum';
 
 @Injectable()
 export class MessageSQLDAO implements MessageAbstractSQLDAO {

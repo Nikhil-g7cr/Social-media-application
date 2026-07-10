@@ -4,6 +4,46 @@ export const enum UserRoles {
   ADMIN = 'ADMIN',
 }
 
+export const enum UserColumns {
+  ID = 'ID',
+  FullName = 'FullName',
+  UserName = 'UserName',
+  EmailAddress = 'EmailAddress',
+  PasswordHash = 'PasswordHash',
+  ProfilePictureUrl = 'ProfilePictureUrl',
+  Bio = 'Bio',
+  Gender = 'Gender',
+  RoleID = 'RoleID',
+  IsActive = 'IsActive',
+  IsDeleted = 'IsDeleted',
+  DeletedAt = 'DeletedAt',
+  CreatedBy = 'CreatedBy',
+  CreatedAt = 'CreatedAt',
+  ModifiedBy = 'ModifiedBy',
+  ModifiedAt = 'ModifiedAt',
+}
+
+export const enum UserAlias {
+  CreatedByUser = 'CreatedByUser',
+  ModifiedByUser = 'ModifiedByUser',
+  UserRoles = 'UserRoles',
+}
+
+export const enum UserRolesColumns {
+  UserRolesGuid = 'UserRolesGuid',
+  UserGuid = 'UserGuid',
+  RoleId = 'RoleId',
+  CreatedBy = 'CreatedBy',
+  EffectiveFrom = 'EffectiveFrom',
+  EffectiveTill = 'EffectiveTill',
+  ModifiedBy = 'ModifiedBy',
+}
+
+export const enum RecordCreatedBy {
+  USER = 'USER',
+  ADMIN = 'ADMIN',
+}
+
 export const enum UserMessage {
   // Success messages
   S1 = 'Username availability check completed.',

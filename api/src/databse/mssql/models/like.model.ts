@@ -4,13 +4,7 @@ import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
-
-export const enum LikesColumns {
-  ID = 'ID',
-  UserID = 'UserID',
-  PostID = 'PostID', // Note: If your DB literally spells this without the 's' (PostID), change this string to 'PostID'!
-  CreatedAt = 'CreatedAt',
-}
+import { LikesColumns } from 'src/core/enums/likes.enum';
 
 @Table({ tableName: Tables.tbl_Like, timestamps: false })
 export class Likes extends Model<Likes> {

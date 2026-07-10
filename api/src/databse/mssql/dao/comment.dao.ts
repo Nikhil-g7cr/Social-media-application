@@ -2,11 +2,11 @@ import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import AppLogger from 'src/core/logger/app-logger';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
-import { messageFactory, messages } from 'src/shared/message.shared';
-import { Comments, Users, Posts, UserColumns } from '../models';
+import { Comments, Users, Posts } from '../models';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { CommentsAbstractSQLDAO } from '../abstract/comment.abstract.mssql';
-import { CommentMessage } from 'src/core/enums/comment.enum';
+import { CommentMessage, CommentsColumns } from 'src/core/enums/comment.enum';
+import { UserColumns } from 'src/core/enums/user.enums';
 
 @Injectable()
 export class CommentSQLDAO implements CommentsAbstractSQLDAO {
@@ -33,7 +33,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
             ],
           },
         ],
-        order: [['CreatedAt', 'DESC']],
+        order: [[CommentsColumns.CreatedAt, 'DESC']],
       });
 
       return createResponse(
@@ -137,7 +137,7 @@ export class CommentSQLDAO implements CommentsAbstractSQLDAO {
             attributes: [UserColumns.ID, UserColumns.FullName, UserColumns.UserName, UserColumns.ProfilePictureUrl],
           },
         ],
-        order: [['CreatedAt', 'DESC']],
+        order: [[CommentsColumns.CreatedAt, 'DESC']],
       });
 
       return createResponse(

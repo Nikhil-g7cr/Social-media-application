@@ -9,3 +9,12 @@ export const enum SessionColumns {
   LastSeenAt = 'LastSeenAt',
   ExpiresAt = 'ExpiresAt',
 }
+
+export const enum RefreshTokenColumns {
+  ID = 'ID',
+  UserID = 'UserID',
+  RefreshTokenHash = 'RefreshTokenHash',
+  ExpiresAt = 'ExpiresAt',
+  IsRevoked = 'IsRevoked',
+  CreatedAt = 'CreatedAt',
+}

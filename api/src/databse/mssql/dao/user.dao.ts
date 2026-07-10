@@ -19,9 +19,6 @@ import {
   Conversation,
   Session,
   Roles,
-  UserColumns,
-  MessageColumns,
-  CommentsColumns,
 } from '../models';
 import { PostMedia } from '../models/postMedia.model';
 import AppLogger from '../../../core/logger/app-logger';
@@ -34,8 +31,10 @@ import { UserAbsSQLDAO } from '../abstract/user.abstract.mssql';
 import { messageFactory, messages } from '../../../shared/message.shared';
 import { randomUUID } from 'crypto';
 import { UpdateUserDto } from '../../../modules/user/dto/UpdateUser.dto';
-import { UserMessage } from '../../../core/enums/user.enums';
+import { UserColumns, UserMessage } from '../../../core/enums/user.enums';
 import { PostsColumns } from 'src/core/enums/post.enum';
+import { CommentsColumns } from 'src/core/enums/comment.enum';
+import { MessageColumns } from 'src/core/enums/message.enum';
 
 @Injectable()
 export class UserSQLDao implements UserAbsSQLDAO {

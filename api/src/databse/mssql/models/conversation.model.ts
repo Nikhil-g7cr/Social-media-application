@@ -7,15 +7,9 @@ import {
 } from 'sequelize-typescript';
 import { Message } from './message.model';
 import { Tables } from '../connection/tables.mssql';
+import { ConversationColumns } from 'src/core/enums/Chat.message.enum';
+import { conversationTypes } from 'src/core/enums/conv.enums';
 
-export const enum ConversationColumns {
-  ID = 'ID',
-  Title = 'Title',
-  Type = 'Type',
-  CreatedBy = 'CreatedBy',
-  CreatedAt = 'CreatedAt',
-  ModifiedAt = 'ModifiedAt',
-}
 
 @Table({
   tableName: Tables.tbl_Conversation,
@@ -40,7 +34,7 @@ export class Conversation extends Model<Conversation> {
     allowNull: false,
     defaultValue: 'single',
     validate: {
-      isIn: [['single', 'group', 'broadcast']],
+      isIn: [[conversationTypes.SINGLE, conversationTypes.GROUP, conversationTypes.BROADCAST]],
     },
   })
   [ConversationColumns.Type]!: string;

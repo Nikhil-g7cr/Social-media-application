@@ -3,23 +3,8 @@ import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Message } from './message.model';
 import { Users } from './user.model';
+import { MsgAttColumns } from 'src/core/enums/message.enum';
 
-export const enum MsgAttColumns {
-  ID = 'ID',
-  Message_id = 'Message_id',
-  FileURL = 'FileURL',
-  FileType = 'FileType',
-  FileSizeBytes = 'FileSizeBytes',
-  CreatedAt = 'CreatedAt',
-  OriginalFileName = 'OriginalFileName',
-  MimeType = 'MimeType',
-  FileExtension = 'FileExtension',
-  ImageWidth = 'ImageWidth',
-  ImageHeight = 'ImageHeight',
-  VideoDuration = 'VideoDuration',
-  ThumbnailURL = 'ThumbnailURL',
-  UploadedBy = 'UploadedBy'
-}
 
 @Table({ tableName: Tables.tbl_Message_Attachment, timestamps: false })
 export class MessageAttachment extends Model<MessageAttachment> { // ✅ Type-safe generic to bypass Sequelize overload errors

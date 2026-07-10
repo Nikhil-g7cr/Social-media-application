@@ -9,23 +9,9 @@ import {
 import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
+import { FileDeleteRequestColumns, RequestStatus } from 'src/core/enums/azure_storage.enums';
 
-export const enum FileDeleteRequestColumns {
-  ID = 'ID',
-  FileName = 'FileName',
-  FileUrl = 'FileUrl',
-  RequestReason = 'RequestReason',
-  RequestedBy = 'RequestedBy',
-  Status = 'Status',
-  CreatedAt = 'CreatedAt',
-  UpdatedAt = 'UpdatedAt',
-}
 
-export const enum RequestStatus {
-  PENDING = 'PENDING',
-  APPROVED = 'APPROVED',
-  REJECTED = 'REJECTED',
-}
 
 @Table({
   tableName: Tables.tbl_FileDeleteRequest,

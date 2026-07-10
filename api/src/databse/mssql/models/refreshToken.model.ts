@@ -10,15 +10,8 @@ import {
 import { Sequelize } from 'sequelize';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
+import { RefreshTokenColumns } from 'src/core/enums/session.enum';
 
-export const enum RefreshTokenColumns {
-  ID = 'ID',
-  UserID = 'UserID',
-  RefreshTokenHash = 'RefreshTokenHash',
-  ExpiresAt = 'ExpiresAt',
-  IsRevoked = 'IsRevoked',
-  CreatedAt = 'CreatedAt',
-}
 
 @Table({
   tableName: 'tbl_RefreshToken', // Matches your SQL table exactly

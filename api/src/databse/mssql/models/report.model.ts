@@ -3,18 +3,8 @@ import { Sequelize } from 'sequelize';
 import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
+import { ReportColumns } from 'src/core/enums/report.enum';
 
-export const enum ReportColumns {
-  ID = 'ID',
-  ReporterID = 'ReporterID',
-  TargetType = 'TargetType', // 'POST', 'COMMENT', 'USER', 'OTHER'
-  TargetID = 'TargetID',
-  Reason = 'Reason',
-  Status = 'Status', // 'PENDING', 'RESOLVED', 'DISMISSED'
-  CreatedAt = 'CreatedAt',
-  ResolvedAt = 'ResolvedAt',
-  ResolvedBy = 'ResolvedBy',
-}
 
 @Table({ tableName: Tables.tbl_Report, timestamps: false })
 export class Reports extends Model<Reports> {

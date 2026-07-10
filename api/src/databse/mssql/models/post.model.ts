@@ -10,8 +10,6 @@ import { PostHashtags } from './postHashtag.model';
 import { PostMedia } from './postMedia.model';
 import { PostsAlias, PostsColumns, PostTypes } from 'src/core/enums/post.enum';
 
-
-
 @Table({
 	tableName: Tables.tbl_Post,
 	timestamps: false

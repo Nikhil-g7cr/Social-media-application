@@ -11,16 +11,7 @@ import { Tables } from '../connection/tables.mssql';
 import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
-
-export const enum NotificationColumns {
-  ID = 'ID',
-  UserID = 'UserID',
-  ActorUserID = 'ActorUserID',
-  PostID = 'PostID',
-  NotificationType = 'NotificationType',
-  IsRead = 'IsRead',
-  CreatedAt = 'CreatedAt',
-}
+import { NotificationColumns } from 'src/core/enums/notificatio.enum';
 
 @Table({ tableName: Tables.tbl_Notification, timestamps: false })
 export class Notification extends Model<Notification> {
@@ -57,7 +48,7 @@ export class Notification extends Model<Notification> {
   // ==========================================
 
   @BelongsTo(() => Users, {
-    foreignKey: 'UserID',
+    foreignKey: NotificationColumns.UserID,
     targetKey: 'ID',
     as: 'User',
     onDelete: 'NO ACTION',
@@ -65,7 +56,7 @@ export class Notification extends Model<Notification> {
   user!: Users;
 
   @BelongsTo(() => Users, {
-    foreignKey: 'ActorUserID',
+    foreignKey: NotificationColumns.ActorUserID,
     targetKey: 'ID',
     as: 'Actor',
     onDelete: 'NO ACTION',
@@ -73,7 +64,7 @@ export class Notification extends Model<Notification> {
   actor!: Users;
 
   @BelongsTo(() => Posts, {
-    foreignKey: 'PostID',
+    foreignKey: NotificationColumns.PostID,
     targetKey: 'ID',
     as: 'Post',
     onDelete: 'NO ACTION',
