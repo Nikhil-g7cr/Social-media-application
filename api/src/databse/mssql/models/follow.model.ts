@@ -11,6 +11,20 @@ import {
 import { Users } from './user.model';
 import { Tables } from '../connection/tables.mssql';
 
+export const enum FollowColumns {
+  ID = 'ID',
+  FollowerID = 'FollowerID',
+  FollowingID = 'FollowingID',
+  Status = 'Status',
+  CreatedAt = 'CreatedAt',
+}
+
+export const enum FollowStatus{
+  PENDING = 'PENDING',
+  ACCEPTED = 'ACCEPTED',
+  REJECTED = 'REJECTED',
+}
+
 @Table({
   tableName: Tables.tbl_Follow,
   timestamps: false,
@@ -22,15 +36,15 @@ export class Follow extends Model<Follow> {
     type: DataType.UUID,
     primaryKey: true,
   })
-  ID!: string;
+  [FollowColumns.ID]!: string;
 
   @ForeignKey(() => Users)
   @Column(DataType.UUID)
-  FollowerID!: string;
+  [FollowColumns.FollowerID]!: string;
 
   @ForeignKey(() => Users)
   @Column(DataType.UUID)
-  FollowingID!: string;
+  [FollowColumns.FollowingID]!: string;
 
   @BelongsTo(() => Users, {
     foreignKey: 'FollowerID',

@@ -1,5 +1,5 @@
 import { Injectable, Inject } from '@nestjs/common';
-import { Follow } from '../models/follow.model';
+import { Follow, FollowStatus } from '../models/follow.model';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { FollowAbstractSQLDao } from '../abstract/follow.abstract.mssql';
 import { FollowMessage } from '../../../core/enums/follow.message.enum';
@@ -53,7 +53,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       return await this.followModel.findAll({
         where: {
           FollowingID: userId,
-          Status: 'ACCEPTED',
+          Status: FollowStatus.ACCEPTED,
         },
         include: ['Follower'],
       });
@@ -67,7 +67,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       return await this.followModel.findAll({
         where: {
           FollowerID: userId,
-          Status: 'ACCEPTED',
+          Status: FollowStatus.ACCEPTED,
         },
         include: ['Following'],
       });
@@ -81,7 +81,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       return await this.followModel.count({
         where: {
           FollowingID: userId,
-          Status: 'ACCEPTED',
+          Status: FollowStatus.ACCEPTED,
         },
       });
     } catch (error: any) {
@@ -94,7 +94,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       return await this.followModel.count({
         where: {
           FollowerID: userId,
-          Status: 'ACCEPTED',
+          Status: FollowStatus.ACCEPTED,
         },
       });
     } catch (error: any) {
@@ -108,7 +108,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
         where: {
           FollowerID: followerId,
           FollowingID: followingId,
-          Status: 'ACCEPTED',
+          Status: FollowStatus.ACCEPTED,
         },
       });
 
@@ -123,7 +123,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       const follows = await this.followModel.findAll({
         where: {
           FollowerID: userId,
-          Status: 'ACCEPTED',
+          Status: FollowStatus.ACCEPTED,
         },
         attributes: ['FollowingID'],
       });
@@ -160,7 +160,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       return await this.followModel.findAll({
         where: {
           FollowingID: userId,
-          Status: 'PENDING',
+          Status: FollowStatus.PENDING,
         },
         include: ['Follower'],
       });
@@ -174,7 +174,7 @@ export class FollowSQLDao implements FollowAbstractSQLDao {
       return await this.followModel.findAll({
         where: {
           FollowerID: userId,
-          Status: 'PENDING',
+          Status: FollowStatus.PENDING,
         },
         include: ['Following'],
       });
