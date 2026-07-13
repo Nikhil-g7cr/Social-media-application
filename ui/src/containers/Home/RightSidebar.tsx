@@ -1,5 +1,6 @@
 import React from "react";
 import ErrorDisplay from "../../components/errors/ErrorDisplay";
+import { TrendingHashtagSkeleton } from "../../shared/shared-components/Skeleton";
 
 interface TrendingHashtag {
   hashtag: string;
@@ -29,13 +30,7 @@ export default function RightSidebar({
 
         <div className="space-y-4">
           {isTrendingLoading ? (
-            <div className="animate-pulse flex space-x-4">
-              <div className="flex-1 space-y-4 py-1">
-                <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                <div className="h-2 bg-gray-200 rounded w-1/2"></div>
-                <div className="h-2 bg-gray-200 rounded w-5/6"></div>
-              </div>
-            </div>
+            <TrendingHashtagSkeleton />
           ) : isTrendingError ? (
             <ErrorDisplay 
               title="Couldn't load trending" 

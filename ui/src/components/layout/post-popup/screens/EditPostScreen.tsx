@@ -3,6 +3,7 @@ import { Image as ImageIcon, X } from 'lucide-react';
 import { useAppSelector } from '../../../../redux/hooks';
 import type { PopupPayload } from '../types';
 import { useEditPost } from '../hooks/useEditPost';
+import { CenteredSpinner } from '../../../../shared/shared-components/Spinner';
 import DynamicForm from '../../../../shared/shared-components/DynamicForm';
 import { updatePostFields } from '../../form/fields/updatePost.field';
 import { updatePostSchema, type UpdatePostFormData } from '../../form/schemas/updatePost.schema';
@@ -35,7 +36,7 @@ const EditPostScreen: React.FC<EditPostScreenProps> = ({ payload, onClose }) => 
   if (isFetchingPost) {
     return (
       <div className="p-12 flex justify-center items-center">
-        <div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+        <CenteredSpinner size="lg" minHeight="h-40" label="Loading post for editing..." />
       </div>
     );
   }

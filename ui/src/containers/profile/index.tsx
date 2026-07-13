@@ -16,6 +16,7 @@ import { Edit3 } from 'lucide-react';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 import ErrorDisplay from '../../components/errors/ErrorDisplay';
 import ConfirmationModal from '../../components/shared/ConfirmationModal';
+import { ProfileHeaderSkeleton, UserItemSkeleton, PostGridItemSkeleton } from '../../shared/shared-components/Skeleton';
 
 const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
@@ -37,9 +38,7 @@ const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boo
         </div>
         <div className="overflow-y-auto flex-1 p-2">
           {isLoading ? (
-            <div className="text-center py-8">
-              <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-            </div>
+            <UserItemSkeleton count={4} />
           ) : users && users.length > 0 ? (
             users.map(u => (
               <div
@@ -148,11 +147,7 @@ const ProfilePage: React.FC = () => {
   }
 
   if (isLoading || !userProfile || !profile) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-      </div>
-    );
+    return <ProfileHeaderSkeleton />;
   }
 
   return (
@@ -276,9 +271,7 @@ const ProfilePage: React.FC = () => {
                   <ErrorDisplay title="Failed to load posts" error={postsError} onRetry={refetchPosts} />
                 </div>
               ) : activeTab === 'posts' && isPostsLoading && page === 1 ? (
-                <div className="col-span-3 lg:col-span-4 text-center py-10">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-                </div>
+                <PostGridItemSkeleton count={6} />
               ) : activeTab === 'posts' && (!userPosts || userPosts.length === 0) ? (
                 <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
                   No posts to show.
@@ -336,9 +329,7 @@ const ProfilePage: React.FC = () => {
                   <ErrorDisplay title="Failed to load liked posts" error={likedPostsError} onRetry={refetchLikedPosts} />
                 </div>
               ) : activeTab === 'liked' && isLikedPostsLoading && page === 1 ? (
-                <div className="col-span-3 lg:col-span-4 text-center py-10">
-                  <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-                </div>
+                <PostGridItemSkeleton count={6} />
               ) : activeTab === 'liked' && (!likedPosts || likedPosts.length === 0) ? (
                 <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
                   No liked posts yet.

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Spin, Alert, Button } from 'antd';
+import { Alert, Button } from 'antd';
 import { RefreshCw, Users, FileText, MessageSquare, HardDrive, MessageCircle, Heart, UserMinus, AlertTriangle } from 'lucide-react';
 import { 
     useGetDashboardSummaryQuery, 
@@ -16,6 +16,7 @@ import ReportsOverview from './components/ReportsOverview';
 import TopUsers from './components/TopUsers';
 import ActivityFeed from './components/ActivityFeed';
 import EngagementChart from './components/EngagementChart';
+import { AnalyticsCardSkeleton } from '../../../shared/shared-components/Skeleton';
 
 interface AdminAnalyticsProps {
     /** Called when the user clicks "View All Reports →" inside the analytics panel */
@@ -54,8 +55,13 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
 
     if (loading && !summary) {
         return (
-            <div className="flex justify-center items-center h-full min-h-[500px]">
-                <Spin size="large" />
+            <div className="p-6 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <AnalyticsCardSkeleton count={4} />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <AnalyticsCardSkeleton count={4} />
+                </div>
             </div>
         );
     }

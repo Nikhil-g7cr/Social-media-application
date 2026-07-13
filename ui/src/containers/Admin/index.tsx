@@ -32,6 +32,7 @@ import FileRequestsPage from '../FileRequests';
 import { FiImage, FiFolder } from 'react-icons/fi';
 import { PanelShell } from '../../components/layout/Panel';
 import Avatar from '../../shared/shared-components/Avatar';
+import { TableRowSkeleton } from '../../shared/shared-components/Skeleton';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ModalState {
@@ -468,9 +469,7 @@ const AdminDashboard = () => {
             )}
 
             {isLoadingUsers ? (
-              <div className="flex justify-center p-12">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600" />
-              </div>
+              <TableRowSkeleton count={5} columns={4} />
             ) : isErrorUsers ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">
                 Error loading users data. Please try again later.
@@ -492,9 +491,7 @@ const AdminDashboard = () => {
               Manage Posts
             </h2>
             {isLoadingPosts ? (
-              <div className="flex justify-center p-12">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600" />
-              </div>
+              <TableRowSkeleton count={5} columns={4} />
             ) : isErrorPosts ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">
                 Error loading posts data. Please try again later.
@@ -525,9 +522,7 @@ const AdminDashboard = () => {
               User Reports
             </h2>
             {isLoadingReports ? (
-              <div className="flex justify-center p-12">
-                <div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-indigo-600" />
-              </div>
+              <TableRowSkeleton count={5} columns={5} />
             ) : isErrorReports ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">
                 Error loading reports data. Please try again later.

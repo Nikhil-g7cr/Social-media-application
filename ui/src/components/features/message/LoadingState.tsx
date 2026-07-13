@@ -1,8 +1,15 @@
+import { CenteredSpinner } from '../../../shared/shared-components/Spinner';
+
+/**
+ * Full-page loading state for the Messages page.
+ * Shown while conversations are being fetched for the first time.
+ */
 const LoadingState = () => (
-  <div className="flex h-[calc(100vh-4rem)] items-center justify-center bg-gray-50">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-  </div>
+  <CenteredSpinner
+    size="lg"
+    minHeight="h-[calc(100vh-4rem)]"
+    label="Loading messages..."
+  />
 );
 
 export default LoadingState;
-

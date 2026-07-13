@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useGetUserLikesQuery, useUnlikePostMutation } from '../../redux/features/like/likeApiSlice';
 import { useGetUserCommentsQuery, useDeleteCommentMutation } from '../../redux/features/comment/commentApiSlice';
-import { Heart, MessageCircle, Trash2, HeartOff, Loader2 } from 'lucide-react';
+import { Heart, MessageCircle, Trash2, HeartOff } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useNavigate } from 'react-router-dom';
+import { PostGridItemSkeleton, CommentSkeleton } from '../../shared/shared-components/Skeleton';
 
 const YourActivityPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'likes' | 'comments'>('likes');
@@ -82,8 +83,8 @@ const YourActivityPage: React.FC = () => {
             {activeTab === 'likes' && (
               <div>
                 {likesLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 p-1">
+                    <PostGridItemSkeleton count={6} />
                   </div>
                 ) : likes.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-500">
@@ -135,8 +136,8 @@ const YourActivityPage: React.FC = () => {
             {activeTab === 'comments' && (
               <div>
                 {commentsLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                  <div className="p-4">
+                    <CommentSkeleton count={4} />
                   </div>
                 ) : comments.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-500">

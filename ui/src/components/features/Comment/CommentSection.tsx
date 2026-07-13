@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import PostImage from "../../../shared/shared-components/PostImage";
 import Avatar from "../../../shared/shared-components/Avatar";
 import ErrorDisplay from "../../errors/ErrorDisplay";
+import Spinner from "../../../shared/shared-components/Spinner";
 
 const COMMENT_MAX_LENGTH = 2000;
 
@@ -111,7 +112,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
           {/* Loading State */}
           {isLoading || isFetching ? (
             <div className="flex justify-center py-4">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+              <Spinner size="sm" />
             </div>
           ) : isError ? (
             <div className="py-2">
@@ -223,7 +224,7 @@ const CommentSection: React.FC<CommentSectionProps> = ({
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-blue-600 disabled:text-gray-300 hover:bg-blue-50 rounded-full transition"
                   >
                     {isCreating ? (
-                      <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent ml-0.5"></div>
+                      <Spinner size="xs" />
                     ) : (
                       <Send className="w-4 h-4 ml-0.5" />
                     )}

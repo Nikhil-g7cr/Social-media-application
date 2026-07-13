@@ -14,6 +14,8 @@ import CreatePost from "../../shared/shared-components/CreatePost";
 import PostCard from "../../components/post/PostCard";
 import InfiniteScroll from "../../shared/shared-components/InfiniteScroll/index";
 import ErrorDisplay from "../../components/errors/ErrorDisplay";
+import LoadingWrapper from "../../shared/shared-components/LoadingWrapper";
+import { PostCardSkeleton } from "../../shared/shared-components/Skeleton";
 
 export default function HomePage() {
   const { user, isAuthenticated } = useAppSelector((state: any) => state.auth);
@@ -75,17 +77,18 @@ export default function HomePage() {
               <CreatePost />
 
               {/* Posts */}
-              {isPostsLoading && page === 1 ? (
-                <div className="flex justify-center p-8">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                </div>
-              ) : isPostsError && page === 1 ? (
-                <ErrorDisplay
-                  title="Failed to load posts"
-                  error={postsError}
-                  onRetry={refetchPosts}
-                />
-              ) : (
+              <LoadingWrapper
+                isLoading={isPostsLoading && page === 1}
+                skeleton={<PostCardSkeleton count={3} />}
+                isError={isPostsError && page === 1}
+                error={
+                  <ErrorDisplay
+                    title="Failed to load posts"
+                    error={postsError}
+                    onRetry={refetchPosts}
+                  />
+                }
+              >
                 <InfiniteScroll
                   onLoadMore={() => setPage((prev) => prev + 1)}
                   hasMore={hasMore}
@@ -101,7 +104,7 @@ export default function HomePage() {
                     />
                   ))}
                 </InfiniteScroll>
-              )}
+              </LoadingWrapper>
             </div>
 
             {/* Right Sidebar */}

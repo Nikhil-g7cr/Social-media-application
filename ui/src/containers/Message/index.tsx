@@ -536,6 +536,7 @@ const MessagesPage: React.FC = () => {
           currentUserId={CURRENT_USER_ID}
           debouncedTerm={debouncedTerm}
           isMobileChatOpen={isMobileChatOpen}
+          isConversationsLoading={isConversationsLoading}
           isSearchFetching={isSearchFetching}
           isSearchOpen={isSearchOpen}
           onlineUserIds={onlineUserIds}

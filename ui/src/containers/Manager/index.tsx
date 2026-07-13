@@ -11,6 +11,7 @@ import FileRequestsPage from '../FileRequests';
 import { PanelShell } from '../../components/layout/Panel';
 import { Modal, Input, message } from 'antd';
 import { useCreateFileRequestMutation } from '../../redux/features/gallery/galleryApiSlice';
+import { TableRowSkeleton } from '../../shared/shared-components/Skeleton';
 
 const ManagerDashboard = () => {
   const [activeTab, setActiveTab] = useState('posts');
@@ -99,7 +100,7 @@ const ManagerDashboard = () => {
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">Suspend Users</h2>
             {isLoadingUsers ? (
-              <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div></div>
+              <TableRowSkeleton count={5} columns={3} />
             ) : isErrorUsers ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading users data. Please try again later.</div>
             ) : (
@@ -129,7 +130,7 @@ const ManagerDashboard = () => {
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">Moderate Posts</h2>
             {isLoadingPosts ? (
-              <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div></div>
+              <TableRowSkeleton count={5} columns={3} />
             ) : isErrorPosts ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading posts data. Please try again later.</div>
             ) : (
@@ -160,7 +161,7 @@ const ManagerDashboard = () => {
           <div className="animate-fade-in-up">
             <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">User Complaints</h2>
             {isLoadingReports ? (
-              <div className="flex justify-center p-12"><div className="animate-spin rounded-full h-10 w-10 border-t-2 border-b-2 border-blue-600"></div></div>
+              <TableRowSkeleton count={5} columns={5} />
             ) : isErrorReports ? (
               <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading reports data. Please try again later.</div>
             ) : (

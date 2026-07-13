@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
-import { Search, Heart, MessageCircle, TrendingUp, Image as ImageIcon, PlayCircle } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import { useGetAllExplorePostsQuery, useGetTrendingPostsQuery } from '../../redux/features/post/postApiSlice';
 import ExplorePostCard from '../../components/post/ExplorePostCard';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 import ErrorDisplay from '../../components/errors/ErrorDisplay';
+import LoadingWrapper from '../../shared/shared-components/LoadingWrapper';
+import { ExploreGridSkeleton } from '../../shared/shared-components/Skeleton';
 
 const CATEGORIES = ['For You', 'Trending', 'Technology', 'Art', 'Sports', 'Entertainment', 'News', 'Travel', 'Food'];
 
@@ -74,20 +76,20 @@ const ExplorePage: React.FC = () => {
       {/* --- Main Content Area --- */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6">
         
-        {isLoading && page === 1 ? (
-          // Loading Skeleton
-          <div className="flex h-64 items-center justify-center">
-            <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-          </div>
-        ) : isError && page === 1 ? (
-          <div className="py-12">
-            <ErrorDisplay 
-              title={`Failed to load ${activeCategory} posts`}
-              error={currentError}
-              onRetry={retryFetch}
-            />
-          </div>
-        ) : (
+        <LoadingWrapper
+          isLoading={isLoading && page === 1}
+          skeleton={<ExploreGridSkeleton />}
+          isError={isError && page === 1}
+          error={
+            <div className="py-12">
+              <ErrorDisplay
+                title={`Failed to load ${activeCategory} posts`}
+                error={currentError}
+                onRetry={retryFetch}
+              />
+            </div>
+          }
+        >
           <InfiniteScroll
             onLoadMore={() => setPage(p => p + 1)}
             hasMore={hasMore}
@@ -100,7 +102,7 @@ const ExplorePage: React.FC = () => {
               ))}
             </div>
           </InfiniteScroll>
-        )}
+        </LoadingWrapper>
 
       </div>
     </div>

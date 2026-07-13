@@ -19,6 +19,7 @@ import { formatDistanceToNow } from 'date-fns';
 import PostImage from '../../shared/shared-components/PostImage';
 import Avatar from '../../shared/shared-components/Avatar';
 import { useNavigate } from 'react-router-dom';
+import { UserItemSkeleton, NotificationItemSkeleton } from '../../shared/shared-components/Skeleton';
 
 const ActivityPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'requests' | 'sent' | 'notifications'>('requests');
@@ -154,9 +155,7 @@ const ActivityPage: React.FC = () => {
             {activeTab === 'requests' && (
               <div className="min-h-[400px]">
                 {requestsLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
+                  <UserItemSkeleton count={3} />
                 ) : pendingRequests.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                     <UserPlus className="w-12 h-12 text-gray-300 mb-4" />
@@ -206,9 +205,7 @@ const ActivityPage: React.FC = () => {
             {activeTab === 'sent' && (
               <div className="min-h-[400px]">
                 {sentLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
+                  <UserItemSkeleton count={3} />
                 ) : sentRequests.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                     <UserPlus className="w-12 h-12 text-gray-300 mb-4" />
@@ -252,9 +249,7 @@ const ActivityPage: React.FC = () => {
             {activeTab === 'notifications' && (
               <div className="min-h-[400px]">
                 {notificationsLoading ? (
-                  <div className="flex justify-center items-center h-40">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  </div>
+                  <NotificationItemSkeleton count={5} />
                 ) : notifications.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-64 text-gray-500">
                     <Bell className="w-12 h-12 text-gray-300 mb-4" />

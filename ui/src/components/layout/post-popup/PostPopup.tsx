@@ -4,6 +4,7 @@ import { PostPopupMode } from './types';
 import type { PopupState } from './types';
 import { PostPopupFactory } from './PostPopupFactory';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import Spinner from '../../../shared/shared-components/Spinner';
 
 interface PostPopupProps {
   state: PopupState;
@@ -33,7 +34,11 @@ export const PostPopup: React.FC<PostPopupProps> = ({ state, onClose }) => {
       showCloseButton={definition.showCloseButton}
     >
       <ErrorBoundary>
-        <Suspense fallback={<div className="p-8 flex justify-center items-center"><div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div></div>}>
+        <Suspense fallback={
+          <div className="p-8 flex justify-center items-center">
+            <Spinner size="lg" />
+          </div>
+        }>
           <ScreenComponent payload={state.payload} onClose={onClose} />
         </Suspense>
       </ErrorBoundary>

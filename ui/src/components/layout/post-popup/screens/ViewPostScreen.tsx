@@ -3,6 +3,7 @@ import { X, AlertCircle } from 'lucide-react';
 import type { PopupPayload } from '../types';
 import { useViewPost } from '../hooks/useViewPost';
 import PostCard from '../../../post/PostCard';
+import { PostCardSkeleton } from '../../../../shared/shared-components/Skeleton';
 
 interface ViewPostScreenProps {
   payload?: PopupPayload;
@@ -42,13 +43,7 @@ const ViewPostScreen: React.FC<ViewPostScreenProps> = ({
       {/* Content */}
       <div className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 sm:py-8">
         {isLoading ? (
-          <div className="flex h-64 flex-col items-center justify-center space-y-4">
-            <div className="h-8 w-8 animate-spin rounded-full border-[2px] border-gray-200 border-t-gray-800" />
-
-            <p className="animate-pulse text-sm font-medium text-gray-500">
-              Loading post...
-            </p>
-          </div>
+          <PostCardSkeleton count={1} />
         ) : error || !post ? (
           <div className="flex h-72 flex-col items-center justify-center px-6 text-center">
             <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-gray-100">

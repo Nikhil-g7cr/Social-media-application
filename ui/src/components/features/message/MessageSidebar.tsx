@@ -6,6 +6,8 @@ import type { UIConversation } from "../../../shared/interfaces/conversation";
 import type { SearchedUser } from "./userSearchBar";
 import type { CreateGroupData } from "../../../shared/interfaces/message";
 import { SEARCH_INPUT_MAX_LENGTH } from "../../../hooks/useDebouncedSearch";
+import { ConversationItemSkeleton } from "../../../shared/shared-components/Skeleton";
+import Spinner from "../../../shared/shared-components/Spinner";
 
 interface MessageSidebarProps {
   activeConversation: UIConversation | null;
@@ -13,6 +15,7 @@ interface MessageSidebarProps {
   currentUserId: string;
   debouncedTerm: string;
   isMobileChatOpen: boolean;
+  isConversationsLoading?: boolean;
   isSearchFetching: boolean;
   isSearchOpen: boolean;
   onlineUserIds: string[];
@@ -32,6 +35,7 @@ const MessageSidebar = ({
   currentUserId,
   debouncedTerm,
   isMobileChatOpen,
+  isConversationsLoading = false,
   isSearchFetching,
   isSearchOpen,
   onlineUserIds,
@@ -71,8 +75,8 @@ const MessageSidebar = ({
           {isSearchOpen && debouncedTerm.length > 0 && (
             <div className="absolute top-full left-0 mt-2 w-full bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden max-h-64 overflow-y-auto z-50">
               {isSearchFetching ? (
-                <div className="p-4 text-center text-sm text-gray-500">
-                  Searching...
+                <div className="p-4 flex justify-center">
+                  <Spinner size="sm" label="Searching..." />
                 </div>
               ) : filteredResults.length === 0 ? (
                 <div className="p-4 text-center text-sm text-gray-500">
@@ -109,7 +113,9 @@ const MessageSidebar = ({
       </div>
 
       <div className="flex-1 overflow-y-auto">
-        {conversations.length === 0 ? (
+        {isConversationsLoading ? (
+          <ConversationItemSkeleton count={5} />
+        ) : conversations.length === 0 ? (
           <div className="p-6 text-center text-sm text-gray-400">
             No conversations yet. Search for someone above!
           </div>

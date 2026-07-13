@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useCallback } from 'react';
+import Spinner from '../Spinner';
 
 interface InfiniteScrollProps {
   onLoadMore: () => void;
@@ -52,7 +53,7 @@ const InfiniteScroll: React.FC<InfiniteScrollProps> = ({
       {isLoading && (
         loadingIndicator || (
           <div className="flex justify-center p-4">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+            <Spinner size="md" />
           </div>
         )
       )}
