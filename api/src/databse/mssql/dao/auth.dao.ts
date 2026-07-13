@@ -6,13 +6,12 @@ import { AppConfig } from 'src/config/AppConfig';
 import { AuthAbstractSQLDao } from '../abstract/auth.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { Users, Session, Roles } from '../models';
-import { SessionColumns } from 'src/core/enums/session.enum';
+import { SessionColumns, AuthMessage, TokenMessage } from 'src/core/enums/auth.enum';
 import { UsersDTO } from 'src/modules/user/dto/users.dto';
 import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { messageFactory, messages } from 'src/shared/message.shared';
 import { randomUUID } from 'crypto';
-import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
-import { UserColumns } from 'src/core/enums/user.enums';
+import { UserColumns } from 'src/core/enums/user.enum';
 
 @Injectable()
 export class AuthSQLDao implements AuthAbstractSQLDao {

@@ -9,15 +9,15 @@ import {
   PrimaryKey,
   Table,
 } from 'sequelize-typescript';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 import { Posts } from './post.model';
 import { Comments } from './comments.model';
 import { Likes } from './like.model';
-import { UserAlias, UserColumns, UserRoles } from '../../../core/enums/user.enums';
+import { UserAlias, UserColumns, UserRoles } from '../../../core/enums/user.enum';
 import { Follow } from './follow.model';
 import { RefreshToken } from './refreshToken.model';
 import { Roles } from './roles.model';
-import { RolesColumns } from 'src/core/enums/role.enum';
+import { RolesColumns } from 'src/core/enums/auth.enum';
 
 
 

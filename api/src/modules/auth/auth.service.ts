@@ -15,7 +15,7 @@ import { messageFactory, messages } from '../../shared/message.shared';
 import { UsersDTO } from '../user/dto/users.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtPayload } from './models/jwt-payload.model';
-import { AuthMessage, TokenMessage } from 'src/core/enums/Auth.message.enum';
+import { AuthMessage, TokenMessage } from 'src/core/enums/auth.enum';
 
 /** Maximum number of concurrent active sessions per user. */
 const MAX_SESSIONS = 4;

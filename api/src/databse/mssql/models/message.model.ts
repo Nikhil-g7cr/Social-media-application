@@ -9,11 +9,11 @@ import {
   HasMany,
 } from 'sequelize-typescript';
 import { Tables } from '../connection/tables.mssql';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 import { Users } from './user.model';
 import { Conversation } from './conversation.model';
 import { MessageAttachment } from './messageAttachment.model';
-import { MessageColumns } from 'src/core/enums/message.enum';
+import { MessageColumns } from 'src/core/enums/chat.enum';
 
 
 

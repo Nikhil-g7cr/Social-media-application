@@ -9,14 +9,12 @@ import { Op } from 'sequelize';
 import { ConversationAbstractSQLDAO } from '../abstract/conversation.abstract.mssql';
 import { FollowAbstractSQLDao } from '../abstract/follow.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import { ConversationColumns, ConversationMessage } from '../../../core/enums/Chat.message.enum';
+import { ConversationColumns, ConversationMessage, conversationTypes, CPColumns, cpRoles, MessageColumns } from 'src/core/enums/chat.enum';
 import { Conversation } from '../models/conversation.model';
 import { CP } from '../models/conversationParticipants.model';
 import { Message } from '../models/message.model';
 import { Users } from '../models/user.model';
-import { conversationTypes, CPColumns, cpRoles } from 'src/core/enums/conv.enums';
-import { UserColumns } from 'src/core/enums/user.enums';
-import { MessageColumns } from 'src/core/enums/message.enum';
+import { UserColumns } from 'src/core/enums/user.enum';
 
 
 

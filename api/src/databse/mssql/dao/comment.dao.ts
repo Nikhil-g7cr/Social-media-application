@@ -6,7 +6,7 @@ import { Comments, Users, Posts } from '../models';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { CommentsAbstractSQLDAO } from '../abstract/comment.abstract.mssql';
 import { CommentMessage, CommentsColumns } from 'src/core/enums/comment.enum';
-import { UserColumns } from 'src/core/enums/user.enums';
+import { UserColumns } from 'src/core/enums/user.enum';
 
 @Injectable()
 export class CommentSQLDAO implements CommentsAbstractSQLDAO {

@@ -18,7 +18,7 @@ import { UsersAbstractSvc } from './user.abstract';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { RolesGuard } from '../../core/guards/role.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
-import { UserRoles } from '../../core/enums/user.enums';
+import { UserRoles } from '../../core/enums/user.enum';
 
 @Controller('user')
 export class UserController {

@@ -1,6 +1,6 @@
 import { BelongsTo, Column, DataType, Model, PrimaryKey, Table } from "sequelize-typescript";
 import { Tables } from "../connection/tables.mssql";
-import { SQLDataType } from "../../../core/enums/data-type-sql.enum";
+import { SQLDataType } from "../../../core/enums/sql.enum";
 import { Sequelize } from "sequelize";
 import { Users } from "./user.model";
 import { CommentsColumns } from "src/core/enums/comment.enum";

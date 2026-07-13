@@ -8,10 +8,10 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Sequelize } from 'sequelize';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Users } from './user.model';
-import { SessionColumns } from 'src/core/enums/session.enum';
+import { SessionColumns } from 'src/core/enums/auth.enum';
 
 /**
  * Session model — contains ONLY active sessions.

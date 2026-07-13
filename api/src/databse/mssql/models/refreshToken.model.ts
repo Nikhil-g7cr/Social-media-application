@@ -8,9 +8,9 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Sequelize } from 'sequelize';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 import { Users } from './user.model';
-import { RefreshTokenColumns } from 'src/core/enums/session.enum';
+import { RefreshTokenColumns } from 'src/core/enums/auth.enum';
 
 
 @Table({

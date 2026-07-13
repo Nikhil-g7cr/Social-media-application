@@ -5,9 +5,8 @@ import { AppResponse, createResponse } from 'src/shared/appresponse.shared';
 import { Likes, Posts, Users } from '../models';
 import { LikeAbstractSQLDAO } from '../abstract/like.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import { LikeMessage } from 'src/core/enums/post.enum'
-import { UserColumns } from 'src/core/enums/user.enums';
-import { LikesColumns } from 'src/core/enums/likes.enum';
+import { LikeMessage, LikesColumns } from 'src/core/enums/like.enum';
+import { UserColumns } from 'src/core/enums/user.enum';
 
 @Injectable()
 export class LikeSQLDAO implements LikeAbstractSQLDAO {

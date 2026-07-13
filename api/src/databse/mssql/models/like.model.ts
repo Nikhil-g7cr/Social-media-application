@@ -1,10 +1,10 @@
 import { BelongsTo, Column, Model, PrimaryKey, Table } from 'sequelize-typescript';
 import { Sequelize } from 'sequelize';
 import { Tables } from '../connection/tables.mssql';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
-import { LikesColumns } from 'src/core/enums/likes.enum';
+import { LikesColumns } from 'src/core/enums/like.enum';
 
 @Table({ tableName: Tables.tbl_Like, timestamps: false })
 export class Likes extends Model<Likes> {

@@ -8,10 +8,10 @@ import { AtPayload } from './interface/users.interface';
 import { AppConfig } from '../../config/AppConfig';
 import AppLogger from '../../core/logger/app-logger';
 import { messageFactory, messages } from '../../shared/message.shared';
-import { UserRoles } from '../../core/enums/user.enums';
+import { UserRoles } from '../../core/enums/user.enum';
 import { DatabaseService } from '../../databse/database.service';
 import { UserAbsSQLDAO } from '../../databse/mssql/abstract/user.abstract.mssql';
-import { AuthMessage } from 'src/core/enums/Auth.message.enum';
+import { AuthMessage } from 'src/core/enums/auth.enum';
 
 @Injectable()
 export class UserService implements UsersAbstractSvc {

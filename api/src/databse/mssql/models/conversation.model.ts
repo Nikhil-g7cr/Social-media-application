@@ -7,8 +7,7 @@ import {
 } from 'sequelize-typescript';
 import { Message } from './message.model';
 import { Tables } from '../connection/tables.mssql';
-import { ConversationColumns } from 'src/core/enums/Chat.message.enum';
-import { conversationTypes } from 'src/core/enums/conv.enums';
+import { ConversationColumns, conversationTypes } from 'src/core/enums/chat.enum';
 
 
 @Table({

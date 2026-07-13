@@ -3,16 +3,12 @@ import { Op } from 'sequelize';
 import { v4 as uuidv4 } from 'uuid';
 import { MessageAbstractSQLDAO } from '../abstract/message.abstract.mssql';
 import { MsSqlConstants } from '../connection/constant.mssql';
-import {
-  ChatMessage,
-  ConversationMessage,
-} from '../../../core/enums/Chat.message.enum';
+import { ChatMessage, ConversationMessage, MessageColumns } from 'src/core/enums/chat.enum';
 import { Message } from '../models/message.model';
 import { MessageAttachment } from '../models/messageAttachment.model';
 import { CP } from '../models/conversationParticipants.model';
 import { Users } from '../models/user.model';
-import { UserColumns } from 'src/core/enums/user.enums';
-import { MessageColumns } from 'src/core/enums/message.enum';
+import { UserColumns } from 'src/core/enums/user.enum';
 
 @Injectable()
 export class MessageSQLDAO implements MessageAbstractSQLDAO {

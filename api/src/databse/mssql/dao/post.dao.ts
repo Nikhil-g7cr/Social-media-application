@@ -16,9 +16,9 @@ import { Sequelize } from 'sequelize-typescript';
 import { messageFactory, messages } from 'src/shared/message.shared';
 import { Op } from 'sequelize';
 import { PostMessage, PostsColumns } from 'src/core/enums/post.enum';
-import { UserColumns } from 'src/core/enums/user.enums';
+import { UserColumns } from 'src/core/enums/user.enum';
 import { CommentsColumns } from 'src/core/enums/comment.enum';
-import { LikesColumns } from 'src/core/enums/likes.enum';
+import { LikesColumns } from 'src/core/enums/like.enum';
 
 @Injectable()
 export class PostSQLDAO implements PostAbstractSQLDao {

@@ -1,5 +1,5 @@
 import { BelongsTo, BelongsToMany, Column, DataType, Default, ForeignKey, HasMany, Model, PrimaryKey, Table } from 'sequelize-typescript';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 import { Tables } from '../connection/tables.mssql';
 import { Users } from './user.model';
 import { Comments } from './comments.model';

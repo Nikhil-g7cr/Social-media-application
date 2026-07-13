@@ -7,12 +7,12 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { DataType } from 'sequelize-typescript';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 
 import { Users } from './user.model';
 import { Conversation } from './conversation.model';
-import { UserColumns } from 'src/core/enums/user.enums';
-import { ConversationParticipantRoles, CPAlias, CPColumns } from 'src/core/enums/conv.enums';
+import { UserColumns } from 'src/core/enums/user.enum';
+import { ConversationParticipantRoles, CPAlias, CPColumns } from 'src/core/enums/chat.enum';
 
 
 @Table({

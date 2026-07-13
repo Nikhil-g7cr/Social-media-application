@@ -6,8 +6,8 @@ import {  Users } from '../models/user.model';
 import { Posts } from '../models/post.model';
 import { v4 as uuidv4 } from 'uuid';
 import { PostsColumns } from 'src/core/enums/post.enum';
-import { UserColumns } from 'src/core/enums/user.enums';
-import { NotificationColumns } from 'src/core/enums/notificatio.enum';
+import { UserColumns } from 'src/core/enums/user.enum';
+import { NotificationColumns } from 'src/core/enums/notification.enum';
 
 @Injectable()
 export class NotificationSQLDao implements NotificationAbsSQLDAO {

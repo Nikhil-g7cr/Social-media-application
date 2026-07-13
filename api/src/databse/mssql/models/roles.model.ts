@@ -8,9 +8,9 @@ import {
   IsIn,
 } from 'sequelize-typescript';
 import { Tables } from '../connection/tables.mssql';
-import { SQLDataType } from 'src/core/enums/data-type-sql.enum';
+import { SQLDataType } from 'src/core/enums/sql.enum';
 import { Users } from './user.model';
-import { RolesColumns, RoleType } from 'src/core/enums/role.enum';
+import { RolesColumns, RoleType } from 'src/core/enums/auth.enum';
 
 
 @Table({ tableName: Tables.tbl_Roles, timestamps: false })

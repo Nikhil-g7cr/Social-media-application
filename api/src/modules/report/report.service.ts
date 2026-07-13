@@ -1,7 +1,7 @@
 import { Injectable, HttpStatus, Inject } from '@nestjs/common';
 import { AppResponse, createResponse } from '../../shared/appresponse.shared';
 import { AtPayload } from '../user/interface/users.interface';
-import { UserRoles } from '../../core/enums/user.enums';
+import { UserRoles } from '../../core/enums/user.enum';
 import { Reports } from '../../databse/mssql/models';
 import { Users } from '../../databse/mssql/models/user.model';
 import { MsSqlConstants } from '../../databse/mssql/connection/constant.mssql';

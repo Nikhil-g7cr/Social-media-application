@@ -10,7 +10,6 @@ export const enum ChatMessage {
   NOT_PARTICIPANT = 'You are not a participant of this conversation',
 }
 
-
 export const enum ConversationColumns {
   ID = 'ID',
   Title = 'Title',
@@ -41,3 +40,61 @@ export const enum ConversationMessage {
   E10 = 'Failed to clear conversation history.',
 }
 
+export const enum CPColumns {
+  ID = 'ID',
+  ConversationID = 'ConversationID',
+  UserID = 'UserID',
+  Role = 'Role',
+  JoinedAt = 'JoinedAt',
+  HistoryClearedAt = 'HistoryClearedAt',
+}
+
+export const enum CPAlias {
+  User = 'User',
+  Conversation = 'Conversation',
+}
+
+export const enum ConversationParticipantRoles {
+  MEMBER = 'member',
+  ADMIN = 'admin',
+  OWNER = 'owner',
+}
+
+export const enum cpRoles {
+  MEMBER = 'member',
+  ADMIN = 'admin',
+  OWNER = 'owner',
+}
+
+export const enum conversationTypes {
+  SINGLE = 'single',
+  GROUP = 'group',
+  BROADCAST = 'broadcast',
+}
+
+export const enum MessageColumns {
+  ID = 'ID',
+  ConversationID = 'ConversationID',
+  SenderID = 'SenderID',
+  Message = 'Message',
+  IsRead = 'IsRead',
+  CreatedAt = 'CreatedAt',
+  ModifiedAt = 'ModifiedAt',
+}
+
+export const enum MsgAttColumns {
+  ID = 'ID',
+  Message_id = 'Message_id',
+  FileURL = 'FileURL',
+  FileType = 'FileType',
+  FileSizeBytes = 'FileSizeBytes',
+  CreatedAt = 'CreatedAt',
+  OriginalFileName = 'OriginalFileName',
+  MimeType = 'MimeType',
+  FileExtension = 'FileExtension',
+  ImageWidth = 'ImageWidth',
+  ImageHeight = 'ImageHeight',
+  VideoDuration = 'VideoDuration',
+  ThumbnailURL = 'ThumbnailURL',
+  UploadedBy = 'UploadedBy',
+}

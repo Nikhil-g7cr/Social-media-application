@@ -4,7 +4,7 @@ import { ApiBearerAuth, ApiTags, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../core/guards/jwt-auth.guard';
 import { RolesGuard } from '../../core/guards/role.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
-import { UserRoles } from '../../core/enums/user.enums';
+import { UserRoles } from '../../core/enums/user.enum';
 
 @ApiTags('Admin Analytics')
 @Controller('admin-analytics')

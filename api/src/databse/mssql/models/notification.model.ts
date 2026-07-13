@@ -8,10 +8,10 @@ import {
   Table,
 } from 'sequelize-typescript';
 import { Tables } from '../connection/tables.mssql';
-import { SQLDataType } from '../../../core/enums/data-type-sql.enum';
+import { SQLDataType } from '../../../core/enums/sql.enum';
 import { Users } from './user.model';
 import { Posts } from './post.model';
-import { NotificationColumns } from 'src/core/enums/notificatio.enum';
+import { NotificationColumns } from 'src/core/enums/notification.enum';
 
 @Table({ tableName: Tables.tbl_Notification, timestamps: false })
 export class Notification extends Model<Notification> {
