@@ -28,6 +28,8 @@ export class AppConfig {
       blobAccountName: process.env.AZURE_BLOB_STORAGE_ACCOUNT_NAME,
       blobAccountKey: process.env.AZURE_BLOB_STORAGE_ACCOUNT_KEY,
       blobContainerName: process.env.AZURE_BLOB_STORAGE_CONTAINER_NAME,
+      blobLoggerContainerName: process.env.AZURE_BLOB_STORAGE_LOGGER_CONTAINER,
+      logLevel: process.env.LOG_LEVEL,
     };
 
     this.envConfig.jwt = {

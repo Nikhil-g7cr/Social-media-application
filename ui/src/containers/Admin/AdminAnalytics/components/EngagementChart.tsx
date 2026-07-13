@@ -53,8 +53,8 @@ const EngagementChart: React.FC<EngagementChartProps> = ({ totalPosts, totalComm
     }
 
     return (
-        <div className="h-64 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full min-w-0" style={{ height: 256 }}>
+            <ResponsiveContainer width="100%" height={256} minWidth={0} minHeight={256}>
                 <PieChart>
                     <Pie
                         data={data}

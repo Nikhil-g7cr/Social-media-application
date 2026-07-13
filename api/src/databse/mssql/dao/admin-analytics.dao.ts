@@ -1,7 +1,6 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { MsSqlConstants } from '../connection/constant.mssql';
 import { Sequelize } from 'sequelize-typescript';
-import { Op } from 'sequelize';
 import {
   Users,
   Posts,
@@ -33,10 +32,21 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
     readonly logger: AppLogger,
   ) {}
 
+  /**
+   * Sequelize serializes JavaScript Dates for MSSQL with a timezone offset
+   * (for example, `2026-07-12 18:30:00.000 +00:00`). SQL Server datetime
+   * columns cannot reliably compare against that representation. Keep the
+   * same instant, but send it as a SQL Server datetime-compatible value.
+   */
+  private toSqlDateTime(date: Date): string {
+    return date.toISOString().slice(0, 23).replace('T', ' ');
+  }
+
   async getDashboardSummary(): Promise<AppResponse> {
     try {
       const startOfToday = new Date();
       startOfToday.setHours(0, 0, 0, 0);
+      const startOfTodaySql = this.toSqlDateTime(startOfToday);
 
       let totalUsers = 0,
         activeUsers = 0,
@@ -71,9 +81,15 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         this.logger.error('deletedUsers error', e);
       }
       try {
-        newUsersToday = await this._user.count({
-          where: { IsDeleted: false, CreatedAt: { [Op.gte]: startOfToday } },
-        });
+        const result = await this.sequelize.query(
+          `
+          SELECT COUNT(*) AS count
+          FROM [Users]
+          WHERE [IsDeleted] = 0 AND [CreatedAt] >= :startOfToday
+        `,
+          { replacements: { startOfToday: startOfTodaySql }, type: 'SELECT' },
+        );
+        newUsersToday = Number((result[0] as any)?.count) || 0;
       } catch (e:any) {
         this.logger.error('newUsersToday error', e);
       }
@@ -84,9 +100,15 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         this.logger.error('totalPosts error', e);
       }
       try {
-        newPostsToday = await this._post.count({
-          where: { CreatedAt: { [Op.gte]: startOfToday } },
-        });
+        const result = await this.sequelize.query(
+          `
+          SELECT COUNT(*) AS count
+          FROM [Post]
+          WHERE [CreatedAt] >= :startOfToday
+        `,
+          { replacements: { startOfToday: startOfTodaySql }, type: 'SELECT' },
+        );
+        newPostsToday = Number((result[0] as any)?.count) || 0;
       } catch (e:any) {
         this.logger.error('newPostsToday error', e);
       }
@@ -170,6 +192,7 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
       const thirtyDaysAgo = new Date();
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
       thirtyDaysAgo.setHours(0, 0, 0, 0);
+      const thirtyDaysAgoSql = this.toSqlDateTime(thirtyDaysAgo);
 
       let userGrowth: any[] = [];
       let postGrowth: any[] = [];
@@ -183,7 +206,7 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
           GROUP BY CAST(CreatedAt AS DATE)
           ORDER BY CAST(CreatedAt AS DATE) ASC
         `,
-          { replacements: { date: thirtyDaysAgo }, type: 'SELECT' },
+          { replacements: { date: thirtyDaysAgoSql }, type: 'SELECT' },
         );
       } catch (e:any) {
         this.logger.error('userGrowth error', e);
@@ -199,7 +222,7 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
           GROUP BY CAST(P.CreatedAt AS DATE)
           ORDER BY CAST(P.CreatedAt AS DATE) ASC
         `,
-          { replacements: { date: thirtyDaysAgo }, type: 'SELECT' },
+          { replacements: { date: thirtyDaysAgoSql }, type: 'SELECT' },
         );
       } catch (e:any) {
         this.logger.error('postGrowth error', e);

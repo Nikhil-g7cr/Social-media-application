@@ -54,8 +54,8 @@ const GrowthCharts: React.FC<GrowthChartsProps> = ({ growthData }) => {
     }
 
     return (
-        <div className="h-80 w-full">
-            <ResponsiveContainer width="100%" height="100%">
+        <div className="w-full min-w-0" style={{ height: 320 }}>
+            <ResponsiveContainer width="100%" height={320} minWidth={0} minHeight={320}>
                 <LineChart
                     data={mergedData}
                     margin={{ top: 10, right: 30, left: 0, bottom: 0 }}

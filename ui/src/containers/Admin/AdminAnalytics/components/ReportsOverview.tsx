@@ -34,7 +34,7 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({ total, pending, resol
                     </span>
                     <span className="text-gray-600">{pending} ({pendingPercentage}%)</span>
                 </div>
-                <Progress percent={pendingPercentage} showInfo={false} strokeColor="#eab308" trailColor="#fef08a" />
+                <Progress percent={pendingPercentage} showInfo={false} strokeColor="#eab308" railColor="#fef08a" />
             </div>
 
             <div>
@@ -44,7 +44,7 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({ total, pending, resol
                     </span>
                     <span className="text-gray-600">{resolved} ({resolvedPercentage}%)</span>
                 </div>
-                <Progress percent={resolvedPercentage} showInfo={false} strokeColor="#22c55e" trailColor="#bbf7d0" />
+                <Progress percent={resolvedPercentage} showInfo={false} strokeColor="#22c55e" railColor="#bbf7d0" />
             </div>
 
             {dismissed > 0 && (
@@ -55,7 +55,7 @@ const ReportsOverview: React.FC<ReportsOverviewProps> = ({ total, pending, resol
                         </span>
                         <span className="text-gray-600">{dismissed} ({dismissedPercentage}%)</span>
                     </div>
-                    <Progress percent={dismissedPercentage} showInfo={false} strokeColor="#9ca3af" trailColor="#f3f4f6" />
+                    <Progress percent={dismissedPercentage} showInfo={false} strokeColor="#9ca3af" railColor="#f3f4f6" />
                 </div>
             )}
 

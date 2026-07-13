@@ -1,5 +1,14 @@
 import { apiSlice } from '../../apiSlice';
 
+export interface LogFileItem {
+  name: string;
+  displayName: string;
+  url: string;
+  size: number;
+  lastModified: string;
+  type: 'app-log' | 'error-log';
+}
+
 export const galleryApiSlice = apiSlice.injectEndpoints({
   endpoints: (builder) => ({
     getFiles: builder.query<any[], void>({
@@ -39,6 +48,21 @@ export const galleryApiSlice = apiSlice.injectEndpoints({
       }),
       invalidatesTags: ['FileRequest'],
     }),
+
+    // ─── Log File Endpoints ────────────────────────────────────────────────
+    getLogFiles: builder.query<LogFileItem[], void>({
+      query: () => ({
+        url: 'files/logs',
+        method: 'GET',
+      }),
+      providesTags: ['LogFile'],
+    }),
+    getLogFileContent: builder.query<any[], string>({
+      query: (blobPath) => ({
+        url: `files/logs/content?blobPath=${encodeURIComponent(blobPath)}`,
+        method: 'GET',
+      }),
+    }),
   }),
 });
 
@@ -48,4 +72,7 @@ export const {
   useGetFileRequestsQuery,
   useCreateFileRequestMutation,
   useUpdateFileRequestStatusMutation,
+  useGetLogFilesQuery,
+  useGetLogFileContentQuery,
+  useLazyGetLogFileContentQuery,
 } = galleryApiSlice;
