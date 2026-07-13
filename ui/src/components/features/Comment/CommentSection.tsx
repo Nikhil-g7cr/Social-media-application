@@ -54,7 +54,6 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   } = useGetCommentsByPostIdQuery(postId, {
     skip: !isOpen, // Only fetch when opened
   });
-  console.log("Comments fetched:", comments);
 
   const [createComment, { isLoading: isCreating }] =
     useCreatePostCommentMutation();
