@@ -41,6 +41,7 @@ export class AuthController {
   @Post('signup')
   @ApiOperation({ summary: 'Register a new user account' })
   @ApiBody({ type: UsersDTO })
+  @Throttle({ default: { limit: 3, ttl: 60000 } })
   async signup(
     @Body() userData: UsersDTO,
     @Ip() ip: string,
@@ -94,6 +95,7 @@ export class AuthController {
       'against stored bcrypt hash, and issues a new access + refresh token pair. ' +
       'In `per_user` mode, caller must pass `email` in request body.',
   })
+  
   async refreshToken(
     @Body() body: { email?: string },
     @Req() req: Request,
