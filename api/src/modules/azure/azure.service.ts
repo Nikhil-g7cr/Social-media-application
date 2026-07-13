@@ -265,7 +265,7 @@ export class FileService implements OnModuleInit {
         }
       });
 
-      return entries;
+      return entries.reverse();
     } catch (error: any) {
       this.logger.error(`Error reading log file ${blobPath}: ${error.message}`, error.stack);
       return [

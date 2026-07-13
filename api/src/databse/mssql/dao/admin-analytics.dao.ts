@@ -42,6 +42,16 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
     return date.toISOString().slice(0, 23).replace('T', ' ');
   }
 
+  private logQueryError(context: string, error: unknown): void {
+    const message = error instanceof Error ? error.message : String(error);
+    const stack = error instanceof Error ? error.stack : undefined;
+
+    this.logger.error(
+      { message: `${context}: ${message}`, stack },
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+
   async getDashboardSummary(): Promise<AppResponse> {
     try {
       const startOfToday = new Date();
@@ -66,19 +76,19 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
       try {
         totalUsers = await this._user.count();
       } catch (e:any) {
-        this.logger.error('totalUsers error', e);
+        this.logQueryError('totalUsers error', e);
       }
       try {
         activeUsers = await this._user.count({
           where: { IsDeleted: false, IsActive: true },
         });
       } catch (e:any) {
-        this.logger.error('activeUsers error', e);
+        this.logQueryError('activeUsers error', e);
       }
       try {
         deletedUsers = await this._user.count({ where: { IsDeleted: true } });
       } catch (e:any) {
-        this.logger.error('deletedUsers error', e);
+        this.logQueryError('deletedUsers error', e);
       }
       try {
         const result = await this.sequelize.query(
@@ -91,13 +101,13 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         );
         newUsersToday = Number((result[0] as any)?.count) || 0;
       } catch (e:any) {
-        this.logger.error('newUsersToday error', e);
+        this.logQueryError('newUsersToday error', e);
       }
 
       try {
         totalPosts = await this._post.count();
       } catch (e:any) {
-        this.logger.error('totalPosts error', e);
+        this.logQueryError('totalPosts error', e);
       }
       try {
         const result = await this.sequelize.query(
@@ -110,53 +120,53 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
         );
         newPostsToday = Number((result[0] as any)?.count) || 0;
       } catch (e:any) {
-        this.logger.error('newPostsToday error', e);
+        this.logQueryError('newPostsToday error', e);
       }
 
       try {
         totalComments = await this._comment.count();
       } catch (e:any) {
-        this.logger.error('totalComments error', e);
+        this.logQueryError('totalComments error', e);
       }
       try {
         totalLikes = await this._like.count();
       } catch (e:any) {
-        this.logger.error('totalLikes error', e);
+        this.logQueryError('totalLikes error', e);
       }
       try {
         totalConversations = await this._conversation.count();
       } catch (e:any) {
-        this.logger.error('totalConversations error', e);
+        this.logQueryError('totalConversations error', e);
       }
       try {
         totalMessages = await this._message.count();
       } catch (e:any) {
-        this.logger.error('totalMessages error', e);
+        this.logQueryError('totalMessages error', e);
       }
 
       try {
         totalReports = await this._report.count();
       } catch (e:any) {
-        this.logger.error('totalReports error', e);
+        this.logQueryError('totalReports error', e);
       }
       try {
         pendingReports = await this._report.count({
           where: { Status: 'PENDING' },
         });
       } catch (e:any) {
-        this.logger.error('pendingReports error', e);
+        this.logQueryError('pendingReports error', e);
       }
       try {
         resolvedReports = await this._report.count({
           where: { Status: 'RESOLVED' },
         });
       } catch (e:any) {
-        this.logger.error('resolvedReports error', e);
+        this.logQueryError('resolvedReports error', e);
       }
       try {
         totalMediaUploaded = await this._postMedia.count();
       } catch (e:any) {
-        this.logger.error('totalMediaUploaded error', e);
+        this.logQueryError('totalMediaUploaded error', e);
       }
 
       const summary = {
@@ -209,7 +219,7 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
           { replacements: { date: thirtyDaysAgoSql }, type: 'SELECT' },
         );
       } catch (e:any) {
-        this.logger.error('userGrowth error', e);
+        this.logQueryError('userGrowth error', e);
       }
 
       try {
@@ -225,7 +235,7 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
           { replacements: { date: thirtyDaysAgoSql }, type: 'SELECT' },
         );
       } catch (e:any) {
-        this.logger.error('postGrowth error', e);
+        this.logQueryError('postGrowth error', e);
       }
 
       return createResponse(HttpStatus.OK, 'Growth analytics retrieved', {
@@ -347,7 +357,7 @@ export class AdminAnalyticsSQLDAO implements AdminAnalyticsAbsSQLDAO {
           { type: 'SELECT' },
         );
       } catch (e:any) {
-        this.logger.error('recentPosts join error', e);
+        this.logQueryError('recentPosts join error', e);
       }
 
       return createResponse(HttpStatus.OK, 'Recent activity retrieved', {

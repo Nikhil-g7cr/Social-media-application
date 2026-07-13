@@ -317,27 +317,285 @@ const GalleryPage: React.FC = () => {
     },
   ];
 
-  // ─── Log Entry Table Columns ───────────────────────────────────────────────
+  // ─── Log Message Parser Helper ─────────────────────────────────────────────
+  const parseLogMessage = (msg: any, record: any) => {
+    const rawContent =
+      msg !== undefined && msg !== null ? msg : record?.raw ?? '—';
+
+    const statusError =
+      typeof record?.status === 'object' && record.status !== null
+        ? record.status
+        : null;
+
+    if (typeof rawContent === 'object' && rawContent !== null) {
+      return {
+        title: rawContent.message || rawContent.name || 'Structured Log Entry',
+        errObj: rawContent || statusError,
+        sqlText: rawContent.sql || rawContent.original?.sql || statusError?.sql || statusError?.original?.sql || record?.sql,
+      };
+    }
+
+    if (typeof rawContent === 'string') {
+      const jsonIndex = rawContent.indexOf('{"');
+      if (jsonIndex !== -1) {
+        const prefixTitle = rawContent.slice(0, jsonIndex).trim();
+        const possibleJson = rawContent.slice(jsonIndex);
+        try {
+          const parsed = JSON.parse(possibleJson);
+          return {
+            title: prefixTitle || parsed.message || parsed.name || 'Log Event',
+            errObj: parsed || statusError,
+            sqlText: parsed.sql || parsed.original?.sql || statusError?.sql || statusError?.original?.sql || record?.sql,
+          };
+        } catch {
+          // Fall through if not valid JSON
+        }
+      }
+    }
+
+    return {
+      title:
+        statusError?.message && !String(rawContent).includes(statusError.message)
+          ? `${String(rawContent)}: ${statusError.message}`
+          : String(rawContent),
+      errObj: statusError,
+      sqlText: statusError?.sql || statusError?.original?.sql || record?.sql,
+    };
+  };
+
+  // ─── Interactive Log Message Cell Subcomponent ─────────────────────────────
+  const LogMessageCell: React.FC<{ msg: any; record: any }> = ({ msg, record }) => {
+    const [expanded, setExpanded] = useState(false);
+
+    const parsed = parseLogMessage(msg, record);
+    const { title, errObj, sqlText } = parsed;
+
+    const cleanSql = sqlText
+      ? String(sqlText).replace(/\\n/g, '\n').replace(/\\t/g, '  ')
+      : null;
+
+    const hasExtraDetails = Boolean(
+      cleanSql ||
+        record?.stack ||
+        (errObj && (errObj.original || errObj.code || errObj.number || !errObj.name))
+    );
+
+    return (
+      <div style={{ padding: '6px 4px' }}>
+        {/* Compact Default Header View */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
+          {errObj?.name && (
+            <Tag color="error" style={{ fontWeight: 600, margin: 0, flexShrink: 0 }}>
+              {errObj.name}
+            </Tag>
+          )}
+          <div
+            style={{
+              fontSize: 13,
+              fontWeight: errObj ? 600 : 400,
+              color: errObj ? '#cf1322' : '#1f1f1f',
+              lineHeight: 1.5,
+              whiteSpace: 'nowrap',
+              overflowX: 'auto',
+              overflowY: 'hidden',
+              minWidth: 0,
+            }}
+          >
+            {title}
+          </div>
+        </div>
+
+        {/* Toggle Expand / Collapse Button */}
+        {hasExtraDetails && (
+          <div style={{ marginTop: 6 }}>
+            <Button
+              type="link"
+              size="small"
+              style={{ padding: 0, fontSize: 12, fontWeight: 600 }}
+              onClick={() => setExpanded(!expanded)}
+            >
+              {expanded ? '▲ Hide Details' : '▼ Show SQL & Error Details'}
+            </Button>
+          </div>
+        )}
+
+        {/* Expanded Rich Details Panel */}
+        {expanded && (
+          <div
+            style={{
+              marginTop: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 10,
+              backgroundColor: '#fafafa',
+              border: '1px solid #e8e8e8',
+              borderRadius: 6,
+              padding: 12,
+            }}
+          >
+            {/* Executed SQL Query Block */}
+            {cleanSql && (
+              <div
+                style={{
+                  backgroundColor: '#1e1e1e',
+                  border: '1px solid #333',
+                  borderRadius: 6,
+                  padding: '10px 14px',
+                  overflowX: 'auto',
+                }}
+              >
+                <div
+                  style={{
+                    color: '#6a9955',
+                    fontSize: 11,
+                    fontWeight: 600,
+                    marginBottom: 6,
+                    fontFamily: 'monospace',
+                  }}
+                >
+                  -- EXECUTED SQL QUERY
+                </div>
+                <pre
+                  style={{
+                    margin: 0,
+                    color: '#9cdcfe',
+                    fontSize: 12,
+                    fontFamily: 'monospace',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    lineHeight: 1.6,
+                  }}
+                >
+                  {cleanSql}
+                </pre>
+              </div>
+            )}
+
+            {/* SQL Server Error Diagnostic Badge */}
+            {errObj && (errObj.original || errObj.code || errObj.number) && (
+              <div
+                style={{
+                  backgroundColor: '#fff1f0',
+                  borderLeft: '3px solid #ff4d4f',
+                  padding: '8px 12px',
+                  borderRadius: '0 4px 4px 0',
+                  fontSize: 12,
+                }}
+              >
+                <span style={{ fontWeight: 600, color: '#cf1322' }}>
+                  SQL Error Details:{' '}
+                </span>
+                <span style={{ fontFamily: 'monospace', color: '#595959' }}>
+                  Code: {errObj.original?.code || errObj.code || 'N/A'} | Number:{' '}
+                  {errObj.original?.number || errObj.number || 'N/A'}
+                  {errObj.original?.state ? ` | State: ${errObj.original.state}` : ''}
+                </span>
+              </div>
+            )}
+
+            {/* Raw JSON Structure (if not just SQL error) */}
+            {errObj && !cleanSql && !errObj.name && (
+              <pre
+                style={{
+                  margin: 0,
+                  padding: '10px 14px',
+                  backgroundColor: '#f8f9fa',
+                  border: '1px solid #e9ecef',
+                  borderRadius: 6,
+                  fontSize: 12,
+                  fontFamily: 'monospace',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word',
+                  lineHeight: 1.5,
+                  color: '#212529',
+                }}
+              >
+                {JSON.stringify(errObj, null, 2)}
+              </pre>
+            )}
+
+            {/* Stack Trace */}
+            {(record?.stack || errObj?.stack || errObj?.original?.stack) && (
+              <div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#cf1322', marginBottom: 4 }}>
+                  Stack Trace:
+                </div>
+                <pre
+                  style={{
+                    margin: 0,
+                    padding: '10px 14px',
+                    backgroundColor: '#fff1f0',
+                    border: '1px solid #ffccc7',
+                    borderRadius: 6,
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    color: '#cf1322',
+                    whiteSpace: 'pre-wrap',
+                    wordBreak: 'break-word',
+                    lineHeight: 1.5,
+                    maxHeight: 250,
+                    overflowY: 'auto',
+                  }}
+                >
+                  {typeof (record.stack || errObj?.stack || errObj?.original?.stack) === 'object'
+                    ? JSON.stringify(record.stack || errObj?.stack || errObj?.original?.stack, null, 2)
+                    : String(record.stack || errObj?.stack || errObj?.original?.stack)}
+                </pre>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const logEntryColumns: TableColumnsType<any> = [
     {
       title: 'Timestamp',
       dataIndex: 'timestamp',
-      width: 185,
+      width: 175,
       render: (ts?: any) => {
         if (!ts) return <Text type="secondary" style={{ fontSize: 11 }}>—</Text>;
         const tsStr = typeof ts === 'object' ? JSON.stringify(ts) : String(ts);
+        const date = new Date(tsStr);
+
+        if (isNaN(date.getTime())) {
+          return (
+            <Text style={{ fontSize: 12, fontFamily: 'monospace', color: '#595959' }}>
+              {tsStr}
+            </Text>
+          );
+        }
+
+        const datePart = date.toLocaleDateString(undefined, {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+        });
+        const timePart = date.toLocaleTimeString(undefined, {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: true,
+        });
+        const ms = String(date.getMilliseconds()).padStart(3, '0');
+
         return (
-          <Text style={{ fontSize: 12, fontFamily: 'monospace', color: '#595959' }}>
-            {tsStr}
-          </Text>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 0' }}>
+            <span style={{ fontWeight: 600, fontSize: 12, color: '#262626' }}>
+              {datePart}
+            </span>
+            <span style={{ fontFamily: 'monospace', fontSize: 11, color: '#595959' }}>
+              {timePart} <span style={{ color: '#8c8c8c' }}>.{ms}</span>
+            </span>
+          </div>
         );
       },
     },
     {
       title: 'Level',
       dataIndex: 'level',
-      width: 90,
+      width: 100,
       filters: Object.keys(LOG_LEVEL_CONFIG).map((k) => ({
         text: k.toUpperCase(),
         value: k,
@@ -350,93 +608,75 @@ const GalleryPage: React.FC = () => {
             : String(level || 'unknown');
         const cfg = getLevelConfig(levelStr);
         return (
-          <Tag
-            style={{
-              color: cfg.color,
-              backgroundColor: cfg.bg,
-              borderColor: cfg.color,
-              fontWeight: 600,
-              fontSize: 11,
-            }}
-          >
-            {cfg.label}
-          </Tag>
+          <div style={{ padding: '4px 0' }}>
+            <Tag
+              style={{
+                color: cfg.color,
+                backgroundColor: cfg.bg,
+                borderColor: cfg.color,
+                fontWeight: 600,
+                fontSize: 11,
+                padding: '2px 8px',
+                borderRadius: 4,
+              }}
+            >
+              {cfg.label}
+            </Tag>
+          </div>
         );
       },
     },
     {
       title: 'Message',
       dataIndex: 'message',
-      render: (msg?: any, record?: any) => {
-        const content =
-          msg !== undefined && msg !== null ? msg : record?.raw ?? '—';
-        const text =
-          typeof content === 'object'
-            ? JSON.stringify(content, null, 2)
-            : String(content);
-
-        return (
-          <div>
-            <Text
-              style={{
-                fontSize: 13,
-                whiteSpace: 'pre-wrap',
-                wordBreak: 'break-word',
-              }}
-            >
-              {text}
-            </Text>
-            {record?.stack && (
-              <pre
-                style={{
-                  marginTop: 6,
-                  padding: 8,
-                  backgroundColor: '#fff1f0',
-                  border: '1px solid #ffa39e',
-                  borderRadius: 4,
-                  fontSize: 11,
-                  color: '#cf1322',
-                  overflowX: 'auto',
-                  maxHeight: 200,
-                }}
-              >
-                {typeof record.stack === 'object'
-                  ? JSON.stringify(record.stack, null, 2)
-                  : String(record.stack)}
-              </pre>
-            )}
-          </div>
-        );
-      },
+      width: 550,
+      render: (msg?: any, record?: any) => (
+        <LogMessageCell msg={msg} record={record} />
+      ),
     },
     {
       title: 'Status',
       dataIndex: 'status',
-      width: 80,
+      width: 95,
       render: (status?: any) => {
         if (status === undefined || status === null) return null;
+        if (typeof status === 'object') {
+          return (
+            <div style={{ padding: '4px 0' }}>
+              <Tag color="red" style={{ fontWeight: 600, padding: '2px 8px', borderRadius: 4 }}>
+                ERROR
+              </Tag>
+            </div>
+          );
+        }
         const isNum = typeof status === 'number';
-        const statusText =
-          typeof status === 'object' ? JSON.stringify(status) : String(status);
+        const statusText = String(status);
         return (
-          <Tag
-            color={
-              isNum && status >= 500
-                ? 'red'
-                : isNum && status >= 400
-                  ? 'orange'
-                  : 'green'
-            }
-          >
-            {statusText}
-          </Tag>
+          <div style={{ padding: '4px 0' }}>
+            <Tag
+              color={
+                isNum && status >= 500
+                  ? 'red'
+                  : isNum && status >= 400
+                    ? 'orange'
+                    : 'green'
+              }
+              style={{
+                fontWeight: 600,
+                padding: '2px 8px',
+                borderRadius: 4,
+              }}
+            >
+              {statusText}
+            </Tag>
+          </div>
         );
       },
     },
     {
       title: 'SID',
       dataIndex: 'sid',
-      width: 80,
+      width: 105,
       render: (sid?: any) => {
         if (sid === undefined || sid === null) return null;
         const sidStr =
@@ -444,11 +684,24 @@ const GalleryPage: React.FC = () => {
             ? JSON.stringify(sid)
             : String(sid || '');
         return sidStr ? (
-          <Tooltip title={sidStr}>
-            <Text copyable style={{ fontSize: 11, fontFamily: 'monospace' }}>
-              {sidStr.slice(0, 8)}…
-            </Text>
-          </Tooltip>
+          <div style={{ padding: '4px 0' }}>
+            <Tooltip title={`Session ID: ${sidStr}`}>
+              <span
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  backgroundColor: '#f5f5f5',
+                  border: '1px solid #d9d9d9',
+                  padding: '2px 6px',
+                  borderRadius: 4,
+                  color: '#595959',
+                  display: 'inline-block',
+                }}
+              >
+                {sidStr.slice(0, 8)}…
+              </span>
+            </Tooltip>
+          </div>
         ) : null;
       },
     },
@@ -689,22 +942,51 @@ const GalleryPage: React.FC = () => {
             Close
           </Button>,
         ]}
-        width="85vw"
-        style={{ top: 24 }}
-        styles={{ body: { padding: '12px 16px', maxHeight: '75vh', overflowY: 'auto' } }}
+        width="92vw"
+        style={{ top: 20 }}
+        styles={{ body: { padding: '16px 20px', maxHeight: '78vh', overflowY: 'auto' } }}
       >
-        {/* Search bar */}
-        <div style={{ marginBottom: 12 }}>
+        {/* Search bar + Export Pretty JSON */}
+        <div style={{ marginBottom: 16, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
           <Input
             prefix={<MdSearch />}
-            placeholder="Filter by message, level…"
+            placeholder="Filter by message, level, SQL query…"
             value={logSearchText}
             onChange={(e) => setLogSearchText(e.target.value)}
             allowClear
+            size="large"
+            style={{ flexGrow: 1, minWidth: 260 }}
           />
+          <Tooltip title="Download log entries as clean, human-readable indented JSON without \n escapes">
+            <Button
+              type="primary"
+              icon={<MdDownload />}
+              size="large"
+              onClick={() => {
+                try {
+                  const jsonStr = JSON.stringify(filteredLogEntries, null, 2);
+                  const blob = new Blob([jsonStr], { type: 'application/json' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `${previewBlobPath?.split('/').pop() || 'tomo-logs'}-pretty.json`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                  URL.revokeObjectURL(url);
+                  messageApi.success('Pretty JSON log file downloaded successfully');
+                } catch (e) {
+                  messageApi.error('Failed to export pretty JSON');
+                }
+              }}
+              disabled={filteredLogEntries.length === 0}
+            >
+              Export Pretty JSON
+            </Button>
+          </Tooltip>
         </div>
 
-        <Divider style={{ margin: '8px 0 12px' }} />
+        <Divider style={{ margin: '8px 0 16px' }} />
 
         {isContentFetching ? (
           <div style={{ textAlign: 'center', padding: 40 }}>
@@ -714,16 +996,16 @@ const GalleryPage: React.FC = () => {
           <Empty description="No log entries match your search." />
         ) : (
           <>
-            <Text type="secondary" style={{ fontSize: 12, marginBottom: 8, display: 'block' }}>
+            <Text type="secondary" style={{ fontSize: 12, marginBottom: 12, display: 'block' }}>
               Showing {filteredLogEntries.length} of {logEntries.length} entries (last 500 from file)
             </Text>
             <Table
               dataSource={filteredLogEntries}
               columns={logEntryColumns}
               rowKey={(record: any, idx?: number) => record._id || String(idx)}
-              size="small"
+              size="middle"
               pagination={{ pageSize: 50, showSizeChanger: true, pageSizeOptions: ['25', '50', '100'] }}
-              scroll={{ x: 900 }}
+              scroll={{ x: 1100 }}
               rowClassName={(record) => {
                 const level = record.level?.toLowerCase();
                 if (level === 'error') return 'log-row-error';
