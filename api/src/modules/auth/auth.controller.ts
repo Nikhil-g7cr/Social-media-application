@@ -28,6 +28,7 @@ import { CurrentUser } from '../../core/decorators/current-user.decorator';
 import type { JwtPayload } from './models/jwt-payload.model';
 import { RefreshCookieService } from './refresh-cookie.service';
 import { RefreshCookieStrategy } from './models/refresh-cookie-strategy.enum';
+import { Throttle } from '@nestjs/throttler/dist/throttler.decorator';
 
 @Controller('auth')
 @ApiTags('Authentication')
@@ -64,6 +65,7 @@ export class AuthController {
   @Post('login')
   @ApiOperation({ summary: 'Authenticate user and receive tokens' })
   @ApiBody({ type: LoginDto })
+  @Throttle({ default: { limit: 5, ttl: 60000 } })
   async login(
     @Body() loginData: LoginDto,
     @Ip() ip: string,
