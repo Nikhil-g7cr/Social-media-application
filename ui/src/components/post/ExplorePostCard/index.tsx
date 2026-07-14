@@ -5,9 +5,10 @@ import { usePostPopup, PostPopupMode } from '../../layout/post-popup';
 
 interface ExplorePostCardProps {
   post: any;
+  actions?: React.ReactNode;
 }
 
-const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
+const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post, actions }) => {
   const { open } = usePostPopup();
 
   let mediaToRender = post.media || [];
@@ -53,6 +54,12 @@ const ExplorePostCard: React.FC<ExplorePostCardProps> = ({ post }) => {
             <span>{post.comments}</span>
           </div>
         </div>
+
+        {actions && (
+          <div className="absolute top-3 right-3 pointer-events-auto">
+            {actions}
+          </div>
+        )}
 
         {/* Author Info at the bottom */}
         <div className="p-4 flex items-center gap-2 translate-y-4 group-hover:translate-y-0 transition-transform duration-200 delay-75">

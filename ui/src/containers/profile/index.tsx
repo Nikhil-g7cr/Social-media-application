@@ -1,7 +1,6 @@
 import React, { useState, useMemo, memo, useEffect } from 'react';
-import { Settings, Grid, Heart, Bookmark, Trash2 } from 'lucide-react';
+import { Settings, Grid, Heart, Bookmark, Edit3, Trash2 } from 'lucide-react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import PostImage from '../../shared/shared-components/PostImage';
 import Avatar from '../../shared/shared-components/Avatar';
 import FollowButton from '../../components/features/Social/FollowButton';
 import { useAppSelector } from '../../redux/hooks';
@@ -12,11 +11,11 @@ import {
   useGetFollowingQuery
 } from '../../redux/features/user/userApiSlice';
 import { useGetPostsByUserIdQuery, useGetLikedPostsByUserIdQuery, useDeletePostMutation } from '../../redux/features/post/postApiSlice';
-import { Edit3 } from 'lucide-react';
 import InfiniteScroll from '../../shared/shared-components/InfiniteScroll/index';
 import ErrorDisplay from '../../components/errors/ErrorDisplay';
 import ConfirmationModal from '../../components/shared/ConfirmationModal';
 import { ProfileHeaderSkeleton, UserItemSkeleton, PostGridItemSkeleton } from '../../shared/shared-components/Skeleton';
+import ExplorePostCard from '../../components/post/ExplorePostCard';
 
 const UsersModal = memo(({ isOpen, onClose, title, userId, type }: { isOpen: boolean, onClose: () => void, title: string, userId: string, type: 'followers' | 'following' }) => {
   const navigate = useNavigate();
@@ -98,7 +97,6 @@ const ProfilePage: React.FC = () => {
       console.error("Failed to delete post:", err);
     }
   };
-
   const userPosts = userPostsData?.posts || [];
   const likedPosts = likedPostsData?.posts || [];
   const likedPostsCount = likedPostsData?.totalRecords ?? likedPosts.length;
@@ -265,7 +263,7 @@ const ProfilePage: React.FC = () => {
             hasMore={hasMore}
             isLoading={isFetching}
           >
-            <div className="mt-6 grid grid-cols-3 gap-1 sm:gap-4 lg:grid-cols-4">
+            <div className="mt-6 columns-2 md:columns-3 lg:columns-4 gap-4 space-y-4">
               {activeTab === 'posts' && isPostsError && page === 1 ? (
                 <div className="col-span-3 lg:col-span-4 py-10">
                   <ErrorDisplay title="Failed to load posts" error={postsError} onRetry={refetchPosts} />
@@ -278,51 +276,36 @@ const ProfilePage: React.FC = () => {
                 </div>
               ) : activeTab === 'posts' && userPosts ? (
                 userPosts.map((post) => (
-                  <div
+                  <ExplorePostCard
                     key={post.id}
-                    className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
-                  >
-                    {post.media && post.media.length > 0 ? (
-                      post.media[0].mediaType === 'VIDEO' ? (
-                        <video src={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                      ) : (
-                        <PostImage mediaUrl={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                      )
-                    ) : post.mediaUrl ? (
-                      <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                    ) : (
-                      <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
-                        {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
+                    post={post}
+                    actions={isCurrentUser ? (
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          aria-label="Edit post"
+                          className="rounded-full bg-white/90 p-2 text-gray-700 hover:bg-white"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            navigate(`/post/update/${post.id}`);
+                          }}
+                        >
+                          <Edit3 className="h-4 w-4" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Delete post"
+                          className="rounded-full bg-red-500/90 p-2 text-white hover:bg-red-600"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setPostToDelete(post.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
                       </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
-                      <div className="flex items-center gap-4 font-semibold">
-                        <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white" /> {post.likes || 0}</span>
-                      </div>
-                      {isCurrentUser && (
-                        <div className="flex items-center gap-2">
-                          <button
-                            className="flex items-center gap-1 bg-white/20 hover:bg-white/40 px-3 py-1 rounded-full text-sm font-medium transition"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              navigate(`/post/update/${post.id}`);
-                            }}
-                          >
-                            <Edit3 className="w-4 h-4" /> Edit
-                          </button>
-                          <button
-                            className="flex items-center gap-1 bg-red-500/80 hover:bg-red-600 px-3 py-1 rounded-full text-sm font-medium transition"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setPostToDelete(post.id);
-                            }}
-                          >
-                            <Trash2 className="w-4 h-4" /> Delete
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
+                    ) : undefined}
+                  />
                 ))
               ) : activeTab === 'liked' && isLikedPostsError && page === 1 ? (
                 <div className="col-span-3 lg:col-span-4 py-10">
@@ -336,29 +319,7 @@ const ProfilePage: React.FC = () => {
                 </div>
               ) : activeTab === 'liked' && likedPosts ? (
                 likedPosts.map((post) => (
-                  <div
-                    key={post.id}
-                    className="aspect-square bg-gray-200 rounded-md overflow-hidden group cursor-pointer relative"
-                  >
-                    {post.media && post.media.length > 0 ? (
-                      post.media[0].mediaType === 'VIDEO' ? (
-                        <video src={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                      ) : (
-                        <PostImage mediaUrl={post.media[0].mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                      )
-                    ) : post.mediaUrl ? (
-                      <PostImage mediaUrl={post.mediaUrl} className="w-full h-full object-cover transition duration-300 group-hover:scale-105" />
-                    ) : (
-                      <div className="w-full h-full p-4 flex items-center justify-center text-center bg-gray-100 text-sm text-gray-700 font-medium">
-                        {post.content && post.content.length > 50 ? post.content.substring(0, 50) + '...' : post.content}
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition duration-200 flex flex-col items-center justify-center gap-4 text-white">
-                      <div className="flex items-center gap-4 font-semibold">
-                        <span className="flex items-center gap-1"><Heart className="w-5 h-5 fill-white text-red-500" /> {post.likes || 0}</span>
-                      </div>
-                    </div>
-                  </div>
+                  <ExplorePostCard key={post.id} post={post} />
                 ))
               ) : (
                 <div className="col-span-3 lg:col-span-4 text-center py-10 text-gray-500">
@@ -385,21 +346,13 @@ const ProfilePage: React.FC = () => {
         onClose={() => setPostToDelete(null)}
         onConfirm={handleConfirmDeletePost}
         title="Delete Post"
-        description={
-          <div className="space-y-2">
-            <p>Are you sure you want to delete this post?</p>
-            <ul className="text-xs text-gray-500 space-y-1 mt-2 list-disc list-inside">
-              <li>The post and all its media will be permanently removed.</li>
-              <li>All associated comments and likes will be deleted.</li>
-              <li className="text-rose-500 font-medium">This cannot be undone.</li>
-            </ul>
-          </div>
-        }
+        description="Are you sure you want to permanently delete this post and its associated media?"
         confirmText="Delete Post"
         cancelText="Cancel"
         icon="warning"
         isLoading={isDeletingPost}
       />
+
     </div>
   );
 };
