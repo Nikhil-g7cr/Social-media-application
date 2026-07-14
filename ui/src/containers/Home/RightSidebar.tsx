@@ -16,15 +16,15 @@ interface RightSidebarProps {
   onRetry?: () => void;
 }
 
-export default function RightSidebar({ 
-  trendingHashtags, 
-  isTrendingLoading, 
-  isTrendingError, 
-  trendingError, 
-  onRetry 
+export default function RightSidebar({
+  trendingHashtags,
+  isTrendingLoading,
+  isTrendingError,
+  trendingError,
+  onRetry
 }: RightSidebarProps) {
   return (
-    <div className="hidden lg:block">
+    <div className="hidden lg:block ">
       <div className="sticky top-24 bg-white rounded-2xl border p-5 shadow-sm">
         <h2 className="font-bold mb-4">Trending For You</h2>
 
@@ -32,11 +32,11 @@ export default function RightSidebar({
           {isTrendingLoading ? (
             <TrendingHashtagSkeleton />
           ) : isTrendingError ? (
-            <ErrorDisplay 
-              title="Couldn't load trending" 
-              error={trendingError} 
+            <ErrorDisplay
+              title="Couldn't load trending"
+              error={trendingError}
               onRetry={onRetry}
-              compact={true} 
+              compact={true}
             />
           ) : trendingHashtags.length > 0 ? (
             trendingHashtags.map((item, index) => (

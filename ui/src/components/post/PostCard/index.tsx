@@ -40,7 +40,7 @@ const PostCard: React.FC<PostCardProps> = ({
       onClick={handleCardClick}
     >
       <div className="flex justify-between">
-        <div className="flex gap-3">
+        <div className="flex gap-3 min-w-0 flex-1">
           <div className="relative">
             <Avatar
               url={post.author.avatarUrl}
@@ -52,9 +52,9 @@ const PostCard: React.FC<PostCardProps> = ({
             )}
           </div>
 
-          <div>
-            <h3 className="font-semibold">{post.author.name}</h3>
-            <p className="text-sm text-gray-500">
+          <div className="min-w-0">
+            <h3 className="font-semibold truncate">{post.author.name}</h3>
+            <p className="text-sm text-gray-500 truncate">
               {post.author.username} • {post.timestamp}
             </p>
           </div>
@@ -70,7 +70,7 @@ const PostCard: React.FC<PostCardProps> = ({
         </button>
       </div>
 
-      <p className="mt-4 max-w-full overflow-wrap-anywhere wrap-break-word text-gray-800 whitespace-pre-wrap">
+      <p className="mt-4 text-gray-800 whitespace-pre-wrap break-words overflow-hidden line-clamp-5">
         {post.content}
       </p>
 

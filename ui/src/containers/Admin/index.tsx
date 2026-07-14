@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppSelector } from '../../redux/hooks';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import DataTable from '../../components/shared/DataTable';
 import {
   useGetUsersQuery,
@@ -46,7 +46,9 @@ const CLOSED_MODAL: ModalState = { isOpen: false, userId: null, userName: '' };
 // ─── Admin Dashboard ──────────────────────────────────────────────────────────
 
 const AdminDashboard = () => {
-  const [activeTab, setActiveTab] = useState('analytics');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'analytics';
+  const setActiveTab = (tab: string) => setSearchParams({ tab });
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const [showDeletedUsers, setShowDeletedUsers] = useState(false);
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);

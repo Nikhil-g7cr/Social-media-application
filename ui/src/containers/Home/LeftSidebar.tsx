@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   Home,
   Search,
@@ -7,52 +7,197 @@ import {
   User,
   LogOut,
   Heart,
+  ChevronLeft,
+  ChevronRight,
+  BarChart2,
+  Users,
+  FileText,
+  AlertOctagon,
+  Image,
+  FolderOpen,
 } from "lucide-react";
 
 interface LeftSidebarProps {
   isAuthenticated: boolean;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  userRole?: string;
 }
 
-export default function LeftSidebar({ isAuthenticated}: LeftSidebarProps) {
+interface NavItem {
+  path: string;
+  icon: React.ElementType;
+  label: string;
+}
+
+export default function LeftSidebar({
+  isAuthenticated,
+  isCollapsed,
+  onToggle,
+  userRole,
+}: LeftSidebarProps) {
+  const location = useLocation();
+
+  // Checks both pathname and ?tab= query param
+  const isActive = (path: string) => {
+    const [pathname, search] = path.split("?");
+    if (search) {
+      const tabParam = new URLSearchParams(search).get("tab");
+      const currentTab = new URLSearchParams(location.search).get("tab");
+      return location.pathname === pathname && currentTab === tabParam;
+    }
+    return location.pathname === path;
+  };
+
+  // ── Nav sets ────────────────────────────────────────────────────────────────
+
+  const normalNavItems: NavItem[] = [
+    { path: "/", icon: Home, label: "Home" },
+    { path: "/explore", icon: Search, label: "Explore" },
+    { path: "/message", icon: MessageSquare, label: "Messages" },
+    { path: "/activity", icon: Heart, label: "Activity" },
+  ];
+
+  const adminNavItems: NavItem[] = [
+    { path: "/admin?tab=analytics", icon: BarChart2, label: "Dashboard" },
+    { path: "/admin?tab=users", icon: Users, label: "Manage Users" },
+    { path: "/admin?tab=posts", icon: FileText, label: "Manage Posts" },
+    { path: "/admin?tab=comments", icon: MessageSquare, label: "Comments" },
+    { path: "/admin?tab=reports", icon: AlertOctagon, label: "Reports" },
+    { path: "/admin?tab=gallery", icon: Image, label: "Gallery" },
+    { path: "/admin?tab=file-requests", icon: FolderOpen, label: "File Requests" },
+  ];
+
+  const managerNavItems: NavItem[] = [
+    { path: "/manager?tab=posts", icon: FileText, label: "Moderate Posts" },
+    { path: "/manager?tab=comments", icon: MessageSquare, label: "Comments" },
+    { path: "/manager?tab=reports", icon: AlertOctagon, label: "User Complaints" },
+    { path: "/manager?tab=users", icon: Users, label: "Suspend Users" },
+    { path: "/manager?tab=gallery", icon: Image, label: "Gallery" },
+    { path: "/manager?tab=file-requests", icon: FolderOpen, label: "File Requests" },
+  ];
+
+  const unauthenticatedNavItems: NavItem[] = [
+    { path: "/explore", icon: Search, label: "Explore" },
+    { path: "/login", icon: LogOut, label: "Login" },
+    { path: "/signup", icon: User, label: "Sign Up" },
+  ];
+
+  // Pick which nav set to show based on current route + role
+  const isAdminPage = location.pathname === "/admin";
+  const isManagerPage = location.pathname === "/manager";
+
+  let navItems: NavItem[];
+  let sectionLabel: string | null = null;
+
+  if (!isAuthenticated) {
+    navItems = unauthenticatedNavItems;
+  } else if (isAdminPage && userRole === "ADMIN") {
+    navItems = adminNavItems;
+    sectionLabel = "Admin Control";
+  } else if (isManagerPage && (userRole === "MANAGER" || userRole === "ADMIN")) {
+    navItems = managerNavItems;
+    sectionLabel = "Manager Panel";
+  } else {
+    navItems = normalNavItems;
+  }
+
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t z-40 md:relative md:block md:border-none md:bg-transparent md:z-auto">
-      <div className="flex justify-around p-2 md:sticky md:top-24 md:flex-col md:space-y-2 md:p-0 md:justify-start">
-        {!isAuthenticated ? (
-          <>
-            <Link to="/explore" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
-              <Search className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
-              <span className="text-xs mt-1 md:text-base md:mt-0 font-medium">Explore</span>
-            </Link>
-            <Link to="/login" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
-              <LogOut className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
-              <span className="text-xs mt-1 md:text-base md:mt-0 font-medium">Login</span>
-            </Link>
-            <Link to="/signup" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
-              <User className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
-              <span className="text-xs mt-1 md:text-base md:mt-0 font-medium">Signup</span>
-            </Link>
-          </>
+    <aside
+      className={`fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 z-30 flex flex-col transition-all duration-300 ease-in-out overflow-visible ${
+        isCollapsed ? "w-16" : "w-64"
+      }`}
+      aria-label="Navigation sidebar"
+    >
+      {/* Toggle button — sits on the right edge */}
+      <button
+        onClick={onToggle}
+        className="absolute -right-3.5 top-8 z-40 h-7 w-7 bg-white border border-gray-200 rounded-full flex items-center justify-center shadow-md hover:shadow-lg hover:bg-gray-50 transition-all duration-150"
+        aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+      >
+        {isCollapsed ? (
+          <ChevronRight className="h-3.5 w-3.5 text-gray-600" />
         ) : (
-          <>
-            <div className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl md:bg-blue-50 text-blue-600 font-medium flex-1 md:flex-none cursor-pointer">
-              <Home className="h-6 w-6 md:h-5 md:w-5 md:mr-3" />
-              <span className="text-xs mt-1 md:text-base md:mt-0">Home</span>
-            </div>
-            <Link to="/explore" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
-              <Search className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
-              <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Explore</span>
-            </Link>
-            <Link to="/message" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
-              <MessageSquare className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
-              <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Messages</span>
-            </Link>
-            <Link to="/activity" className="flex flex-col md:flex-row items-center p-2 md:px-4 md:py-3 rounded-xl hover:bg-gray-100 flex-1 md:flex-none">
-              <Heart className="h-6 w-6 md:h-5 md:w-5 md:mr-3 text-gray-600" />
-              <span className="text-xs mt-1 md:text-base md:mt-0 text-gray-700">Activity</span>
-            </Link>
-          </>
+          <ChevronLeft className="h-3.5 w-3.5 text-gray-600" />
         )}
-      </div>
-    </div>
+      </button>
+
+      {/* Section label for role panels */}
+      {sectionLabel && !isCollapsed && (
+        <div className="px-4 pt-4 pb-1">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-gray-400">
+            {sectionLabel}
+          </span>
+        </div>
+      )}
+
+      {/* Nav items */}
+      <nav
+        className={`flex-1 overflow-y-auto overflow-x-visible px-2 space-y-1 ${
+          sectionLabel && !isCollapsed ? "pt-1" : "py-4"
+        }`}
+      >
+        {navItems.map(({ path, icon: Icon, label }) => {
+          const active = isActive(path);
+          return (
+            <div key={path} className="relative group">
+              <Link
+                to={path}
+                className={`flex items-center rounded-xl font-medium transition-all duration-150 ${
+                  active
+                    ? "bg-blue-50 text-blue-600"
+                    : "text-gray-700 hover:bg-gray-100 hover:text-gray-900"
+                } ${isCollapsed ? "justify-center p-3" : "gap-3 px-4 py-3"}`}
+              >
+                <Icon className="h-5 w-5 shrink-0" />
+                {!isCollapsed && <span className="truncate">{label}</span>}
+              </Link>
+
+              {/* Tooltip when collapsed */}
+              {isCollapsed && (
+                <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-lg whitespace-nowrap pointer-events-none z-50 shadow-lg opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-150">
+                  {label}
+                  <span className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-gray-900" />
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* Back to home — shown at bottom when inside a role panel */}
+        {(isAdminPage || isManagerPage) && (
+          <div className="relative group mt-2 pt-3 border-t border-gray-100">
+            <Link
+              to="/"
+              className={`flex items-center rounded-xl font-medium transition-all duration-150 text-gray-500 hover:bg-gray-100 hover:text-gray-900 ${
+                isCollapsed ? "justify-center p-3" : "gap-3 px-4 py-3"
+              }`}
+            >
+              <Home className="h-5 w-5 shrink-0" />
+              {!isCollapsed && <span className="truncate">Back to Home</span>}
+            </Link>
+            {isCollapsed && (
+              <div className="absolute left-full top-1/2 -translate-y-1/2 ml-3 px-3 py-1.5 bg-gray-900 text-white text-sm font-medium rounded-lg whitespace-nowrap pointer-events-none z-50 shadow-lg opacity-0 group-hover:opacity-100 translate-x-1 group-hover:translate-x-0 transition-all duration-150">
+                Back to Home
+                <span className="absolute right-full top-1/2 -translate-y-1/2 border-[5px] border-transparent border-r-gray-900" />
+              </div>
+            )}
+          </div>
+        )}
+      </nav>
+
+      {/* Footer
+      <div
+        className={`border-t border-gray-100 overflow-hidden transition-all duration-300 ${
+          isCollapsed ? "py-3 px-0 flex justify-center" : "py-4 px-5"
+        }`}
+      >
+        {!isCollapsed && (
+          <p className="text-xs text-gray-400 truncate">
+            © {new Date().getFullYear()} SocialConnect
+          </p>
+        )}
+      </div> */}
+    </aside>
   );
 }

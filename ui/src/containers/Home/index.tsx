@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import LeftSidebar from "./LeftSidebar";
 import RightSidebar from "./RightSidebar";
 import { useAppSelector } from "../../redux/hooks";
 import {
@@ -63,59 +62,54 @@ export default function HomePage() {
 
   return (
     <div className="min-h-full bg-gray-50">
-      {/* Main Layout */}
-      <div className="max-w-7xl mx-auto px-4 py-8 pb-24 md:pb-8">
-        <div>
-          {/* Left Sidebar / Bottom Nav on Mobile */}
+      <div className="max-w-4xl mx-auto px-4 py-6 pb-8">
+        {/* Content area: feed + right sidebar */}
+        <div className="flex gap-6 items-start">
+          {/* Main Feed — takes remaining space */}
+          <div className="flex-1 min-w-0 space-y-6">
+            <CreatePost />
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <LeftSidebar
-              isAuthenticated={isAuthenticated}
-            />
-            {/* Feed */}
-            <div className="md:col-span-2 space-y-6">
-              <CreatePost />
-
-              {/* Posts */}
-              <LoadingWrapper
-                isLoading={isPostsLoading && page === 1}
-                skeleton={<PostCardSkeleton count={3} />}
-                isError={isPostsError && page === 1}
-                error={
-                  <ErrorDisplay
-                    title="Failed to load posts"
-                    error={postsError}
-                    onRetry={refetchPosts}
-                  />
-                }
+            {/* Posts */}
+            <LoadingWrapper
+              isLoading={isPostsLoading && page === 1}
+              skeleton={<PostCardSkeleton count={3} />}
+              isError={isPostsError && page === 1}
+              error={
+                <ErrorDisplay
+                  title="Failed to load posts"
+                  error={postsError}
+                  onRetry={refetchPosts}
+                />
+              }
+            >
+              <InfiniteScroll
+                onLoadMore={() => setPage((prev) => prev + 1)}
+                hasMore={hasMore}
+                isLoading={isFetching}
               >
-                <InfiniteScroll
-                  onLoadMore={() => setPage((prev) => prev + 1)}
-                  hasMore={hasMore}
-                  isLoading={isFetching}
-                >
-                  {posts.map((post: any) => (
-                    <PostCard
-                      key={post.id}
-                      post={post}
-                      user={user}
-                      onlineUserIds={onlineUserIds}
-                      toggleLike={toggleLike}
-                    />
-                  ))}
-                </InfiniteScroll>
-              </LoadingWrapper>
-            </div>
-
-            {/* Right Sidebar */}
-            <RightSidebar
-              trendingHashtags={trendingHashtags}
-              isTrendingLoading={isTrendingLoading}
-              isTrendingError={isTrendingError}
-              trendingError={trendingError}
-              onRetry={refetchTrending}
-            />
+                {posts.map((post: any) => (
+                  <PostCard
+                    key={post.id}
+                    post={post}
+                    user={user}
+                    onlineUserIds={onlineUserIds}
+                    toggleLike={toggleLike}
+                  />
+                ))}
+              </InfiniteScroll>
+            </LoadingWrapper>
           </div>
+
+          {/* Right Sidebar — sticky, only visible on xl+ screens */}
+
+          <RightSidebar
+            trendingHashtags={trendingHashtags}
+            isTrendingLoading={isTrendingLoading}
+            isTrendingError={isTrendingError}
+            trendingError={trendingError}
+            onRetry={refetchTrending}
+          />
+
         </div>
       </div>
     </div>

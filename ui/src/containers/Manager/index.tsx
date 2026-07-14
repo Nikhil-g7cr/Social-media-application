@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAppSelector } from '../../redux/hooks';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import DataTable from '../../components/shared/DataTable';
 import { useGetUsersQuery, useUpdateUserProfileMutation } from '../../redux/features/user/userApiSlice';
 import { useGetAllExplorePostsQuery, useDeletePostMutation } from '../../redux/features/post/postApiSlice';
@@ -14,7 +14,9 @@ import { useCreateFileRequestMutation } from '../../redux/features/gallery/galle
 import { TableRowSkeleton } from '../../shared/shared-components/Skeleton';
 
 const ManagerDashboard = () => {
-  const [activeTab, setActiveTab] = useState('posts');
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') || 'posts';
+  const setActiveTab = (tab: string) => setSearchParams({ tab });
   const [isSidebarOpen, setIsSidebarOpen] = useState(() => window.innerWidth >= 1024);
   const user = useAppSelector((state: any) => state.auth.user);
   const onlineUserIds = useAppSelector((state: any) => state.onlineUsers.onlineUserIds);
