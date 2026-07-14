@@ -74,10 +74,9 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
 
       const result: any[] = [];
 
-      const otherCps = await this.cpModel.findAll({
+      const conversationParticipants = await this.cpModel.findAll({
         where: {
           ConversationID: { [Op.in]: conversationIds },
-          UserID: { [Op.ne]: userId },
         },
         include: [
           {
@@ -90,16 +89,23 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
 
       const participantsByConv = new Map<string, any[]>();
 
-      for (const cp of otherCps) {
+      for (const cp of conversationParticipants) {
         if (!participantsByConv.has(cp.ConversationID)) {
           participantsByConv.set(cp.ConversationID, []);
         }
 
-        participantsByConv.get(cp.ConversationID)!.push(cp.User);
+        participantsByConv.get(cp.ConversationID)!.push(cp);
       }
 
       for (const conv of conversations as any[]) {
-        const participants = participantsByConv.get(conv.ID) ?? [];
+        const participantRecords = participantsByConv.get(conv.ID) ?? [];
+        // Groups need every member (including the signed-in user) so the UI
+        // can show the full member list. A one-to-one chat still displays
+        // only the other person.
+        const participants =
+          conv.Type === conversationTypes.GROUP
+            ? participantRecords
+            : participantRecords.filter((cp: any) => cp.UserID !== userId);
 
         let lm =
           conv.messages && conv.messages.length > 0
@@ -121,11 +127,12 @@ export class ConversationSQLDAO implements ConversationAbstractSQLDAO {
           continue;
         }
 
-        const mappedParticipants = participants.map((p: any) => ({
-          id: p.ID,
-          name: p.FullName,
-          username: p.UserName,
-          avatarUrl: p.ProfilePictureUrl || null,
+        const mappedParticipants = participants.map((participant: any) => ({
+          id: participant.User.ID,
+          name: participant.User.FullName,
+          username: participant.User.UserName,
+          avatarUrl: participant.User.ProfilePictureUrl || null,
+          role: participant.Role,
         }));
 
         const displayName =

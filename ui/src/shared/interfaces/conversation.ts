@@ -7,6 +7,7 @@ export interface UIConversationParticipant {
   name: string;
   username: string;
   avatarUrl?: string | null;
+  role?: "admin" | "owner" | "member";
 }
 
 export interface UIConversation {
@@ -45,6 +46,7 @@ export interface ConversationParticipant {
   name: string;
   username: string;
   avatarUrl?: string | null;
+  role?: "admin" | "owner" | "member";
 }
 
 export interface Conversation {
