@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
   Home,
@@ -72,7 +72,6 @@ export default function LeftSidebar({
     { path: "/manager?tab=posts", icon: FileText, label: "Moderate Posts" },
     { path: "/manager?tab=comments", icon: MessageSquare, label: "Comments" },
     { path: "/manager?tab=reports", icon: AlertOctagon, label: "User Complaints" },
-    { path: "/manager?tab=users", icon: Users, label: "Suspend Users" },
     { path: "/manager?tab=gallery", icon: Image, label: "Gallery" },
     { path: "/manager?tab=file-requests", icon: FolderOpen, label: "File Requests" },
   ];
@@ -101,6 +100,18 @@ export default function LeftSidebar({
   } else {
     navItems = normalNavItems;
   }
+
+  // Remember only recognized sidebar destinations. If somebody edits a panel
+  // tab in the address bar to an invalid value, the 404 page can restore the
+  // last valid tab instead of sending them to Home.
+  useEffect(() => {
+    if (navItems.some(({ path }) => isActive(path))) {
+      sessionStorage.setItem(
+        "lastValidSidebarLocation",
+        `${location.pathname}${location.search}`,
+      );
+    }
+  }, [location.pathname, location.search, navItems]);
 
   return (
     <aside
@@ -185,19 +196,6 @@ export default function LeftSidebar({
           </div>
         )}
       </nav>
-
-      {/* Footer
-      <div
-        className={`border-t border-gray-100 overflow-hidden transition-all duration-300 ${
-          isCollapsed ? "py-3 px-0 flex justify-center" : "py-4 px-5"
-        }`}
-      >
-        {!isCollapsed && (
-          <p className="text-xs text-gray-400 truncate">
-            © {new Date().getFullYear()} SocialConnect
-          </p>
-        )}
-      </div> */}
     </aside>
   );
 }

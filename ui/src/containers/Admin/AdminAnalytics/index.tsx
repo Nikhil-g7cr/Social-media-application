@@ -9,6 +9,7 @@ import {
     useGetRecentActivityQuery,
     useGetPendingFileRequestsQuery
 } from '../../../redux/features/adminAnalytics/adminAnalyticsApiSlice';
+import { useAppSelector } from '../../../redux/hooks';
 
 import StatisticsCards from './components/StatisticsCards';
 import GrowthCharts from './components/GrowthCharts';
@@ -33,6 +34,7 @@ const toNumber = (value: unknown): number => {
 const toArray = <T,>(value: T[] | undefined | null): T[] => Array.isArray(value) ? value : [];
 
 const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, onNavigateToFileRequests }) => {
+    const onlineUserCount = useAppSelector((state) => state.onlineUsers.onlineUserIds.length);
     const { data: summary, isLoading: loadingSummary, isFetching: fetchingSummary, error: summaryError, refetch: refetchSummary } = useGetDashboardSummaryQuery(undefined, { pollingInterval: 60000 });
     const { data: growth, refetch: refetchGrowth } = useGetGrowthAnalyticsQuery(undefined, { pollingInterval: 60000 });
     const { data: contentDist, refetch: refetchContentDist } = useGetContentDistributionQuery(undefined, { pollingInterval: 60000 });
@@ -77,7 +79,9 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
 
     const dashboardSummary = {
         totalUsers: toNumber(summary?.totalUsers),
-        activeUsers: toNumber(summary?.activeUsers),
+        // Presence comes from the Socket.IO sync, rather than the persisted
+        // IsActive account flag, so this always represents users online now.
+        activeUsers: onlineUserCount,
         deletedUsers: toNumber(summary?.deletedUsers),
         newUsersToday: toNumber(summary?.newUsersToday),
         totalPosts: toNumber(summary?.totalPosts),
@@ -126,9 +130,11 @@ const AdminAnalytics: React.FC<AdminAnalyticsProps> = ({ onNavigateToReports, on
                     color="bg-blue-50"
                 />
                 <StatisticsCards
-                    title="Active Users"
+                    title="Users Online"
                     value={dashboardSummary.activeUsers}
                     icon={<Users className="text-green-500" size={24} />}
+                    trend="Live now"
+                    trendUp={true}
                     color="bg-green-50"
                 />
                 <StatisticsCards

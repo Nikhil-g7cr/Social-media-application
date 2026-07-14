@@ -62,7 +62,7 @@ const ProfileDropdown: React.FC = () => {
             {/* Conditional Role Dashboard Link */}
             {user?.role === 'ADMIN' && (
               <Link 
-                to="/admin" 
+                to="/admin?tab=analytics" 
                 onClick={() => setIsOpen(false)}
                 className="flex items-center px-4 py-2.5 text-sm font-medium text-purple-700 hover:bg-purple-50 transition-colors"
               >
@@ -73,7 +73,7 @@ const ProfileDropdown: React.FC = () => {
 
             {user?.role === 'MANAGER' && (
               <Link 
-                to="/manager" 
+                to="/manager?tab=posts" 
                 onClick={() => setIsOpen(false)}
                 className="flex items-center px-4 py-2.5 text-sm font-medium text-indigo-700 hover:bg-indigo-50 transition-colors"
               >

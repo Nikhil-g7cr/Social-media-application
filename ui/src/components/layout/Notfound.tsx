@@ -6,7 +6,23 @@ const NotFoundPage = () => {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate("/", { replace: true });
+      const lastValidLocation = sessionStorage.getItem(
+        "lastValidSidebarLocation",
+      );
+
+      if (lastValidLocation) {
+        navigate(lastValidLocation, { replace: true });
+        return;
+      }
+
+      // React Router stores a history index for in-app navigation. Return to
+      // the previous page/tab when one exists; direct visits still fall back
+      // to Home because there is no in-app page to return to.
+      if ((window.history.state?.idx ?? 0) > 0) {
+        navigate(-1);
+      } else {
+        navigate("/", { replace: true });
+      }
     }, 3000);
 
     return () => clearTimeout(timer);
@@ -25,7 +41,7 @@ const NotFoundPage = () => {
       </p>
 
       <p className="mt-6 text-sm text-gray-400">
-        Redirecting to home page...
+        Returning to the previous page...
       </p>
     </div>
   );

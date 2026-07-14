@@ -73,6 +73,8 @@ function getLevelConfig(level: string) {
 
 const GalleryPage: React.FC = () => {
   const [filter, setFilter] = useState('ALL');
+  const userRole = useSelector((state: RootState) => state.auth.user?.role) || 'USER';
+  const isAdmin = userRole === 'ADMIN';
 
   // Delete Request Modal state (For Manager/User)
   const [openDeleteModal, setOpenDeleteModal] = useState(false);
@@ -99,15 +101,12 @@ const GalleryPage: React.FC = () => {
     data: logFiles = [],
     isLoading: isLogLoading,
     isFetching: isLogFetching,
-  } = useGetLogFilesQuery();
+  } = useGetLogFilesQuery(undefined, { skip: !isAdmin });
   const [fetchLogContent, { data: logEntries = [], isFetching: isContentFetching }] =
     useLazyGetLogFileContentQuery();
 
   // Snackbar state
   const [messageApi, contextHolder] = message.useMessage();
-
-  // Get user role from Redux
-  const userRole = useSelector((state: RootState) => state.auth.user?.role) || 'USER';
 
   // ─── Media handlers ────────────────────────────────────────────────────────
 
@@ -207,19 +206,21 @@ const GalleryPage: React.FC = () => {
     { key: 'IMAGES', label: 'Images' },
     { key: 'VIDEOS', label: 'Videos' },
     { key: 'DOCUMENTS', label: 'Documents / Other' },
-    {
-      key: 'LOGS',
-      label: (
-        <span>
-          Logs{' '}
-          <Badge
-            count={logFiles.length}
-            size="small"
-            style={{ backgroundColor: '#1677ff', marginLeft: 4 }}
-          />
-        </span>
-      ),
-    },
+    ...(isAdmin
+      ? [{
+          key: 'LOGS',
+          label: (
+            <span>
+              Logs{' '}
+              <Badge
+                count={logFiles.length}
+                size="small"
+                style={{ backgroundColor: '#1677ff', marginLeft: 4 }}
+              />
+            </span>
+          ),
+        }]
+      : []),
   ];
 
   // ─── Log File Table Columns ────────────────────────────────────────────────

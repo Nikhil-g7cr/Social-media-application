@@ -33,6 +33,7 @@ import { FiImage, FiFolder } from 'react-icons/fi';
 import { PanelShell } from '../../components/layout/Panel';
 import Avatar from '../../shared/shared-components/Avatar';
 import { TableRowSkeleton } from '../../shared/shared-components/Skeleton';
+import NotFoundPage from '../../components/layout/Notfound';
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface ModalState {
@@ -97,6 +98,11 @@ const AdminDashboard = () => {
   // ── Auth guard ─────────────────────────────────────────────────────────────
   if (user?.role !== 'ADMIN') {
     return <Navigate to="/" replace />;
+  }
+
+  // Keep the URL aligned with the default panel content on a direct visit.
+  if (!searchParams.has('tab')) {
+    return <Navigate to="/admin?tab=analytics" replace />;
   }
 
   // ── Handlers ───────────────────────────────────────────────────────────────
@@ -589,7 +595,7 @@ const AdminDashboard = () => {
         );
 
       default:
-        return null;
+        return <NotFoundPage />;
     }
   };
 

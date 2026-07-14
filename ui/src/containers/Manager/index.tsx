@@ -12,6 +12,7 @@ import { PanelShell } from '../../components/layout/Panel';
 import { Modal, Input, message } from 'antd';
 import { useCreateFileRequestMutation } from '../../redux/features/gallery/galleryApiSlice';
 import { TableRowSkeleton } from '../../shared/shared-components/Skeleton';
+import NotFoundPage from '../../components/layout/Notfound';
 
 const ManagerDashboard = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -37,6 +38,11 @@ const ManagerDashboard = () => {
 
   if (user?.role !== 'MANAGER' && user?.role !== 'ADMIN') {
     return <Navigate to="/" replace />;
+  }
+
+  // Keep the URL aligned with the default panel content on a direct visit.
+  if (!searchParams.has('tab')) {
+    return <Navigate to="/manager?tab=posts" replace />;
   }
 
   const handleToggleSuspend = async (userId: string, isActive: boolean) => {
@@ -97,36 +103,36 @@ const ManagerDashboard = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'users':
-        return (
-          <div className="animate-fade-in-up">
-            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">Suspend Users</h2>
-            {isLoadingUsers ? (
-              <TableRowSkeleton count={5} columns={3} />
-            ) : isErrorUsers ? (
-              <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading users data. Please try again later.</div>
-            ) : (
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
-                <DataTable 
-                  columns={userColumns} 
-                  data={usersData} 
-                  actions={(row) => (
-                    <div className="space-x-3 flex justify-end">
-                      {row.role !== 'ADMIN' && (
-                        <button 
-                          onClick={() => handleToggleSuspend(row.id, row.isActive)}
-                          className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${row.isActive !== false ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-sm' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm'}`}
-                        >
-                          {row.isActive !== false ? 'Temporarily Suspend' : 'Activate'}
-                        </button>
-                      )}
-                    </div>
-                  )}
-                />
-              </div>
-            )}
-          </div>
-        );
+      // case 'users':
+      //   return (
+      //     <div className="animate-fade-in-up">
+      //       <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-linear-to-r from-gray-800 to-gray-600 mb-6">Suspend Users</h2>
+      //       {isLoadingUsers ? (
+      //         <TableRowSkeleton count={5} columns={3} />
+      //       ) : isErrorUsers ? (
+      //         <div className="text-red-500 bg-red-50 p-4 rounded-lg border border-red-100 text-center">Error loading users data. Please try again later.</div>
+      //       ) : (
+      //         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden overflow-x-auto">
+      //           <DataTable 
+      //             columns={userColumns} 
+      //             data={usersData} 
+      //             actions={(row) => (
+      //               <div className="space-x-3 flex justify-end">
+      //                 {row.role !== 'ADMIN' && (
+      //                   <button 
+      //                     onClick={() => handleToggleSuspend(row.id, row.isActive)}
+      //                     className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${row.isActive !== false ? 'bg-rose-50 text-rose-600 hover:bg-rose-100 hover:shadow-sm' : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm'}`}
+      //                   >
+      //                     {row.isActive !== false ? 'Temporarily Suspend' : 'Activate'}
+      //                   </button>
+      //                 )}
+      //               </div>
+      //             )}
+      //           />
+      //         </div>
+      //       )}
+      //     </div>
+      //   );
       case 'posts':
         return (
           <div className="animate-fade-in-up">
@@ -222,7 +228,7 @@ const ManagerDashboard = () => {
           </div>
         );
       default:
-        return null;
+        return <NotFoundPage />;
     }
   };
 
@@ -230,7 +236,6 @@ const ManagerDashboard = () => {
     { id: 'posts', label: 'Moderate Posts', icon: FiFileText },
     { id: 'comments', label: 'Moderate Comments', icon: FiMessageSquare },
     { id: 'reports', label: 'User Complaints', icon: FiAlertOctagon },
-    { id: 'users', label: 'Suspend Users', icon: FiUsers },
     { id: 'gallery', label: 'Gallery', icon: FiImage },
     { id: 'file-requests', label: 'File Requests', icon: FiFolder },
   ];
