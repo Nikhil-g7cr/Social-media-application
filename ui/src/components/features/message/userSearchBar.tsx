@@ -30,16 +30,17 @@ const UserSearch: React.FC<UserSearchProps> = ({
   clearOnSelect = true,
 }) => {
   // Destructure the internal state and debounced value from your custom hook
-  const { searchTerm, setSearchTerm, debouncedTerm, maxLength } = useDebouncedSearch("", 500);
+  const { searchTerm, setSearchTerm, debouncedTerm, maxLength } =
+    useDebouncedSearch("", 500);
   const currentUserId = useAppSelector((state) => state.auth.user?.id);
-  
+
   const [isOpen, setIsOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   // Pass ONLY the debounced string to the RTK Query
   const { data: searchResults, isFetching: isSearching } = useSearchUsersQuery(
     debouncedTerm,
-    { skip: debouncedTerm.length < 2 }
+    { skip: debouncedTerm.length < 2 },
   );
   const { data: followers = [] } = useGetFollowersQuery(currentUserId || "", {
     skip: !currentUserId,
@@ -78,7 +79,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
     (user: any) =>
       !excludeUserIds.includes(user.id) &&
       followerIds.has(user.id) &&
-      followingIds.has(user.id)
+      followingIds.has(user.id),
   );
 
   return (
@@ -130,8 +131,7 @@ const UserSearch: React.FC<UserSearchProps> = ({
                 <Avatar
                   url={user.avatarUrl}
                   name={user.name}
-                //   size="sm"
-                  className="mr-3 shrink-0"
+                  className="mr-3 h-9 w-9 rounded-full object-cover"
                 />
                 <div className="flex flex-col min-w-0">
                   <span className="block truncate font-medium text-gray-900">

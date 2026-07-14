@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
-import { Button, Modal, Input, Space, message } from 'antd';
-import { UsergroupAddOutlined } from '@ant-design/icons';
-import { X } from 'lucide-react';
-import Avatar from '../../shared/shared-components/Avatar';
-import type { SearchedUser } from '../features/message/userSearchBar';
-import UserSearch from '../features/message/userSearchBar';
+import React, { useState } from "react";
+import { Button, Modal, Input, Space, message } from "antd";
+import { UsergroupAddOutlined } from "@ant-design/icons";
+import { X } from "lucide-react";
+import Avatar from "../../shared/shared-components/Avatar";
+import type { SearchedUser } from "../features/message/userSearchBar";
+import UserSearch from "../features/message/userSearchBar";
 
 // Define the structure of the data you want to send back to the main page
 export interface CreateGroupData {
@@ -18,7 +18,7 @@ interface CreateGroupProps {
 
 const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [groupName, setGroupName] = useState('');
+  const [groupName, setGroupName] = useState("");
   const [selectedMembers, setSelectedMembers] = useState<SearchedUser[]>([]);
 
   const showModal = () => setIsModalOpen(true);
@@ -30,11 +30,11 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
 
   const handleOk = () => {
     if (!groupName.trim()) {
-      message.error('Please enter a group name');
+      message.error("Please enter a group name");
       return;
     }
     if (selectedMembers.length === 0) {
-      message.error('Please select at least one member');
+      message.error("Please select at least one member");
       return;
     }
 
@@ -49,7 +49,7 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
   };
 
   const resetForm = () => {
-    setGroupName('');
+    setGroupName("");
     setSelectedMembers([]);
   };
 
@@ -82,7 +82,11 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
         cancelText="Cancel"
         destroyOnClose
       >
-        <Space direction="vertical" style={{ width: '100%', marginTop: '16px' }} size="large">
+        <Space
+          direction="vertical"
+          style={{ width: "100%", marginTop: "16px" }}
+          size="large"
+        >
           {/* Group Name Input */}
           <div>
             <label className="block mb-2 font-medium text-gray-700">
@@ -118,7 +122,7 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
                     <Avatar
                       url={member.avatarUrl}
                       name={member.name}
-                      className="w-6 h-6 mr-2"
+                      className="mr-2 h-7 w-7 rounded-full object-cover"
                     />
                     <span className="font-medium mr-2">{member.name}</span>
                     <button
