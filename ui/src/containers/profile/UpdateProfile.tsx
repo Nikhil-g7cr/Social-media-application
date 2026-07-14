@@ -178,6 +178,7 @@ const UpdateProfilePage = () => {
           fields={updateProfileFields as any}
           defaultValues={defaultValues}
           validationSchema={updateProfileSchema}
+          mode="onChange"
           submitButtonText={
             isUploading || isUpdating ? "Saving..." : "Save Changes"
           }

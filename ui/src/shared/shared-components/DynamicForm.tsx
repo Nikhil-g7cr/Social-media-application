@@ -51,7 +51,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         disabled={disabled || field.disabled}
         maxLength={field.maxLength}
         rows={4}
-        className="w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+        aria-invalid={!!errors[field.name]}
+        className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 disabled:bg-gray-100 ${
+          errors[field.name]
+            ? "border-red-500 focus:ring-red-500"
+            : "focus:ring-blue-500"
+        }`}
       />
     ),
 
@@ -60,7 +65,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
         id={field.name}
         {...register(field.name)}
         disabled={disabled || field.disabled}
-        className="w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100"
+        aria-invalid={!!errors[field.name]}
+        className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 disabled:bg-gray-100 ${
+          errors[field.name]
+            ? "border-red-500 focus:ring-red-500"
+            : "focus:ring-blue-500"
+        }`}
       >
         <option value="">Select</option>
         {field.options?.map((option:any) => (
@@ -137,7 +147,12 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             disabled={disabled || field.disabled}
             maxLength={field.maxLength}
             {...register(field.name)}
-            className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+            aria-invalid={!!errors[field.name]}
+            className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 disabled:bg-gray-100 ${
+              errors[field.name]
+                ? "border-red-500 focus:ring-red-500"
+                : "focus:ring-blue-500"
+            } ${
               isPasswordField ? "pr-11 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden" : ""
             }`}
           />
