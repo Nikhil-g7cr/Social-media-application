@@ -23,8 +23,13 @@ export default function RightSidebar({
   trendingError,
   onRetry
 }: RightSidebarProps) {
+  const formatTrendingText = (text: string, maxLength: number = 20) => {
+    if (!text) return "";
+    return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+  };
+
   return (
-    <div className="hidden lg:block ">
+    <div className="hidden lg:block w-72 shrink-0">
       <div className="sticky top-24 bg-white rounded-2xl border p-5 shadow-sm">
         <h2 className="font-bold mb-4">Trending For You</h2>
 
@@ -40,9 +45,16 @@ export default function RightSidebar({
             />
           ) : trendingHashtags.length > 0 ? (
             trendingHashtags.map((item, index) => (
-              <div key={index}>
-                <p className="text-xs text-gray-500">{item.category || 'Trending'}</p>
-                <p className="font-semibold">{item.hashtag}</p>
+              <div key={index} className="group">
+                <p className="text-xs text-gray-500 truncate">
+                  {item.category || 'Trending'}
+                </p>
+                <p
+                  className="font-semibold text-gray-900 group-hover:text-blue-600 transition-colors cursor-pointer truncate"
+                  title={item.hashtag}
+                >
+                  {formatTrendingText(item.hashtag, 20)}
+                </p>
                 <p className="text-xs text-gray-500">
                   {item.postCount} {item.postCount === 1 ? 'post' : 'posts'}
                 </p>
