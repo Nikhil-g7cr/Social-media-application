@@ -144,9 +144,11 @@ export default function LeftSidebar({
 
       {/* Nav items */}
       <nav
-        className={`flex-1 overflow-y-auto overflow-x-visible px-2 space-y-1 ${
-          sectionLabel && !isCollapsed ? "pt-1" : "py-4"
-        }`}
+        className={`flex-1 px-2 space-y-1 ${
+          isCollapsed
+            ? "overflow-visible"
+            : "overflow-y-auto overflow-x-hidden [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+        } ${sectionLabel && !isCollapsed ? "pt-1" : "py-4"}`}
       >
         {navItems.map(({ path, icon: Icon, label }) => {
           const active = isActive(path);
