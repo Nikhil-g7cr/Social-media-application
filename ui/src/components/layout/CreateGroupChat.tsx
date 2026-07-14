@@ -69,10 +69,9 @@ const CreateGroupFeature: React.FC<CreateGroupProps> = ({ onSubmit }) => {
         type="primary"
         icon={<UsergroupAddOutlined />}
         onClick={showModal}
+        title="Create Group"
         className="bg-blue-600 hover:bg-blue-700"
-      >
-        Create Group
-      </Button>
+      />
 
       <Modal
         title={<span className="font-semibold text-lg">Create New Group</span>}

@@ -32,7 +32,7 @@ const MessageThread = ({
           className={`flex ${isSentByMe ? "justify-end" : "justify-start"}`}
         >
           <div
-            className={`max-w-[75%] sm:max-w-[60%] flex flex-col ${isSentByMe ? "items-end" : "items-start"}`}
+            className={`max-w-[75%] sm:max-w-[60%] flex flex-col min-w-0 w-full ${isSentByMe ? "items-end" : "items-start"}`}
           >
             {shouldShowSenderName && (
               <span className="text-xs font-medium text-gray-500 mb-1 mx-1">
@@ -45,6 +45,7 @@ const MessageThread = ({
                   ? "bg-green-600 text-white rounded-br-none"
                   : "bg-white border border-gray-200 text-gray-900 rounded-bl-none shadow-sm"
               }`}
+              style={{ maxWidth: "100%", overflow: "hidden" }}
             >
               {msg.attachments && msg.attachments.length > 0 && (
                 <div className="flex flex-col gap-2 mb-2">
@@ -94,7 +95,16 @@ const MessageThread = ({
                 </div>
               )}
               {msg.text && (
-                <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
+                <p
+                  className="text-sm whitespace-pre-wrap"
+                  style={{
+                    overflowWrap: "anywhere",
+                    wordBreak: "break-word",
+                    whiteSpace: "pre-wrap",
+                  }}
+                >
+                  {msg.text}
+                </p>
               )}
             </div>
             <span className="text-[10px] text-gray-400 mt-1 mx-1">
