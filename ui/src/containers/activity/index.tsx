@@ -20,10 +20,31 @@ import PostImage from '../../shared/shared-components/PostImage';
 import Avatar from '../../shared/shared-components/Avatar';
 import { useNavigate } from 'react-router-dom';
 import { UserItemSkeleton, NotificationItemSkeleton } from '../../shared/shared-components/Skeleton';
+import Pagination from '../../shared/shared-components/Pagination';
+
+// ─── Constants ───────────────────────────────────────────────────────────────
+
+/** Number of items displayed per page for each tab */
+const PAGE_SIZE = 10;
+
+// ─── Component ───────────────────────────────────────────────────────────────
 
 const ActivityPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'requests' | 'sent' | 'notifications'>('requests');
   const navigate = useNavigate();
+
+  // ── Pagination state — each tab is fully independent ──────────────────────
+  const [requestsPage, setRequestsPage] = useState(1);
+  const [sentPage, setSentPage] = useState(1);
+  const [notificationsPage, setNotificationsPage] = useState(1);
+
+  // ── Tab switcher — resets the target tab's page to 1 for clean UX ─────────
+  const switchTab = (tab: 'requests' | 'sent' | 'notifications') => {
+    setActiveTab(tab);
+    if (tab === 'requests') setRequestsPage(1);
+    if (tab === 'sent') setSentPage(1);
+    if (tab === 'notifications') setNotificationsPage(1);
+  };
 
   // Notifications
   const { data: serverNotifications = [], isLoading: notificationsLoading } = useGetNotificationsQuery();
@@ -41,10 +62,7 @@ const ActivityPage: React.FC = () => {
   const { data: sentRequests = [], isLoading: sentLoading } = useGetSentRequestsQuery();
   const [unfollowUser] = useUnfollowUserMutation();
 
-  const handleCancelRequest = async (e: React.MouseEvent, userId: string) => {
-    e.stopPropagation();
-    await unfollowUser(userId).unwrap();
-  };
+  // ── Derived / mapped data ──────────────────────────────────────────────────
 
   const notifications = serverNotifications.map((n: ApiNotification) => ({
     id: n.ID,
@@ -52,10 +70,44 @@ const ActivityPage: React.FC = () => {
     actorId: n.ActorUserID,
     actorName: n.Actor?.UserName || 'Someone',
     actorAvatar: n.Actor?.avatarUrl,
-    content: n.NotificationType === 'LIKE' ? 'liked your post.' : n.NotificationType === 'FOLLOW' ? 'started following you.' : n.NotificationType === 'FOLLOW_REQUEST' ? 'sent you a follow request.' : n.NotificationType === 'FOLLOW_ACCEPTED' ? 'accepted your follow request.' : n.NotificationType === 'MESSAGE' ? 'sent you a message.' : 'system notification.',
+    content:
+      n.NotificationType === 'LIKE'
+        ? 'liked your post.'
+        : n.NotificationType === 'FOLLOW'
+        ? 'started following you.'
+        : n.NotificationType === 'FOLLOW_REQUEST'
+        ? 'sent you a follow request.'
+        : n.NotificationType === 'FOLLOW_ACCEPTED'
+        ? 'accepted your follow request.'
+        : n.NotificationType === 'MESSAGE'
+        ? 'sent you a message.'
+        : 'system notification.',
     time: formatDistanceToNow(new Date(n.CreatedAt), { addSuffix: true }),
     isRead: n.IsRead,
   }));
+
+  // ── Pagination math ────────────────────────────────────────────────────────
+
+  const requestsTotalPages = Math.ceil(pendingRequests.length / PAGE_SIZE);
+  const sentTotalPages = Math.ceil(sentRequests.length / PAGE_SIZE);
+  const notificationsTotalPages = Math.ceil(notifications.length / PAGE_SIZE);
+
+  /** Slice a full data array down to the items for the current page */
+  function pageSlice<T>(items: T[], page: number): T[] {
+    const start = (page - 1) * PAGE_SIZE;
+    return items.slice(start, start + PAGE_SIZE);
+  }
+
+  const pagedRequests = pageSlice(pendingRequests, requestsPage);
+  const pagedSentRequests = pageSlice(sentRequests, sentPage);
+  const pagedNotifications = pageSlice(notifications, notificationsPage);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleCancelRequest = async (e: React.MouseEvent, userId: string) => {
+    e.stopPropagation();
+    await unfollowUser(userId).unwrap();
+  };
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -82,6 +134,8 @@ const ActivityPage: React.FC = () => {
     await rejectRequest(followerId).unwrap();
   };
 
+  // ── Render ────────────────────────────────────────────────────────────────
+
   return (
     <div className="min-h-screen bg-gray-50 pt-20 pb-10">
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -103,7 +157,7 @@ const ActivityPage: React.FC = () => {
           {/* Tabs */}
           <div className="flex border-b border-gray-100 bg-gray-50/50 px-4">
             <button
-              onClick={() => setActiveTab('requests')}
+              onClick={() => switchTab('requests')}
               className={`flex items-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition ${
                 activeTab === 'requests' 
                   ? 'border-blue-600 text-blue-600' 
@@ -118,7 +172,7 @@ const ActivityPage: React.FC = () => {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('sent')}
+              onClick={() => switchTab('sent')}
               className={`flex items-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition ${
                 activeTab === 'sent' 
                   ? 'border-blue-600 text-blue-600' 
@@ -133,7 +187,7 @@ const ActivityPage: React.FC = () => {
               )}
             </button>
             <button
-              onClick={() => setActiveTab('notifications')}
+              onClick={() => switchTab('notifications')}
               className={`flex items-center gap-2 py-4 px-4 text-sm font-medium border-b-2 transition ${
                 activeTab === 'notifications' 
                   ? 'border-blue-600 text-blue-600' 
@@ -151,9 +205,10 @@ const ActivityPage: React.FC = () => {
 
           {/* Content */}
           <div className="divide-y divide-gray-100">
-            {/* REQUESTS TAB */}
+
+            {/* ── REQUESTS TAB ─────────────────────────────────────────────── */}
             {activeTab === 'requests' && (
-              <div className="min-h-[400px]">
+              <div className="min-h-[400px] flex flex-col">
                 {requestsLoading ? (
                   <UserItemSkeleton count={3} />
                 ) : pendingRequests.length === 0 ? (
@@ -163,47 +218,61 @@ const ActivityPage: React.FC = () => {
                     <p className="text-sm">When someone requests to follow you, it'll show up here.</p>
                   </div>
                 ) : (
-                  pendingRequests.map((request) => (
-                    <div 
-                      key={request.id} 
-                      className="flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition cursor-pointer"
-                      onClick={() => navigate(`/profile/${request.id}`)}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar
-                          url={request.avatarUrl}
-                          name={request.name}
-                          className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                        />
-                        <div>
-                          <div className="font-semibold text-gray-900">{request.name}</div>
-                          <div className="text-sm text-gray-500">@{request.username || request.name.toLowerCase().replace(/\s+/g, '')}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">Requested to follow you</div>
+                  <>
+                    {/* Page items */}
+                    <div className="flex-1 divide-y divide-gray-100">
+                      {pagedRequests.map((request) => (
+                        <div 
+                          key={request.id} 
+                          className="flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition cursor-pointer"
+                          onClick={() => navigate(`/profile/${request.id}`)}
+                        >
+                          <div className="flex items-center gap-4">
+                            <Avatar
+                              url={request.avatarUrl}
+                              name={request.name}
+                              className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                            />
+                            <div>
+                              <div className="font-semibold text-gray-900">{request.name}</div>
+                              <div className="text-sm text-gray-500">@{request.username || request.name.toLowerCase().replace(/\s+/g, '')}</div>
+                              <div className="text-xs text-gray-400 mt-0.5">Requested to follow you</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={(e) => handleAcceptRequest(e, request.id)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1.5 px-4 rounded-full transition shadow-sm"
+                            >
+                              Accept
+                            </button>
+                            <button
+                              onClick={(e) => handleRejectRequest(e, request.id)}
+                              className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-1.5 px-4 rounded-full transition"
+                            >
+                              Reject
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={(e) => handleAcceptRequest(e, request.id)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-1.5 px-4 rounded-full transition shadow-sm"
-                        >
-                          Accept
-                        </button>
-                        <button
-                          onClick={(e) => handleRejectRequest(e, request.id)}
-                          className="bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-medium py-1.5 px-4 rounded-full transition"
-                        >
-                          Reject
-                        </button>
-                      </div>
+                      ))}
                     </div>
-                  ))
+
+                    {/* Pagination — only shows when more than one page */}
+                    <Pagination
+                      currentPage={requestsPage}
+                      totalPages={requestsTotalPages}
+                      totalItems={pendingRequests.length}
+                      pageSize={PAGE_SIZE}
+                      onPageChange={setRequestsPage}
+                    />
+                  </>
                 )}
               </div>
             )}
 
-            {/* SENT REQUESTS TAB */}
+            {/* ── SENT REQUESTS TAB ────────────────────────────────────────── */}
             {activeTab === 'sent' && (
-              <div className="min-h-[400px]">
+              <div className="min-h-[400px] flex flex-col">
                 {sentLoading ? (
                   <UserItemSkeleton count={3} />
                 ) : sentRequests.length === 0 ? (
@@ -213,41 +282,55 @@ const ActivityPage: React.FC = () => {
                     <p className="text-sm">When you request to follow someone, they'll show up here.</p>
                   </div>
                 ) : (
-                  sentRequests.map((request) => (
-                    <div 
-                      key={request.id} 
-                      className="flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition cursor-pointer"
-                      onClick={() => navigate(`/profile/${request.id}`)}
-                    >
-                      <div className="flex items-center gap-4">
-                        <Avatar
-                          url={request.avatarUrl}
-                          name={request.name}
-                          className="w-12 h-12 rounded-full object-cover border border-gray-200"
-                        />
-                        <div>
-                          <div className="font-semibold text-gray-900">{request.name}</div>
-                          <div className="text-sm text-gray-500">@{request.username || request.name.toLowerCase().replace(/\s+/g, '')}</div>
-                          <div className="text-xs text-gray-400 mt-0.5">Follow request sent</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
-                        <button
-                          onClick={(e) => handleCancelRequest(e, request.id)}
-                          className="bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 hover:border-red-200 text-sm font-medium py-1.5 px-4 rounded-full transition"
+                  <>
+                    {/* Page items */}
+                    <div className="flex-1 divide-y divide-gray-100">
+                      {pagedSentRequests.map((request) => (
+                        <div 
+                          key={request.id} 
+                          className="flex items-center justify-between p-4 sm:p-6 hover:bg-gray-50 transition cursor-pointer"
+                          onClick={() => navigate(`/profile/${request.id}`)}
                         >
-                          Cancel
-                        </button>
-                      </div>
+                          <div className="flex items-center gap-4">
+                            <Avatar
+                              url={request.avatarUrl}
+                              name={request.name}
+                              className="w-12 h-12 rounded-full object-cover border border-gray-200"
+                            />
+                            <div>
+                              <div className="font-semibold text-gray-900">{request.name}</div>
+                              <div className="text-sm text-gray-500">@{request.username || request.name.toLowerCase().replace(/\s+/g, '')}</div>
+                              <div className="text-xs text-gray-400 mt-0.5">Follow request sent</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              onClick={(e) => handleCancelRequest(e, request.id)}
+                              className="bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200 hover:border-red-200 text-sm font-medium py-1.5 px-4 rounded-full transition"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  ))
+
+                    {/* Pagination — only shows when more than one page */}
+                    <Pagination
+                      currentPage={sentPage}
+                      totalPages={sentTotalPages}
+                      totalItems={sentRequests.length}
+                      pageSize={PAGE_SIZE}
+                      onPageChange={setSentPage}
+                    />
+                  </>
                 )}
               </div>
             )}
 
-            {/* NOTIFICATIONS TAB */}
+            {/* ── NOTIFICATIONS TAB ────────────────────────────────────────── */}
             {activeTab === 'notifications' && (
-              <div className="min-h-[400px]">
+              <div className="min-h-[400px] flex flex-col">
                 {notificationsLoading ? (
                   <NotificationItemSkeleton count={5} />
                 ) : notifications.length === 0 ? (
@@ -258,6 +341,7 @@ const ActivityPage: React.FC = () => {
                   </div>
                 ) : (
                   <>
+                    {/* Toolbar row */}
                     <div className="flex justify-end p-2 bg-gray-50/50">
                       <button
                         onClick={() => clearAllNotifications().unwrap()}
@@ -266,57 +350,70 @@ const ActivityPage: React.FC = () => {
                         <Trash2 className="w-3 h-3" /> Clear all
                       </button>
                     </div>
-                    {notifications.map((notification) => (
-                      <div
-                        key={notification.id}
-                        onClick={() => {
-                          if (!notification.isRead) markAsReadMutation(notification.id).unwrap();
-                          // Could navigate based on type here
-                        }}
-                        className={`flex items-start justify-between p-4 sm:p-6 hover:bg-gray-50 transition cursor-pointer ${
-                          !notification.isRead ? 'bg-blue-50/30' : ''
-                        }`}
-                      >
-                        <div className="flex items-start gap-4 flex-1">
-                          <div className="relative flex-shrink-0 mt-1">
-                            <Avatar
-                              url={notification.actorAvatar}
-                              name={notification.actorName}
-                              className="w-10 h-10 rounded-full object-cover"
-                            />
-                            {getNotificationIcon(notification.type)}
+
+                    {/* Page items */}
+                    <div className="flex-1 divide-y divide-gray-100">
+                      {pagedNotifications.map((notification) => (
+                        <div
+                          key={notification.id}
+                          onClick={() => {
+                            if (!notification.isRead) markAsReadMutation(notification.id).unwrap();
+                          }}
+                          className={`flex items-start justify-between p-4 sm:p-6 hover:bg-gray-50 transition cursor-pointer ${
+                            !notification.isRead ? 'bg-blue-50/30' : ''
+                          }`}
+                        >
+                          <div className="flex items-start gap-4 flex-1">
+                            <div className="relative flex-shrink-0 mt-1">
+                              <Avatar
+                                url={notification.actorAvatar}
+                                name={notification.actorName}
+                                className="w-10 h-10 rounded-full object-cover"
+                              />
+                              {getNotificationIcon(notification.type)}
+                            </div>
+                            <div>
+                              <p className="text-sm text-gray-800 leading-relaxed">
+                                <span className="font-bold text-gray-900">{notification.actorName}</span>{' '}
+                                {notification.content}
+                              </p>
+                              <span className="text-xs text-gray-500 mt-1 block font-medium">
+                                {notification.time}
+                              </span>
+                            </div>
                           </div>
-                          <div>
-                            <p className="text-sm text-gray-800 leading-relaxed">
-                              <span className="font-bold text-gray-900">{notification.actorName}</span>{' '}
-                              {notification.content}
-                            </p>
-                            <span className="text-xs text-gray-500 mt-1 block font-medium">
-                              {notification.time}
-                            </span>
+                          <div className="flex items-center gap-3 pl-4">
+                            {!notification.isRead && (
+                              <div className="w-2.5 h-2.5 bg-blue-600 rounded-full flex-shrink-0"></div>
+                            )}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                deleteNotification(notification.id).unwrap();
+                              }}
+                              className="text-gray-400 hover:text-red-500 transition p-1 rounded-full hover:bg-red-50"
+                              title="Delete notification"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           </div>
                         </div>
-                        <div className="flex items-center gap-3 pl-4">
-                          {!notification.isRead && (
-                            <div className="w-2.5 h-2.5 bg-blue-600 rounded-full flex-shrink-0"></div>
-                          )}
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification.id).unwrap();
-                            }}
-                            className="text-gray-400 hover:text-red-500 transition p-1 rounded-full hover:bg-red-50"
-                            title="Delete notification"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
+
+                    {/* Pagination — only shows when more than one page */}
+                    <Pagination
+                      currentPage={notificationsPage}
+                      totalPages={notificationsTotalPages}
+                      totalItems={notifications.length}
+                      pageSize={PAGE_SIZE}
+                      onPageChange={setNotificationsPage}
+                    />
                   </>
                 )}
               </div>
             )}
+
           </div>
         </div>
       </div>
