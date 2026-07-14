@@ -6,8 +6,6 @@ import { Eye, EyeOff } from "lucide-react";
 import type { FieldConfig } from "../../components/layout/form/types";
 import ErrorDisplay from "../../components/errors/ErrorDisplay";
 
-
-
 interface DynamicFormProps {
   fields: FieldConfig[];
   defaultValues?: Record<string, any>;
@@ -139,7 +137,9 @@ const DynamicForm: React.FC<DynamicFormProps> = ({
             disabled={disabled || field.disabled}
             maxLength={field.maxLength}
             {...register(field.name)}
-            className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${isPasswordField ? "pr-11" : ""}`}
+            className={`w-full rounded-md border p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 ${
+              isPasswordField ? "pr-11 [&::-ms-reveal]:hidden [&::-ms-clear]:hidden" : ""
+            }`}
           />
           {isPasswordField && (
             <button
