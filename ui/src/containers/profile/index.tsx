@@ -83,7 +83,13 @@ const ProfilePage: React.FC = () => {
   const [page, setPage] = useState(1);
   const likedPostsPage = activeTab === 'liked' ? page : 1;
 
-  const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsByUserIdQuery({ userId: targetUserId, page, limit: 10 }, { skip: !targetUserId || activeTab !== 'posts' });
+  const { data: userPostsData, isLoading: isPostsLoading, isFetching: isPostsFetching, isError: isPostsError, error: postsError, refetch: refetchPosts } = useGetPostsByUserIdQuery(
+    { userId: targetUserId, page, limit: 10 },
+    {
+      skip: !targetUserId || activeTab !== 'posts',
+      refetchOnMountOrArgChange: true,
+    },
+  );
   const { data: likedPostsData, isLoading: isLikedPostsLoading, isFetching: isLikedPostsFetching, isError: isLikedPostsError, error: likedPostsError, refetch: refetchLikedPosts } = useGetLikedPostsByUserIdQuery({ userId: targetUserId, page: likedPostsPage, limit: 10 }, { skip: !targetUserId || !isCurrentUser });
   const [deletePost, { isLoading: isDeletingPost }] = useDeletePostMutation();
   const [postToDelete, setPostToDelete] = useState<string | null>(null);
@@ -104,7 +110,12 @@ const ProfilePage: React.FC = () => {
   const isFetching = activeTab === 'posts' ? isPostsFetching : isLikedPostsFetching;
 
   const [modalState, setModalState] = useState<{ isOpen: boolean, type: 'followers' | 'following' }>({ isOpen: false, type: 'followers' });
-  const isLoading = isUserLoading || isFollowInfoLoading;
+  // Do not render a temporary "0 Posts" while the first page, containing the
+  // API's totalRecords count, is still being fetched.
+  const isLoading =
+    isUserLoading ||
+    isFollowInfoLoading ||
+    (activeTab === 'posts' && isPostsLoading);
 
   const handleTabChange = (tab: 'posts' | 'liked' | 'saved') => {
     if (activeTab !== tab) {
@@ -129,7 +140,8 @@ const ProfilePage: React.FC = () => {
       bio: userProfile.bio || 'No bio available',
       avatarUrl: userProfile.avatarUrl,
       stats: {
-        posts: userPostsData?.posts ? userPostsData.posts.length : 0,
+        // The list is paginated; the API's totalRecords is the full post count.
+        posts: userPostsData?.totalRecords ?? 0,
         followers: followInfo?.followersCount || 0,
         following: followInfo?.followingCount || 0,
       }

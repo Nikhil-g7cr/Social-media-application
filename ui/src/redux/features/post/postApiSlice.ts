@@ -50,6 +50,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
             transformResponse: (response: any) => {
                 const rawPosts = response?.data?.posts || [];
                 const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const totalRecords = Number(response?.data?.pagination?.totalRecords) || 0;
                 const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
@@ -68,7 +69,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     mediaUrl: p.MediaURL,
                     media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
-                return { posts, hasMore };
+                return { posts, hasMore, totalRecords };
             },
             serializeQueryArgs: ({ endpointName }) => endpointName,
             merge: (currentCache, newItems, { arg }) => {
@@ -80,6 +81,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     currentCache.posts.push(...uniqueNewItems);
                 }
                 currentCache.hasMore = newItems.hasMore;
+                currentCache.totalRecords = newItems.totalRecords;
             },
             forceRefetch({ currentArg, previousArg }) {
                 return currentArg?.page !== previousArg?.page;
@@ -212,6 +214,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
             transformResponse: (response: any) => {
                 const rawPosts = response?.data?.posts || [];
                 const hasMore = response?.data?.pagination?.hasNextPage || false;
+                const totalRecords = Number(response?.data?.pagination?.totalRecords) || 0;
                 const posts = rawPosts.map((p: any) => ({
                     id: p.ID,
                     author: {
@@ -230,7 +233,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     mediaUrl: p.MediaURL,
                     media: p.Media?.map((m: any) => ({ mediaType: m.MediaType, mediaUrl: m.MediaURL, mimeType: m.MimeType, fileSize: m.FileSize, blobName: m.BlobName, fileName: m.FileName })) || [],
                 }));
-                return { posts, hasMore };
+                return { posts, hasMore, totalRecords };
             },
             serializeQueryArgs: ({ endpointName, queryArgs }) => `${endpointName}-${queryArgs.userId}`,
             merge: (currentCache, newItems, { arg }) => {
@@ -242,6 +245,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                     currentCache.posts.push(...uniqueNewItems);
                 }
                 currentCache.hasMore = newItems.hasMore;
+                currentCache.totalRecords = newItems.totalRecords;
             },
             forceRefetch({ currentArg, previousArg }) {
                 return currentArg?.page !== previousArg?.page || currentArg?.userId !== previousArg?.userId;
@@ -359,6 +363,7 @@ export const postApiSlice = apiSlice.injectEndpoints({
                         dispatch(
                             postApiSlice.util.updateQueryData('getPostsByUserId', { userId, page: 1, limit: 10 }, (draft) => {
                                 draft.posts = draft.posts.filter(p => p.id !== id);
+                                draft.totalRecords = Math.max(0, (draft.totalRecords || 0) - 1);
                             })
                         )
                     );
