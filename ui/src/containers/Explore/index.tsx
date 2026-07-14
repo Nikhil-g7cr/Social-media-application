@@ -54,7 +54,7 @@ const ExplorePage: React.FC = () => {
       <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-gray-200">
         {/* --- Category Chips --- */}
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-3">
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1">
+          <div className="flex gap-2 overflow-x-auto hide-scrollbar pb-1 scrollbar-none">
             {CATEGORIES.map((category) => (
               <button
                 key={category}
