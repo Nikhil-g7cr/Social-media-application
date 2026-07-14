@@ -63,7 +63,7 @@ const Approutes = () => {
       <div
         className={
           showSidebar
-            ? `transition-all duration-300 ease-in-out md:${
+            ? `transition-all duration-300 ease-in-out mb-16 md:${
                 sidebarCollapsed ? "ml-16" : "ml-64"
               }`
             : ""
