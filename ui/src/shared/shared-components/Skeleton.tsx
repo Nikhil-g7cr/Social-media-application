@@ -338,7 +338,7 @@ export const AnalyticsCardSkeleton: React.FC<AnalyticsCardSkeletonProps> = ({
         className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 flex items-center gap-4"
         aria-hidden="true"
       >
-        <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse flex-shrink-0" />
+        <div className="w-12 h-12 rounded-xl bg-gray-200 animate-pulse shrink-0" />
         <div className="flex-1 space-y-2">
           <Skeleton className="h-3 w-24" />
           <Skeleton className="h-6 w-16" />

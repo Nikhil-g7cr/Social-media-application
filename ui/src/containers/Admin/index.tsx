@@ -55,6 +55,8 @@ const AdminDashboard = () => {
   const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  
+
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -194,6 +196,8 @@ const AdminDashboard = () => {
     {
       key: 'username',
       label: 'Username',
+      /** Hidden on mobile — shown in the expanded panel instead */
+      hideOnMobile: true,
       render: (val: string, row: any) => (
         <span className={`${row.isDeleted ? 'text-gray-400' : 'text-gray-500'}`}>@{val}</span>
       ),
@@ -201,6 +205,8 @@ const AdminDashboard = () => {
     {
       key: 'role',
       label: 'Role',
+      /** Hidden on mobile — shown in the expanded panel instead */
+      hideOnMobile: true,
       render: (val: string) => (
         <span
           className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${val === 'ADMIN'
@@ -214,10 +220,11 @@ const AdminDashboard = () => {
         </span>
       ),
     },
-
     {
       key: 'isDeleted',
       label: 'Account',
+      /** Hidden on mobile — shown in the expanded panel instead */
+      hideOnMobile: true,
       render: (val: boolean) =>
         val ? (
           <span className="px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold flex items-center w-max space-x-1 bg-gray-100 text-gray-500 border border-gray-200">
@@ -270,6 +277,7 @@ const AdminDashboard = () => {
     {
       key: 'targetType',
       label: 'Target Type',
+      hideOnMobile: true,
       render: (val: string) => (
         <span className="px-2 py-1 bg-blue-50 text-blue-700 border border-blue-100 rounded-md text-xs font-semibold">
           {val}
@@ -279,6 +287,8 @@ const AdminDashboard = () => {
     {
       key: 'reason',
       label: 'Reason',
+
+      hideOnMobile: true,
       render: (val: string) => (
         <span className="text-gray-600 truncate max-w-37.5 block" title={val}>
           {val}
@@ -288,6 +298,7 @@ const AdminDashboard = () => {
     {
       key: 'status',
       label: 'Status',
+      hideOnMobile: true,
       render: (val: string) => (
         <span
           className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${val === 'PENDING'
@@ -304,6 +315,7 @@ const AdminDashboard = () => {
     {
       key: 'createdAt',
       label: 'Date',
+      hideOnMobile:true,
       render: (val: string) => (
         <span className="text-gray-500 text-sm">{new Date(val).toLocaleDateString()}</span>
       ),
@@ -446,10 +458,11 @@ const AdminDashboard = () => {
               <button
                 id="toggle-show-deleted"
                 onClick={() => setShowDeletedUsers((prev) => !prev)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${showDeletedUsers
-                    ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                    : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
-                  }`}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors border ${
+                  showDeletedUsers
+                    ? "bg-red-50 text-red-600 border-red-200 hover:bg-red-100"
+                    : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
+                }`}
               >
                 {showDeletedUsers ? (
                   <>
@@ -470,8 +483,9 @@ const AdminDashboard = () => {
               <div className="mb-4 flex items-center gap-3 px-4 py-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-sm font-medium">
                 <FiEye className="w-4 h-4 shrink-0" />
                 <span>
-                  Showing <strong>all users including soft-deleted</strong>. Restore a user to re-activate their
-                  account, or permanently delete to remove all data.
+                  Showing <strong>all users including soft-deleted</strong>.
+                  Restore a user to re-activate their account, or permanently
+                  delete to remove all data.
                 </span>
               </div>
             )}
@@ -487,6 +501,61 @@ const AdminDashboard = () => {
                 columns={userColumns}
                 data={usersData}
                 actions={renderUserActions}
+                expandable={{
+                  /**
+                   * This panel only appears on mobile (< 768 px).
+                   * It shows the fields that are hidden in the compact mobile row.
+                   */
+                  expandedRowRender: (row) => (
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                      {/* Username */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">Username</p>
+                        <p className={`text-sm font-medium ${row.isDeleted ? 'text-gray-400' : 'text-gray-700'}`}>
+                          @{row.username}
+                        </p>
+                      </div>
+
+                      {/* Email */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">Email</p>
+                        <p className="text-sm font-medium text-gray-700 break-all">{row.email}</p>
+                      </div>
+
+                      {/* Role badge */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Role</p>
+                        <span
+                          className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold ${
+                            row.role === 'ADMIN'
+                              ? 'bg-purple-100 text-purple-700 border border-purple-200'
+                              : row.role === 'MANAGER'
+                                ? 'bg-indigo-100 text-indigo-700 border border-indigo-200'
+                                : 'bg-gray-100 text-gray-700 border border-gray-200'
+                          }`}
+                        >
+                          {row.role || 'USER'}
+                        </span>
+                      </div>
+
+                      {/* Account status badge */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">Account</p>
+                        {row.isDeleted ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold bg-gray-100 text-gray-500 border border-gray-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-400" />
+                            Deleted
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] uppercase tracking-wider font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                            <span className="w-1.5 h-1.5 rounded-full bg-teal-500" />
+                            Active
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ),
+                }}
               />
             )}
           </div>
@@ -541,26 +610,85 @@ const AdminDashboard = () => {
                 data={reportsData}
                 actions={(row) => (
                   <div className="space-x-2 flex justify-end">
-                    {row.status === 'PENDING' ? (
+                    {row.status === "PENDING" ? (
                       <>
                         <button
-                          onClick={() => resolveReport({ id: row.id, status: 'RESOLVED' })}
+                          onClick={() =>
+                            resolveReport({ id: row.id, status: "RESOLVED" })
+                          }
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-600 hover:bg-emerald-100 hover:shadow-sm transition-all duration-200"
                         >
                           Resolve
                         </button>
                         <button
-                          onClick={() => resolveReport({ id: row.id, status: 'DISMISSED' })}
+                          onClick={() =>
+                            resolveReport({ id: row.id, status: "DISMISSED" })
+                          }
                           className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-100 text-gray-600 hover:bg-gray-200 hover:shadow-sm transition-all duration-200"
                         >
                           Dismiss
                         </button>
                       </>
                     ) : (
-                      <span className="text-xs text-gray-400 italic px-2 py-1">Actioned</span>
+                      <span className="text-xs text-gray-400 italic px-2 py-1">
+                        Actioned
+                      </span>
                     )}
                   </div>
                 )}
+                expandable={{
+                  expandedRowRender: (row) => (
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-3">
+                      {/*Target Type */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+                          Target Type
+                        </p>
+                        <p className={`text-sm font-medium 'text-gray-700`}>
+                          {row.targetType}
+                        </p>
+                      </div>
+
+                      {/* Reason */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+                          Reason
+                        </p>
+                        <p className="text-sm font-medium text-gray-700 break-all">
+                          {row.reason}
+                        </p>
+                      </div>
+
+                      {/* Status */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                          Status
+                        </p>
+                        <span
+                          className={`px-3 py-1 rounded-full text-[10px] uppercase tracking-wider font-bold ${
+                            row.status === "PENDING"
+                              ? "bg-amber-100 text-amber-700 border border-amber-200"
+                              : row.status === "RESOLVED"
+                                ? "bg-emerald-100 text-emerald-700 border border-emerald-200"
+                                : "bg-gray-100 text-gray-700 border border-gray-200"
+                          }`}
+                        >
+                          {row.status}
+                        </span>
+                      </div>
+
+                      {/* Date */}
+                      <div>
+                        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-1">
+                          Date
+                        </p>
+                        <span className="text-gray-500 text-sm">
+                          {new Date(row.createdAt).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  ),
+                }}
               />
             )}
           </div>

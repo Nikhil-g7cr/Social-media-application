@@ -121,7 +121,7 @@ const ConfirmationModal: React.FC<ConfirmationModalProps> = ({
         </button>
 
         <div className="flex flex-col sm:flex-row gap-4 mb-6">
-          <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${getIconBackground()}`}>
+          <div className={`shrink-0 w-12 h-12 rounded-full flex items-center justify-center ${getIconBackground()}`}>
             {getIconElement()}
           </div>
           <div className="pt-1">
