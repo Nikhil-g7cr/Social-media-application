@@ -131,7 +131,7 @@ export default function LeftSidebar({
   return (
     <>
         <aside
-          className={`hidden md:flex fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 z-30 flex-col transition-all duration-300 ease-in-out overflow-visible md:${
+          className={`hidden md:flex fixed top-16 left-0 h-[calc(100vh-4rem)] bg-white border-r border-gray-200 z-30 flex-col transition-all duration-300 ease-in-out overflow-visible ${
             isCollapsed ? "w-16" : "w-64"
           }`}
         >
