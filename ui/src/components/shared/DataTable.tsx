@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 
 interface Column {
   key: string;
-  label: string;
+  label: string | React.ReactNode;
   render?: (val: any, row: any) => React.ReactNode;
   /** When true, this column is hidden on mobile and shown inside the expanded panel */
   hideOnMobile?: boolean;
@@ -22,6 +22,10 @@ interface DataTableProps {
   };
   /** Window width below which "mobile expand" mode activates. Defaults to 768. */
   mobileBreakpoint?: number;
+  /** Custom row key or function to extract unique key from row */
+  rowKey?: string | ((row: any, index: number) => string | number);
+  /** Custom className for row based on record */
+  rowClassName?: (row: any, index: number) => string;
 }
 
 const DataTable: React.FC<DataTableProps> = ({
@@ -31,6 +35,8 @@ const DataTable: React.FC<DataTableProps> = ({
   pageSize = 10,
   expandable,
   mobileBreakpoint = 768,
+  rowKey,
+  rowClassName,
 }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [isMobile, setIsMobile] = useState(false);
@@ -144,14 +150,19 @@ const DataTable: React.FC<DataTableProps> = ({
               </tr>
             ) : (
               pageData.map((row, i) => {
-                const rowId = row.id ?? row.ID ?? startIndex + i;
+                const rowId = rowKey
+                  ? typeof rowKey === "function"
+                    ? rowKey(row, startIndex + i)
+                    : row[rowKey]
+                  : row.id ?? row.ID ?? row.name ?? row._id ?? startIndex + i;
                 const isExpanded = expandedRow === rowId;
+                const customClass = rowClassName ? rowClassName(row, startIndex + i) : "";
 
                 return (
                   <React.Fragment key={rowId}>
                     {/* ── Data row ──────────────────────────────────────── */}
                     <tr
-                      className={`transition-colors duration-150 ${
+                      className={`transition-colors duration-150 ${customClass} ${
                         isExpanded ? "bg-blue-50/40" : "hover:bg-gray-50"
                       }`}
                     >

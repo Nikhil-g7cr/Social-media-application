@@ -37,6 +37,7 @@ import {
   useLazyGetLogFileContentQuery,
 } from '../../redux/features/gallery/galleryApiSlice';
 import type { LogFileItem } from '../../redux/features/gallery/galleryApiSlice';
+import DataTable from '../../components/shared/DataTable';
 
 const { Title, Text } = Typography;
 const { TextArea } = Input;
@@ -225,11 +226,11 @@ const GalleryPage: React.FC = () => {
 
   // ─── Log File Table Columns ────────────────────────────────────────────────
 
-  const logTableColumns: TableColumnsType<LogFileItem> = [
+  const logFilesColumns = [
     {
-      title: 'Type',
-      dataIndex: 'type',
-      width: 110,
+      key: 'type',
+      label: 'Type',
+      hideOnMobile: false,
       render: (type: string) =>
         type === 'error-log' ? (
           <Tag color="red" icon={<MdErrorOutline style={{ marginRight: 4 }} />}>
@@ -240,22 +241,19 @@ const GalleryPage: React.FC = () => {
             App Log
           </Tag>
         ),
-      filters: [
-        { text: 'App Log', value: 'app-log' },
-        { text: 'Error Log', value: 'error-log' },
-      ],
-      onFilter: (value, record) => record.type === value,
     },
     {
-      title: 'File Name',
-      dataIndex: 'displayName',
+      key: 'displayName',
+      label: 'File Name',
+      hideOnMobile: false,
       render: (name: string) => (
         <span style={{ fontFamily: 'monospace', fontSize: 13 }}>{name}</span>
       ),
     },
     {
-      title: 'Full Path',
-      dataIndex: 'name',
+      key: 'name',
+      label: 'Full Path',
+      hideOnMobile: true,
       render: (name: string) => (
         <Text type="secondary" style={{ fontSize: 12, fontFamily: 'monospace' }}>
           {name}
@@ -263,60 +261,79 @@ const GalleryPage: React.FC = () => {
       ),
     },
     {
-      title: 'Size',
-      dataIndex: 'size',
-      width: 100,
+      key: 'size',
+      label: 'Size',
+      hideOnMobile: true,
       render: (size?: number) =>
         size != null ? (
           <Text type="secondary">{(size / 1024).toFixed(1)} KB</Text>
         ) : (
           '—'
         ),
-      sorter: (a, b) => (a.size ?? 0) - (b.size ?? 0),
     },
     {
-      title: 'Last Modified',
-      dataIndex: 'lastModified',
-      width: 180,
+      key: 'lastModified',
+      label: 'Last Modified',
+      hideOnMobile: true,
       render: (date?: string) =>
         date ? (
           <Text type="secondary">{new Date(date).toLocaleString()}</Text>
         ) : (
           '—'
         ),
-      sorter: (a, b) =>
-        new Date(a.lastModified ?? 0).getTime() -
-        new Date(b.lastModified ?? 0).getTime(),
-      defaultSortOrder: 'descend',
-    },
-    {
-      title: 'Actions',
-      width: 160,
-      render: (_, record: LogFileItem) => (
-        <div style={{ display: 'flex', gap: 8 }}>
-          <Button
-            size="small"
-            type="primary"
-            icon={<VscFileSubmodule />}
-            onClick={() => handleLogPreview(record)}
-          >
-            Preview
-          </Button>
-          <Tooltip title="Download raw log file">
-            <Button
-              size="small"
-              icon={<MdDownload />}
-              href={record.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Download
-            </Button>
-          </Tooltip>
-        </div>
-      ),
     },
   ];
+
+  const renderLogFileActions = (record: LogFileItem) => (
+    <div style={{ display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+      <Button
+        size="small"
+        type="primary"
+        icon={<VscFileSubmodule />}
+        onClick={() => handleLogPreview(record)}
+      >
+        Preview
+      </Button>
+      <Tooltip title="Download raw log file">
+        <Button
+          size="small"
+          icon={<MdDownload />}
+          href={record.url}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Download
+        </Button>
+      </Tooltip>
+    </div>
+  );
+
+  const renderLogFileExpanded = (row: LogFileItem) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-3 py-1">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+          Full Path
+        </p>
+        <p className="text-xs font-mono text-gray-700 break-all">{row.name}</p>
+      </div>
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+          Size
+        </p>
+        <p className="text-xs text-gray-700">
+          {row.size != null ? `${(row.size / 1024).toFixed(1)} KB` : '—'}
+        </p>
+      </div>
+      <div className="sm:col-span-2">
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+          Last Modified
+        </p>
+        <p className="text-xs text-gray-700">
+          {row.lastModified ? new Date(row.lastModified).toLocaleString() : '—'}
+        </p>
+      </div>
+    </div>
+  );
 
   // ─── Log Message Parser Helper ─────────────────────────────────────────────
   const parseLogMessage = (msg: any, record: any) => {
@@ -550,11 +567,48 @@ const GalleryPage: React.FC = () => {
     );
   };
 
-  const logEntryColumns: TableColumnsType<any> = [
+  const logEntriesColumns = [
     {
-      title: 'Timestamp',
-      dataIndex: 'timestamp',
-      width: 175,
+      key: 'level',
+      label: 'Level',
+      hideOnMobile: false,
+      render: (level?: any) => {
+        const levelStr =
+          typeof level === 'object' && level !== null
+            ? JSON.stringify(level)
+            : String(level || 'unknown');
+        const cfg = getLevelConfig(levelStr);
+        return (
+          <div style={{ padding: '4px 0' }}>
+            <Tag
+              style={{
+                color: cfg.color,
+                backgroundColor: cfg.bg,
+                borderColor: cfg.color,
+                fontWeight: 600,
+                fontSize: 11,
+                padding: '2px 8px',
+                borderRadius: 4,
+              }}
+            >
+              {cfg.label}
+            </Tag>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'message',
+      label: 'Message',
+      hideOnMobile: false,
+      render: (msg?: any, record?: any) => (
+        <LogMessageCell msg={msg} record={record} />
+      ),
+    },
+    {
+      key: 'timestamp',
+      label: 'Timestamp',
+      hideOnMobile: true,
       render: (ts?: any) => {
         if (!ts) return <Text type="secondary" style={{ fontSize: 11 }}>—</Text>;
         const tsStr = typeof ts === 'object' ? JSON.stringify(ts) : String(ts);
@@ -594,51 +648,9 @@ const GalleryPage: React.FC = () => {
       },
     },
     {
-      title: 'Level',
-      dataIndex: 'level',
-      width: 100,
-      filters: Object.keys(LOG_LEVEL_CONFIG).map((k) => ({
-        text: k.toUpperCase(),
-        value: k,
-      })),
-      onFilter: (value, record) => String(record.level || '').toLowerCase() === value,
-      render: (level?: any) => {
-        const levelStr =
-          typeof level === 'object' && level !== null
-            ? JSON.stringify(level)
-            : String(level || 'unknown');
-        const cfg = getLevelConfig(levelStr);
-        return (
-          <div style={{ padding: '4px 0' }}>
-            <Tag
-              style={{
-                color: cfg.color,
-                backgroundColor: cfg.bg,
-                borderColor: cfg.color,
-                fontWeight: 600,
-                fontSize: 11,
-                padding: '2px 8px',
-                borderRadius: 4,
-              }}
-            >
-              {cfg.label}
-            </Tag>
-          </div>
-        );
-      },
-    },
-    {
-      title: 'Message',
-      dataIndex: 'message',
-      width: 550,
-      render: (msg?: any, record?: any) => (
-        <LogMessageCell msg={msg} record={record} />
-      ),
-    },
-    {
-      title: 'Status',
-      dataIndex: 'status',
-      width: 95,
+      key: 'status',
+      label: 'Status',
+      hideOnMobile: true,
       render: (status?: any) => {
         if (status === undefined || status === null) return null;
         if (typeof status === 'object') {
@@ -675,9 +687,9 @@ const GalleryPage: React.FC = () => {
       },
     },
     {
-      title: 'SID',
-      dataIndex: 'sid',
-      width: 105,
+      key: 'sid',
+      label: 'SID',
+      hideOnMobile: true,
       render: (sid?: any) => {
         if (sid === undefined || sid === null) return null;
         const sidStr =
@@ -707,6 +719,50 @@ const GalleryPage: React.FC = () => {
       },
     },
   ];
+
+  const renderLogEntryExpanded = (row: any) => (
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-6 gap-y-3 py-1">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+          Timestamp
+        </p>
+        <p className="text-xs font-mono text-gray-700">
+          {row.timestamp ? new Date(typeof row.timestamp === 'object' ? JSON.stringify(row.timestamp) : row.timestamp).toLocaleString() : '—'}
+        </p>
+      </div>
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+          Status
+        </p>
+        <div className="mt-0.5">
+          {row.status !== undefined && row.status !== null ? (
+            <Tag
+              color={
+                typeof row.status === 'number' && row.status >= 500
+                  ? 'red'
+                  : typeof row.status === 'number' && row.status >= 400
+                    ? 'orange'
+                    : 'green'
+              }
+              style={{ fontWeight: 600 }}
+            >
+              {String(row.status)}
+            </Tag>
+          ) : (
+            <span className="text-xs text-gray-400">—</span>
+          )}
+        </div>
+      </div>
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-wider text-gray-400 mb-0.5">
+          SID
+        </p>
+        <p className="text-xs font-mono text-gray-600 break-all">
+          {row.sid ? String(typeof row.sid === 'object' ? JSON.stringify(row.sid) : row.sid) : '—'}
+        </p>
+      </div>
+    </div>
+  );
 
   // ─── Render ────────────────────────────────────────────────────────────────
 
@@ -840,13 +896,17 @@ const GalleryPage: React.FC = () => {
                 </Text>
               </div>
 
-              <Table<LogFileItem>
-                dataSource={logFiles}
-                columns={logTableColumns}
+              <DataTable
+                columns={logFilesColumns}
+                data={[...logFiles].sort(
+                  (a, b) =>
+                    new Date(b.lastModified ?? 0).getTime() -
+                    new Date(a.lastModified ?? 0).getTime()
+                )}
+                actions={renderLogFileActions}
                 rowKey="name"
-                size="middle"
-                pagination={{ pageSize: 20 }}
-                locale={{ emptyText: <Empty description="No log files found in the blob container." /> }}
+                pageSize={20}
+                expandable={{ expandedRowRender: renderLogFileExpanded }}
               />
             </>
           )}
@@ -1000,20 +1060,18 @@ const GalleryPage: React.FC = () => {
             <Text type="secondary" style={{ fontSize: 12, marginBottom: 12, display: 'block' }}>
               Showing {filteredLogEntries.length} of {logEntries.length} entries (last 500 from file)
             </Text>
-            <Table
-              dataSource={filteredLogEntries}
-              columns={logEntryColumns}
-              rowKey={(record: any, idx?: number) => record._id || String(idx)}
-              size="middle"
-              pagination={{ pageSize: 50, showSizeChanger: true, pageSizeOptions: ['25', '50', '100'] }}
-              scroll={{ x: 1100 }}
-              rowClassName={(record) => {
+            <DataTable
+              columns={logEntriesColumns}
+              data={filteredLogEntries}
+              rowKey={(record: any, idx: number) => record._id || String(idx)}
+              pageSize={50}
+              rowClassName={(record: any) => {
                 const level = record.level?.toLowerCase();
                 if (level === 'error') return 'log-row-error';
                 if (level === 'warn') return 'log-row-warn';
                 return '';
               }}
-              style={{ fontSize: 12 }}
+              expandable={{ expandedRowRender: renderLogEntryExpanded }}
             />
           </>
         )}
